@@ -1,0 +1,42 @@
+{
+  "mode": "claude_replacement_test",
+  "enabled": true,
+  "schedule": [
+    {
+      "time": "06:30",
+      "action": "generate_morning_plan",
+      "check": [
+        "villain_schedule",
+        "morning_tasks",
+        "yesterday_log"
+      ]
+    },
+    {
+      "time": "11:30",
+      "action": "detect_blockers",
+      "check": [
+        "task_progress",
+        "whisper_status",
+        "schedule_delay"
+      ]
+    },
+    {
+      "time": "14:30",
+      "action": "rebuild_afternoon_plan",
+      "check": [
+        "unfinished_tasks",
+        "energy_level",
+        "priority_change"
+      ]
+    },
+    {
+      "time": "18:00",
+      "action": "create_daily_log",
+      "check": [
+        "completed_tasks",
+        "failed_tasks",
+        "failure_rules"
+      ]
+    }
+  ]
+}
