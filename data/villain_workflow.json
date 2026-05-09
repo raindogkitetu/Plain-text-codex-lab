@@ -1,0 +1,51 @@
+{
+  "workflow": [
+    {
+      "step": 1,
+      "name": "official_site_check",
+      "action": "visit_site",
+      "target": "villain_official_site",
+      "purpose": "公式サイト更新確認"
+    },
+    {
+      "step": 2,
+      "name": "official_x_check",
+      "action": "check_x_account",
+      "target": "villain_official_x",
+      "purpose": "公式X投稿確認"
+    },
+    {
+      "step": 3,
+      "name": "community_search",
+      "action": "search_x_posts",
+      "target": "villain_x_posts",
+      "purpose": "Villain関連投稿確認"
+    },
+    {
+      "step": 4,
+      "name": "category_scan",
+      "action": "check_categories",
+      "target": [
+        "whitepaper",
+        "nft",
+        "token",
+        "apparel"
+      ],
+      "purpose": "カテゴリ更新確認"
+    },
+    {
+      "step": 5,
+      "name": "save_memory",
+      "action": "save_findings",
+      "target": "villain_memory",
+      "purpose": "発見内容保存"
+    },
+    {
+      "step": 6,
+      "name": "create_daily_report",
+      "action": "generate_log",
+      "target": "villain_logs",
+      "purpose": "巡回結果ログ生成"
+    }
+  ]
+}
