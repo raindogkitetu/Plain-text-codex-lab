@@ -10,6 +10,7 @@
     "external_api_integration_allowed": false,
     "x_login_operation_allowed": false,
     "click_post_button_allowed": false,
+    "x_api_config_path": "data/x_api_config.json",
     "codex_role": "投稿案を生成し、投稿キューへ追加するだけ。大将承認なしに投稿対象へ進めない。",
     "operator_role": "大将が元ネタ、画像、Passcode、禁止事項、投稿文を確認し、手動承認する。"
   },
@@ -141,13 +142,14 @@
   },
   "auto_post_on_conditions": {
     "current_status": "disabled",
+    "x_api_config_path": "data/x_api_config.json",
     "requirements_before_turning_on": [
       "大将がauto_post_enabled:trueを明示指示する",
       "投稿キュー方式で一定期間事故なく運用できている",
       "画像添付、元ネタURL、Passcode、禁止事項チェック、大将承認の全項目が機械的に検証できる",
       "rejected/skipped/approved/postedの履歴が正しく残る",
       "投稿実行前に最終停止できる手動ストップ手段がある",
-      "X APIまたは外部投稿手段の権限、レート制限、失敗時挙動が別DBで定義済み",
+      "data/x_api_config.jsonでX API設定、安全ガード、dry_run解除条件が定義済み",
       "テスト投稿用の非公開または安全な検証手順が完了している"
     ],
     "still_forbidden_in_this_version": [

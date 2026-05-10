@@ -1,0 +1,53 @@
+{
+  "version": "x_api_config_v0.1.0",
+  "status": "preparation_only",
+  "provider": "x_api",
+  "credentials": {
+    "api_key_env": "X_API_KEY",
+    "api_secret_env": "X_API_SECRET",
+    "access_token_env": "X_ACCESS_TOKEN",
+    "access_token_secret_env": "X_ACCESS_TOKEN_SECRET",
+    "bearer_token_env": "X_BEARER_TOKEN"
+  },
+  "connection": {
+    "api_connected": false,
+    "login_required": false,
+    "dry_run_only": true
+  },
+  "posting_guard": {
+    "auto_post_enabled": false,
+    "manual_approval_required": true,
+    "require_queue_status": "approved",
+    "require_image_ready": true,
+    "require_final_caption": true,
+    "require_human_confirm_text": "POST_APPROVED",
+    "block_if_credentials_missing": true,
+    "block_if_dry_run_only": true
+  },
+  "allowed_actions_now": [
+    "validate_config",
+    "prepare_payload",
+    "dry_run_preview"
+  ],
+  "blocked_actions_now": [
+    "x_login",
+    "api_authenticate",
+    "create_tweet",
+    "upload_media",
+    "publish_post",
+    "schedule_live_post"
+  ],
+  "on_conditions_for_future": {
+    "auto_post_enabled_must_be": true,
+    "manual_approval_required_must_be": true,
+    "api_connected_must_be": true,
+    "dry_run_only_must_be": false,
+    "queue_item_status_must_be": "approved",
+    "human_confirm_text_must_match": "POST_APPROVED"
+  },
+  "notes": [
+    "This file is preparation only.",
+    "No credentials are stored here.",
+    "Live posting is intentionally blocked."
+  ]
+}
