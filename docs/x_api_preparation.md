@@ -44,3 +44,29 @@ Human approval rule:
 
 Safety note:
 - This preparation step contains no credentials, no login flow, no API call, and no posting function.
+
+## Dry Run Payload Builder
+
+Script:
+- `scripts/build_villain_dry_run_payload.py`
+
+Output:
+- `data/villain_dry_run_payloads.json`
+
+Purpose:
+- Read queue items with status `waiting_for_image` or `approved`.
+- Build a local preview payload shaped like a pre-posting payload.
+- Keep `status` at `dry_run_preview_ready`.
+- Preserve `dry_run_only=true`.
+- Preserve `auto_post_enabled=false`.
+- Preserve `manual_approval_required=true`.
+
+Still blocked:
+- X login.
+- API authentication.
+- Tweet creation.
+- Media upload.
+- Live publish.
+- Live scheduling.
+
+The dry-run payload is not approval for live posting. It is only a preview object.
