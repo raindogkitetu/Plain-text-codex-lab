@@ -19,6 +19,7 @@ X_CONFIG_PATH = ROOT / "data" / "x_api_config.json"
 AUTO_PLAN_PATH = ROOT / "data" / "villain_auto_post_plan.json"
 HISTORY_PATH = ROOT / "data" / "villain_post_history.json"
 FINAL_SAFETY_REPORT_PATH = ROOT / "reports" / "villain_final_safety_check.md"
+PREFLIGHT_REPORT_PATH = ROOT / "reports" / "x_api_preflight_check.md"
 DASHBOARD_PATH = ROOT / "reports" / "villain_dashboard.md"
 
 
@@ -53,6 +54,15 @@ def final_safety_status() -> str:
     text = FINAL_SAFETY_REPORT_PATH.read_text(encoding="utf-8")
     if "Overall judgment: `BLOCKED`" in text:
         return "BLOCKED"
+    return "UNKNOWN"
+
+
+def preflight_status() -> str:
+    if not PREFLIGHT_REPORT_PATH.exists():
+        return "NOT_READY"
+    text = PREFLIGHT_REPORT_PATH.read_text(encoding="utf-8")
+    if "preflight_status: `NOT_READY`" in text:
+        return "NOT_READY"
     return "UNKNOWN"
 
 
@@ -95,6 +105,7 @@ def main() -> None:
     postable_count = count_payloads(payloads, ("safety", "postable_judgment"), True)
     live_posting = "DISABLED"
     final_status = final_safety_status()
+    x_preflight_status = preflight_status()
     generated_at = datetime.now(timezone.utc).isoformat()
 
     lines = [
@@ -103,6 +114,7 @@ def main() -> None:
         f"- Generated at: `{generated_at}`",
         f"- live posting: `{live_posting}`",
         f"- final safety: `{final_status}`",
+        f"- x api preflight: `{x_preflight_status}`",
         "",
         "## Core Status",
         "",
@@ -124,6 +136,7 @@ def main() -> None:
         "",
         "## X API",
         "",
+        f"- `preflight_status`: `{x_preflight_status}`",
         f"- `api_connected`: `{bool_text(connection.get('api_connected', False))}`",
         f"- `login_required`: `{bool_text(connection.get('login_required', False))}`",
         f"- `dry_run_only`: `{bool_text(connection.get('dry_run_only', True))}`",

@@ -1,8 +1,9 @@
 # Villain Posting OS Dashboard
 
-- Generated at: `2026-05-10T13:31:02.568099+00:00`
+- Generated at: `2026-05-10T13:35:39.964216+00:00`
 - live posting: `DISABLED`
 - final safety: `BLOCKED`
+- x api preflight: `NOT_READY`
 
 ## Core Status
 
@@ -24,6 +25,7 @@
 
 ## X API
 
+- `preflight_status`: `NOT_READY`
 - `api_connected`: `false`
 - `login_required`: `false`
 - `dry_run_only`: `true`
