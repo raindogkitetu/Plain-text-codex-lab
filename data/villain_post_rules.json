@@ -388,6 +388,25 @@
           "意味を回収しきる"
         ]
       }
+    },
+    {
+      "name": "skip_day_policy",
+      "description": "毎日投稿より鬼徹っぽさ維持を優先し、無理に書くくらいなら投稿なしを許可する。",
+      "skip_allowed": true,
+      "conditions": [
+        "今日の引っかかりが弱い",
+        "2本とも説明寄り",
+        "rough_note_modeが崩れる",
+        "無理に書いている感がある",
+        "Villain側に新しい空気がない"
+      ],
+      "policy": "毎日投稿より鬼徹っぽさ維持を優先する。",
+      "when_skipped": [
+        "投稿案は完成扱いにしない",
+        "Passcode usage_logは記録しない",
+        "note化メモだけ残してよい",
+        "翌日は無理に穴埋めしない"
+      ]
     }
   ],
   "post_structure": {

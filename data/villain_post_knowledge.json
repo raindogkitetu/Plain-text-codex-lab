@@ -1461,6 +1461,8 @@
       "通常運用は本命1本、保険1本だけを生成する。",
       "実投稿候補は本命1本のみ。保険は比較用下書きとして扱う。",
       "seasonal / temporary 投稿は通常運用の2本から除外する。",
+      "skip_day_policyに該当する日は『今日は投稿なし』を許可する。",
+      "毎日投稿より鬼徹っぽさ維持を優先する。",
       "説明系の翌日は空気系を強める。",
       "THE POOL型とWhitepaper翻訳型を同日に出す場合、片方は極端に短くする。",
       "THE POOL型は説明寄りになりそうならその日は外す。",
@@ -1468,6 +1470,24 @@
       "Dear villains型はtemporary扱い。公式Xで Dear villains / gather / 集会 などの言及がある時だけ差し込む。",
       "深掘り型は週2回まで。note導線を匂わせるだけにする。"
     ],
+    "skip_day_policy": {
+      "skip_allowed": true,
+      "conditions": [
+        "今日の引っかかりが弱い",
+        "2本とも説明寄り",
+        "rough_note_modeが崩れる",
+        "無理に書いている感がある",
+        "Villain側に新しい空気がない"
+      ],
+      "priority": "毎日投稿より鬼徹っぽさ維持を優先する。",
+      "when_skipped": {
+        "posting_decision": "skip",
+        "post_generation": "do_not_force",
+        "passcode_usage_log": "not_required",
+        "note_seed_only": true,
+        "required_note": "今日の引っかかりが弱かった理由、または次に見るべき空気を1行だけ残す。"
+      }
+    },
     "weekly_rotation": [
       {
         "day": 1,
