@@ -40,11 +40,12 @@ def collect_blockers(payload: dict) -> list[str]:
         blockers.append("dry_run_only is true")
     if safety.get("api_connected") is False:
         blockers.append("api_connected is false")
-    if approval.get("approved_for_live_post") is not True:
-        blockers.append("approved_for_live_post is false")
     if not payload.get("image_path"):
         blockers.append("image_path is null")
-    if approval.get("manual_approval_required") is True:
+    if (
+        approval.get("manual_approval_required") is True
+        and approval.get("human_confirm_received") is not True
+    ):
         blockers.append("manual approval is required")
     if approval.get("daisho_approval_status") != "approved":
         blockers.append("daisho approval is not approved")
@@ -58,6 +59,8 @@ def collect_blockers(payload: dict) -> list[str]:
         blockers.append("skip_day_policy is true")
     if safety.get("live_post_blocked") is True:
         blockers.append("live_post_blocked is true")
+    if safety.get("postable_judgment") is False:
+        blockers.append("postable_judgment is false")
 
     return blockers
 
@@ -73,6 +76,8 @@ def collect_next_actions(payload: dict) -> list[str]:
         actions.append("Confirm the Passcode in the final footer.")
     if approval.get("daisho_approval_status") != "approved":
         actions.append("Get explicit Daisho approval with POST_APPROVED.")
+    if approval.get("approved_for_live_post") is True:
+        actions.append("Approval marker is recorded. Keep dry-run blocking active.")
     if checks.get("prohibited_content_check") != "pass":
         actions.append("Resolve prohibited content check before any approval.")
     if not actions:
@@ -106,8 +111,10 @@ def render_payload(payload: dict, index: int) -> str:
         "",
         f"- `manual_approval_required`: `{bool_text(approval.get('manual_approval_required', True))}`",
         f"- `human_confirm_text_required`: `{approval.get('human_confirm_text_required', 'POST_APPROVED')}`",
+        f"- `human_confirm_received`: `{bool_text(approval.get('human_confirm_received', False))}`",
         f"- `daisho_approval_status`: `{approval.get('daisho_approval_status', 'unchecked')}`",
         f"- `approved_for_live_post`: `{bool_text(approval.get('approved_for_live_post', False))}`",
+        f"- `approved_at`: `{nullable_text(approval.get('approved_at'))}`",
         "",
         "### Safety",
         "",
@@ -115,6 +122,7 @@ def render_payload(payload: dict, index: int) -> str:
         f"- `api_connected`: `{bool_text(safety.get('api_connected', False))}`",
         f"- `live_post_blocked`: `{bool_text(safety.get('live_post_blocked', True))}`",
         f"- `auto_post_enabled`: `{bool_text(safety.get('auto_post_enabled', False))}`",
+        f"- `postable_judgment`: `{bool_text(safety.get('postable_judgment', False))}`",
         "",
         "### 投稿不可理由",
         "",
