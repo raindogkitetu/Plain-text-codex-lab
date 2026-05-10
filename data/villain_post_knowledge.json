@@ -1094,6 +1094,73 @@
       "rotation_mood": "服から人へ繋がる"
     },
     {
+      "id": "STORE",
+      "name": "店舗型",
+      "availability": {
+        "class": "evergreen",
+        "enabled_by_default": true,
+        "enabled_when": [
+          "wear2earn_store_page_available",
+          "nagoya_store_context",
+          "community_store_visit_post",
+          "apparel_and_cafe_context"
+        ],
+        "disabled_when": []
+      },
+      "hook_templates": [
+        "店があるWeb3、やっぱり少し変。",
+        "画面の外に店があるの、強い。",
+        "Villainは、場所がある。"
+      ],
+      "air": "説明より場所。店、服、コーヒー、誰かが来る感じ。Web3を画面の外へ戻す。",
+      "avoid": [
+        "店舗紹介記事にする",
+        "アクセス案内だけで終わる",
+        "来店煽り",
+        "おしゃれさだけで語る"
+      ],
+      "note_fit": "high",
+      "recommended_image_type": [
+        "$villain NAGOYA店舗写真",
+        "店内と服",
+        "Apparel & Cafeの空気が出る写真"
+      ],
+      "rotation_mood": "画面の外に場所がある"
+    },
+    {
+      "id": "ABOUT_WORDING",
+      "name": "ABOUT文言型",
+      "availability": {
+        "class": "evergreen",
+        "enabled_by_default": true,
+        "enabled_when": [
+          "shop_about_page_available",
+          "about_wording_has_hook",
+          "rough_first_reaction_needed"
+        ],
+        "disabled_when": []
+      },
+      "hook_templates": [
+        "ABOUTの文章、ちょっと強い。",
+        "Love $villain, and wear it daily...",
+        "毎日着ろって、普通にすごい。"
+      ],
+      "air": "ABOUTの短い文言に引っかかる。翻訳しすぎず、言葉の強さと変さを残す。",
+      "avoid": [
+        "ABOUT全文の要約",
+        "ブランド理念の解説",
+        "綺麗なコピー化",
+        "深いことを言おうとする"
+      ],
+      "note_fit": "medium",
+      "recommended_image_type": [
+        "Shop ABOUTスクリーンショット",
+        "ABOUT文言と服の写真",
+        "短い引用を置いた黒背景カード"
+      ],
+      "rotation_mood": "短い文言への引っかかり"
+    },
+    {
       "id": "GATHERING",
       "name": "集会型",
       "availability": {
@@ -1325,8 +1392,40 @@
     }
   ],
   "production_rotation_plan": {
-    "purpose": "毎日違う空気にして、量産してもAI臭くならないようにする。",
-    "daily_count": 3,
+    "purpose": "毎日違う空気にして、量産してもAI臭くならないようにする。3日テスト後は毎日2本、本命1本と保険1本へ絞る。",
+    "daily_count": 2,
+    "daily_candidate_roles": [
+      "main",
+      "backup"
+    ],
+    "daily_output_rule": "毎日最後に『今日の本命』を1本だけ出す。",
+    "priority_order_after_day3_test": [
+      {
+        "rank": 1,
+        "topic": "APPAREL",
+        "reason": "鬼徹のぽろっと感とVillainらしさが最も自然に出る。"
+      },
+      {
+        "rank": 2,
+        "topic": "STORE",
+        "reason": "画面の外に場所があるため、新規にも伝わりやすくAI臭くなりにくい。"
+      },
+      {
+        "rank": 3,
+        "topic": "WHITEPAPER_DISCOMFORT",
+        "reason": "Whitepaperの硬さと服・店の距離感に違和感を置ける。"
+      },
+      {
+        "rank": 4,
+        "topic": "ABOUT_WORDING",
+        "reason": "短い文言への引っかかりからrough_first_reactionを作りやすい。"
+      },
+      {
+        "rank": 5,
+        "topic": "THE_POOL",
+        "reason": "説明寄りにならない時だけ使う。機能ではなく静かな動きとして扱う。"
+      }
+    ],
     "availability_classes": [
       "evergreen",
       "seasonal",
@@ -1359,8 +1458,12 @@
     },
     "rules": [
       "同じ投稿タイプを2本連続で出さない。",
+      "通常運用は本命1本、保険1本だけを生成する。",
+      "実投稿候補は本命1本のみ。保険は比較用下書きとして扱う。",
+      "seasonal / temporary 投稿は通常運用の2本から除外する。",
       "説明系の翌日は空気系を強める。",
       "THE POOL型とWhitepaper翻訳型を同日に出す場合、片方は極端に短くする。",
+      "THE POOL型は説明寄りになりそうならその日は外す。",
       "Apparel型は基準投稿の温度を守るが、同じフレーズを連投しない。",
       "Dear villains型はtemporary扱い。公式Xで Dear villains / gather / 集会 などの言及がある時だけ差し込む。",
       "深掘り型は週2回まで。note導線を匂わせるだけにする。"
@@ -1370,64 +1473,57 @@
         "day": 1,
         "types": [
           "APPAREL",
-          "THE_POOL",
-          "GATHERING"
+          "NEWCOMER"
         ],
-        "mood": "服、人の動き、人の気配"
+        "mood": "服、外から入る"
       },
       {
         "day": 2,
         "types": [
-          "NEWCOMER",
-          "WHITEPAPER_TRANSLATION",
-          "APPAREL"
+          "STORE",
+          "WHITEPAPER_TRANSLATION"
         ],
-        "mood": "外から入る、思想、服"
+        "mood": "店、思想への違和感"
       },
       {
         "day": 3,
         "types": [
-          "THE_POOL",
           "APPAREL",
-          "DEEP_DIVE_NOTE"
+          "ABOUT_WORDING"
         ],
-        "mood": "服、動き、noteの種"
+        "mood": "服、ABOUT文言の引っかかり"
       },
       {
         "day": 4,
         "types": [
-          "THE_POOL",
-          "GATHERING",
-          "NEWCOMER"
+          "WHITEPAPER_TRANSLATION",
+          "APPAREL"
         ],
-        "mood": "動き、集まる感じ、やさしい入口"
+        "mood": "硬い思想、服へ戻る"
       },
       {
         "day": 5,
         "types": [
           "NEWCOMER",
-          "WHITEPAPER_TRANSLATION",
-          "GATHERING"
+          "STORE"
         ],
-        "mood": "入口、思想、人の気配"
+        "mood": "入口、店"
       },
       {
         "day": 6,
         "types": [
-          "DEEP_DIVE_NOTE",
-          "THE_POOL",
-          "GATHERING"
+          "ABOUT_WORDING",
+          "DEEP_DIVE_NOTE"
         ],
-        "mood": "考察、動き、人の気配"
+        "mood": "文言の引っかかり、noteの種"
       },
       {
         "day": 7,
         "types": [
           "APPAREL",
-          "WHITEPAPER_TRANSLATION",
-          "NEWCOMER"
+          "THE_POOL"
         ],
-        "mood": "基準投稿、思想、外から入る"
+        "mood": "服、説明しないTHE POOL"
       }
     ],
     "seasonal_insertion_rules": [
@@ -1468,7 +1564,8 @@
     ],
     "anti_ai_smell_checks": [
       "各投稿に同じ構文を使っていないか。",
-      "3本すべてが説明で終わっていないか。",
+      "2本とも説明で終わっていないか。",
+      "本命と保険の温度が同じになっていないか。",
       "『なんか』『少し』『気配』を便利語として反復していないか。",
       "最後が毎回同じ感情や同じ締めになっていないか。",
       "今日見たもの、引っかかった言葉、店、Discord、集会、服、人、THE POOLの動きのどれかから始まっているか。",

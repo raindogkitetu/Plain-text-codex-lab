@@ -137,6 +137,8 @@
       "post_types": [
         "THE_POOL",
         "APPAREL",
+        "STORE",
+        "ABOUT_WORDING",
         "GATHERING",
         "WHITEPAPER_TRANSLATION",
         "DEAR_VILLAINS",
@@ -154,7 +156,10 @@
       ],
       "rules": [
         "同じ投稿タイプを2本連続で出さない。",
-        "1日の3本は、説明系、空気系、入口系を混ぜる。",
+        "通常運用は毎日2本だけ生成する。本命1本、保険1本とする。",
+        "毎日の最後に『今日の本命』を1本だけ選ぶ。",
+        "2本の優先順位は Apparel、店舗、Whitepaper違和感、ABOUT文言、THE POOL の順にする。",
+        "THE_POOL型は説明寄りにならない時だけ使う。",
         "THE_POOL型は機能説明を本文に詰めない。",
         "APPAREL型は基準投稿の温度を守るが文面をコピーしない。",
         "DEAR_VILLAINS型はtemporary扱い。通常7日ローテーションから除外する。",
@@ -171,18 +176,15 @@
       "daily_mix_examples": [
         [
           "APPAREL",
-          "THE_POOL",
-          "GATHERING"
+          "NEWCOMER"
         ],
         [
-          "NEWCOMER",
-          "WHITEPAPER_TRANSLATION",
-          "GATHERING"
-        ],
-        [
-          "WHITEPAPER_TRANSLATION",
           "APPAREL",
-          "DEEP_DIVE_NOTE"
+          "WHITEPAPER_TRANSLATION"
+        ],
+        [
+          "APPAREL",
+          "THE_POOL"
         ]
       ],
       "seasonal_insert_examples": [
@@ -261,7 +263,7 @@
         "空気を残す。",
         "『なんか』を許容する。",
         "Villainらしさを分かりやすさより優先する。",
-        "Apparelの基準は『入口は服でいい』の温度。",
+        "Apparelの基準は『入口は服でいい』の温度。ただし同じ文言はphrase_cooldown対象として連投しない。",
         "THE POOLでは『集会っぽい』と説明せず、集まる前の気配で見せる。",
         "villainlotteryでは広い運試しではなく、Villain文脈を早めに置く。"
       ],
@@ -344,6 +346,48 @@
         "肩書き、日程、Buyback、販売、限定、再販は公式または本人投稿URLで再確認する。",
         "外向き投稿で『ボス』表現を使う場合は文脈に注意し、過剰な権威付けにしない。"
       ]
+    },
+    {
+      "name": "daily_two_posts_operation_20260510",
+      "description": "3日テスト後の運用変更。品質が十分になったため、毎日3本から毎日2本へ減らし、本命1本と保険1本で運用する。",
+      "daily_count": 2,
+      "candidate_roles": [
+        "main",
+        "backup"
+      ],
+      "priority_order": [
+        "APPAREL",
+        "STORE",
+        "WHITEPAPER_DISCOMFORT",
+        "ABOUT_WORDING",
+        "THE_POOL"
+      ],
+      "rules": [
+        "本命1本、保険1本だけを生成する。",
+        "実投稿候補は本命1本のみ。保険は比較用下書きとして扱う。",
+        "seasonal / temporary 投稿は通常運用の2本から除外する。",
+        "毎日最後に『今日の本命』を1本だけ出す。",
+        "鬼徹のぽろっと感を最優先する。",
+        "rough_note_modeを維持する。",
+        "評論家っぽさ、綺麗なまとめ、説明AI感を避ける。",
+        "phrase_cooldownを必ず守る。",
+        "THE POOLは説明寄りになりそうな日は使わない。使う場合も機能説明ではなく、見た瞬間の引っかかりで止める。"
+      ],
+      "selection_bias": {
+        "prefer": [
+          "服",
+          "店",
+          "Whitepaperを読んだ時の違和感",
+          "ABOUT文言の引っかかり",
+          "THE POOLの静かな動き"
+        ],
+        "avoid": [
+          "毎日THE POOLを入れる",
+          "2本とも説明系にする",
+          "本命と保険の温度を同じにする",
+          "意味を回収しきる"
+        ]
+      }
     }
   ],
   "post_structure": {
