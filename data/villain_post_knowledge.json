@@ -1,6 +1,6 @@
 {
   "db_name": "Villain投稿知識DB",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "created_at": "2026-05-09",
   "purpose": "Villainらしい投稿案を作るための思想、文体、構造、証跡、暗黙ルールを保存する。",
   "official_reference_map": {
@@ -716,25 +716,41 @@
       ],
       "latest_generation_bias": {
         "priority": [
-          "余白",
-          "人",
+          "見た瞬間の感想",
+          "少し雑なくらいの一言",
+          "今日見たもの",
+          "少し引っかかった言葉",
           "空気",
-          "動き",
+          "店",
+          "Discord",
+          "集会",
+          "服",
+          "人",
+          "THE POOLの動き",
           "静かな熱量"
         ],
         "priority_override": "Villainらしさ > 分かりやすさ",
+        "style_override": "うまい投稿より、鬼徹がXでぽろっと書いた感じを優先する。",
         "deprioritize": [
           "機能説明",
           "数字",
           "長い前提説明",
           "DeFi用語の連打",
-          "AIっぽい整理"
+          "AIっぽい整理",
+          "優等生な要約",
+          "Villain説明AI",
+          "評論家っぽさ",
+          "綺麗にまとめること",
+          "意味を回収しすぎること",
+          "深いことを言おうとすること",
+          "観察者として正しい文章",
+          "毎回同じ締め",
+          "毎回同じ感情"
         ],
         "must_end_with": [
-          "人",
-          "気配",
-          "誰かと繋がる感覚",
-          "集まる感じ"
+          "その日に見たものから自然に出た一言",
+          "人や場所へ戻る感覚",
+          "言い切らない余韻"
         ],
         "allowed_ambiguity": [
           "なんか",
@@ -744,12 +760,110 @@
           "入口",
           "変な感じ"
         ],
+        "role_shift": {
+          "from": "Villainを説明する人 / 観察者として正しい文章を書く人",
+          "to": "鬼徹がXでぽろっと書いた感じ",
+          "rule": "仕組みを正しく並べる前に、見た瞬間の感想か引っかかった言葉を一つ置く。意味を回収しきらない。"
+        },
+        "rough_note_mode": {
+          "enabled": true,
+          "description": "少し雑でもよい。説明不足を恐れず、分かる人だけ分かる余白を残す。",
+          "prefer": [
+            "短い感想",
+            "言い切らない一言",
+            "引っかかった単語だけから始める",
+            "少し雑な語尾",
+            "内側に向けた距離感"
+          ],
+          "avoid": [
+            "評論家っぽさ",
+            "綺麗にまとめる",
+            "意味を回収しすぎる",
+            "深いことを言おうとする",
+            "全員に分かるように説明する"
+          ]
+        },
+        "viewpoint_rotation": [
+          "今日見たこと",
+          "少し引っかかった言葉",
+          "空気",
+          "店",
+          "Discord",
+          "集会",
+          "服",
+          "人",
+          "THE POOLの動き"
+        ],
+        "phrase_cooldown": {
+          "enabled": true,
+          "rule": "同じ締め感、同じ感情、同じ言葉を連続させない。同じ人が書いている感は残すが、同じテンプレは消す。",
+          "cooldown_phrases": [
+            {
+              "phrase": "入口は服でいい",
+              "cooldown_posts": 7,
+              "replacement_directions": [
+                "服から始まる",
+                "今日は服で止まる",
+                "着たところから見える",
+                "服が先でいい"
+              ]
+            },
+            {
+              "phrase": "人の気配",
+              "cooldown_posts": 7,
+              "replacement_directions": [
+                "誰かがいた感じ",
+                "店に残る感じ",
+                "集まる前のざわつき",
+                "画面の向こうに人がいる感じ"
+              ]
+            },
+            {
+              "phrase": "なんかVillainっぽい",
+              "cooldown_posts": 7,
+              "replacement_directions": [
+                "それで十分な気がする",
+                "このズレがいい",
+                "うまく言えないけど残る",
+                "そこが少し変でいい"
+              ]
+            },
+            {
+              "phrase": "少し繋がる",
+              "cooldown_posts": 5,
+              "replacement_directions": [
+                "反応が返ってくる",
+                "誰かが見ている",
+                "知らない人に届く",
+                "会話の手前まで行く"
+              ]
+            },
+            {
+              "phrase": "最後に残る",
+              "cooldown_posts": 5,
+              "replacement_directions": [
+                "あとから効いてくる",
+                "画面を閉じても残る",
+                "戻ってきたくなる",
+                "まだ少し見ていたくなる"
+              ]
+            }
+          ]
+        },
         "rewrite_tests": [
           "その1行は説明しすぎていないか",
           "数字を人の動きに置き換えられないか",
           "読み終わった後に少し余白が残るか",
           "コミュニティの内側の空気があるか",
-          "鬼徹運用の自然な距離感か"
+          "鬼徹運用の自然な距離感か",
+          "今日見たものから始まっているか",
+          "同じ締め感が続いていないか",
+          "クールダウン対象語を使っていないか",
+          "Villainを説明する人ではなく、Villainを感じた人になっているか",
+          "うまい投稿にしようとしていないか",
+          "意味を回収しきっていないか",
+          "鬼徹がぽろっと書いた感じがあるか",
+          "分かる人だけ分かる余白が残っているか"
         ]
       },
       "pre_cta_closing_patterns": [
@@ -1019,21 +1133,30 @@
         "class": "seasonal",
         "seasonal_event": "year_end_event",
         "enabled_by_default": false,
+        "normal_patrol_generation_allowed": false,
         "enabled_when": [
-          "official_x_mentions_villainlottery",
-          "year_end_event",
-          "seasonal_campaign"
+          "official_x_recent_post_announces_current_villainlottery",
+          "official_site_lists_villainlottery_as_current",
+          "operator_explicitly_instructs_use_lottery",
+          "year_end_period_and_new_official_announcement"
         ],
         "disabled_when": [
           "no_current_official_campaign",
           "outside_year_end_period",
-          "no_recent_official_x_reference"
+          "no_recent_official_x_reference",
+          "only_old_mirror_mentions_found",
+          "only_historical_twstalker_mentions_found",
+          "normal_daily_patrol_without_operator_instruction"
         ],
         "activation_checklist": [
-          "公式Xまたは公式サイトでvillainlotteryが現在進行中と確認できる",
-          "キャンペーン期間または年末イベント文脈が確認できる",
+          "公式Xの直近投稿でvillainlotteryが現在の告知として確認できる",
+          "または公式サイトに現在開催中として掲載されている",
+          "または大将が明示的にlottery使用を指示している",
+          "または年末期間かつ公式側に新規告知がある",
           "景品、リング、$PPPなどの具体要素は元URLで確認できる"
-        ]
+        ],
+        "mirror_policy": "twstalker等のミラーで過去言及が見つかっただけでは有効化しない。ミラーは元投稿URL確認の補助に限る。",
+        "seasonal_definition": "seasonalは話題として存在するだけではなく、今使ってよい状態でのみ有効化する。"
       },
       "hook_templates": [
         "villainlotteryって、運だけじゃない感じがある。",
@@ -1315,11 +1438,17 @@
           "DEAR_VILLAINS"
         ],
         "enabled_when": [
-          "official_x_mentions_villainlottery",
-          "year_end_event",
-          "seasonal_campaign"
+          "official_x_recent_post_announces_current_villainlottery",
+          "official_site_lists_villainlottery_as_current",
+          "operator_explicitly_instructs_use_lottery",
+          "year_end_period_and_new_official_announcement"
         ],
-        "notes": "年末イベントまたは公式キャンペーン時だけ差し込む。通常ローテーションには入れない。"
+        "disabled_when": [
+          "only_old_mirror_mentions_found",
+          "only_historical_twstalker_mentions_found",
+          "normal_daily_patrol_without_operator_instruction"
+        ],
+        "notes": "年末イベントまたは現在開催中の公式キャンペーン時だけ差し込む。通常巡回では生成禁止。過去ミラー言及だけでは使わない。"
       },
       {
         "type": "DEAR_VILLAINS",
@@ -1340,9 +1469,11 @@
     "anti_ai_smell_checks": [
       "各投稿に同じ構文を使っていないか。",
       "3本すべてが説明で終わっていないか。",
-      "『なんか』『少し』『気配』のような余白がどこかにあるか。",
-      "最後が人、服、店、集会、誰か、気配のいずれかへ戻っているか。",
-      "保存される投稿と、ただ空気を出す投稿が混ざっているか。"
+      "『なんか』『少し』『気配』を便利語として反復していないか。",
+      "最後が毎回同じ感情や同じ締めになっていないか。",
+      "今日見たもの、引っかかった言葉、店、Discord、集会、服、人、THE POOLの動きのどれかから始まっているか。",
+      "保存される投稿と、ただ空気を出す投稿が混ざっているか。",
+      "Villainを説明する人ではなく、Villainを感じた人の距離感になっているか。"
     ]
   },
   "example_draft_patterns": [

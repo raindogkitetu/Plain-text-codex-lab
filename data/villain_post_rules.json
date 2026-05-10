@@ -1,6 +1,6 @@
 {
   "db_name": "Villain投稿ルールDB",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "created_at": "2026-05-09",
   "purpose": "Whitepaper思想を今日の話題へ翻訳し、Villain形式の投稿案を生成するための運用ルールを定義する。",
   "source_policy": {
@@ -161,7 +161,10 @@
         "DEAR_VILLAINS型は公式Xで Dear villains / gather / 集会 などの言及がある時だけ差し込む。",
         "通常時はDEAR_VILLAINSの代わりにGATHERINGまたはNEWCOMERを使う。",
         "VILLAINLOTTERY型は投稿タイプとして保持するが通常ローテーションから除外する。",
-        "VILLAINLOTTERY型は official_x_mentions_villainlottery / year_end_event / seasonal_campaign のいずれかで有効化する。",
+        "VILLAINLOTTERY型は通常巡回では生成禁止。",
+        "VILLAINLOTTERY型は公式Xの直近投稿で現在告知、公式サイトの現在開催掲載、大将の明示指示、または年末期間かつ公式新規告知がある場合のみ有効化する。",
+        "twstalker等のミラーで過去言及が見つかっただけではVILLAINLOTTERY型を有効化しない。",
+        "seasonalは話題として存在するだけではなく、今使ってよい状態でのみ有効化する。",
         "DEEP_DIVE_NOTE型はnote導線を匂わせるが、露骨に誘導しない。",
         "今後の季節イベントは seasonal / temporary / evergreen のavailability classで分類する。"
       ],
@@ -649,12 +652,12 @@
     },
     {
       "id": "raindog_voice_shape",
-      "question": "問いかけ/個人的実感 -> 仕組みの短文説明 -> 自分の驚き/愛着 -> CTA前の締め、の流れがあるか。",
+      "question": "観察者として正しい文章ではなく、鬼徹がXでぽろっと書いた感じになっているか。",
       "required": true
     },
     {
       "id": "pre_cta_closing",
-      "question": "CTA前に『これがvillainのエコシステム』『Discord来れば分かる』『アートで繋がるコミュニティ』等の締めがあるか。",
+      "question": "CTA前の締めが前回と同じ感情・同じ言葉に寄っていないか。",
       "required": true
     },
     {
@@ -669,7 +672,27 @@
     },
     {
       "id": "ends_by_returning_to_people",
-      "question": "最後が仕組みではなく、人や気配へ戻っているか。",
+      "question": "最後が仕組み説明で終わらず、その日に見たものや人・場所・動きへ自然に戻っているか。",
+      "required": true
+    },
+    {
+      "id": "viewpoint_rotation",
+      "question": "今日見たこと、引っかかった言葉、空気、店、Discord、集会、服、人、THE POOLの動きなど、前回と違う視点を持っているか。",
+      "required": true
+    },
+    {
+      "id": "rough_note_mode",
+      "question": "うまくまとめすぎず、少し雑な感想や分かる人だけ分かる余白が残っているか。",
+      "required": true
+    },
+    {
+      "id": "no_critic_voice",
+      "question": "評論家っぽさ、綺麗なまとめ、深いことを言おうとする癖が出ていないか。",
+      "required": true
+    },
+    {
+      "id": "phrase_cooldown",
+      "question": "入口は服でいい / 人の気配 / なんかVillainっぽい などのクールダウン対象語を連投していないか。",
       "required": true
     },
     {
