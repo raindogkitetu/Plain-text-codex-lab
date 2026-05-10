@@ -1,0 +1,100 @@
+{
+  "db_name": "Villain手動承認ルールDB",
+  "version": "0.1.0",
+  "created_at": "2026-05-10",
+  "purpose": "Villain投稿キュー内の投稿案を、大将が承認するための条件と事故防止ルールを定義する。",
+  "approval_policy": {
+    "manual_approval_required": true,
+    "approval_owner": "大将",
+    "auto_post_enabled": false,
+    "posting_execution_allowed": false,
+    "approval_must_be_explicit": true,
+    "implicit_approval_not_allowed": true,
+    "codex_cannot_self_approve": true
+  },
+  "approval_statuses": [
+    "unchecked",
+    "approved",
+    "rejected",
+    "needs_fix"
+  ],
+  "required_checks_before_approval": [
+    {
+      "id": "source_url_confirmed",
+      "required_status": "pass",
+      "approval_blocker_if_not_pass": true,
+      "question": "元ネタURLは確認済みか。"
+    },
+    {
+      "id": "image_attached",
+      "required_status": "pass",
+      "approval_blocker_if_not_pass": true,
+      "question": "画像またはポスターは添付済みか。"
+    },
+    {
+      "id": "passcode_confirmed",
+      "required_status": "pass",
+      "approval_blocker_if_not_pass": true,
+      "question": "Passcodeは確認済みで、最終行に入っているか。"
+    },
+    {
+      "id": "prohibited_content_check",
+      "required_status": "pass",
+      "approval_blocker_if_not_pass": true,
+      "question": "禁止事項チェックはpassか。"
+    },
+    {
+      "id": "skip_day_policy",
+      "required_value": false,
+      "approval_blocker_if_true": true,
+      "question": "今日は投稿なしにすべき日ではないか。"
+    },
+    {
+      "id": "raindog_voice_check",
+      "required_status": "pass",
+      "approval_blocker_if_not_pass": true,
+      "question": "鬼徹がぽろっと書いた感じが残っているか。"
+    }
+  ],
+  "reject_if": [
+    "画像未添付",
+    "元ネタURL未確認",
+    "Passcode未確認",
+    "prohibited_content_checkがpass以外",
+    "skip_day_policyがtrue",
+    "大将承認がない",
+    "推測断定がある",
+    "証跡なし断定がある",
+    "過度な煽りがある",
+    "価格煽りがある",
+    "Web3インフルエンサー風になっている",
+    "rough_note_modeが崩れている",
+    "無理に書いている感がある"
+  ],
+  "approval_record_template": {
+    "queue_id": "",
+    "approval_status": "unchecked",
+    "approved_by": "",
+    "approved_at": "",
+    "approval_comment": "",
+    "required_checks_snapshot": {
+      "source_url_confirmed": "unchecked",
+      "image_attached": "unchecked",
+      "passcode_confirmed": "unchecked",
+      "prohibited_content_check": "unchecked",
+      "skip_day_policy": false,
+      "raindog_voice_check": "unchecked"
+    },
+    "final_decision": "waiting_for_approval"
+  },
+  "auto_post_enable_gate": {
+    "can_enable_auto_post": false,
+    "required_before_enable": [
+      "大将が明示的に自動投稿ONを指示する",
+      "manual_approval_requiredを維持したまま承認済みのみ投稿対象にできる",
+      "画像、元ネタURL、Passcode、禁止事項、skip_day_policyを自動検証できる",
+      "投稿履歴と失敗ログを必ず保存できる",
+      "即時停止できる手動停止ルールがある"
+    ]
+  }
+}

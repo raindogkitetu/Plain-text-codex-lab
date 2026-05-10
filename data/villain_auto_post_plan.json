@@ -1,0 +1,161 @@
+{
+  "db_name": "Villain自動投稿準備DB",
+  "version": "0.1.0",
+  "created_at": "2026-05-10",
+  "purpose": "Villain投稿を将来自動投稿できる状態へ近づけるための設計DB。現時点では投稿実行、Xログイン、投稿ボタン操作、外部API連携を行わない。",
+  "global_policy": {
+    "auto_post_enabled": false,
+    "manual_approval_required": true,
+    "posting_execution_allowed": false,
+    "external_api_integration_allowed": false,
+    "x_login_operation_allowed": false,
+    "click_post_button_allowed": false,
+    "codex_role": "投稿案を生成し、投稿キューへ追加するだけ。大将承認なしに投稿対象へ進めない。",
+    "operator_role": "大将が元ネタ、画像、Passcode、禁止事項、投稿文を確認し、手動承認する。"
+  },
+  "queue_based_flow": [
+    {
+      "step": 1,
+      "status": "draft_generated",
+      "actor": "Codex",
+      "description": "巡回結果にもとづき、投稿案を生成して投稿キューへ保存する。",
+      "next_status": "waiting_for_image"
+    },
+    {
+      "step": 2,
+      "status": "waiting_for_image",
+      "actor": "Operator",
+      "description": "画像またはポスターを添付し、素材元と使用可否を確認する。",
+      "next_status": "waiting_for_approval"
+    },
+    {
+      "step": 3,
+      "status": "waiting_for_approval",
+      "actor": "Operator",
+      "description": "大将が投稿前チェックを確認する。全項目がpassの場合のみ承認できる。",
+      "next_status": "approved"
+    },
+    {
+      "step": 4,
+      "status": "approved",
+      "actor": "Operator",
+      "description": "投稿対象として承認済み。現時点では自動投稿せず、人間が必要に応じて手動投稿する。",
+      "next_status": "posted"
+    },
+    {
+      "step": 5,
+      "status": "posted",
+      "actor": "Operator",
+      "description": "実投稿後に投稿URL、投稿時刻、使用画像、Passcode、反応を履歴へ記録する。",
+      "next_status": "history_recorded"
+    }
+  ],
+  "allowed_statuses": [
+    "draft_generated",
+    "waiting_for_image",
+    "waiting_for_approval",
+    "approved",
+    "posted",
+    "skipped",
+    "rejected"
+  ],
+  "pre_post_checks": {
+    "all_required_for_approval": true,
+    "checks": [
+      {
+        "id": "source_url_confirmed",
+        "required_status": "pass",
+        "fail_action": "posting_prohibited",
+        "description": "元ネタURLが確認済みであること。"
+      },
+      {
+        "id": "image_attached",
+        "required_status": "pass",
+        "fail_action": "posting_prohibited",
+        "description": "画像またはポスターが添付済みであること。"
+      },
+      {
+        "id": "passcode_confirmed",
+        "required_status": "pass",
+        "fail_action": "posting_prohibited",
+        "description": "使用Passcodeが確認済みで、最終行に入っていること。"
+      },
+      {
+        "id": "prohibited_content_check",
+        "required_status": "pass",
+        "fail_action": "posting_prohibited",
+        "description": "禁止事項チェックがpassであること。pass以外は投稿禁止。"
+      },
+      {
+        "id": "skip_day_policy",
+        "required_value": false,
+        "fail_action": "do_not_post",
+        "description": "skip_day_policyがtrueの場合は投稿しない。"
+      },
+      {
+        "id": "daisho_approval",
+        "required_status": "approved",
+        "fail_action": "posting_prohibited",
+        "description": "大将の明示承認があること。"
+      }
+    ]
+  },
+  "accident_prevention_rules": [
+    "auto_post_enabledがfalseの間は、いかなる投稿実行処理も作らない。",
+    "manual_approval_requiredがtrueの間は、承認なしにapprovedへ進めない。",
+    "画像未添付なら投稿禁止。",
+    "元ネタURL未確認なら投稿禁止。",
+    "Passcode未確認なら投稿禁止。",
+    "prohibited_content_checkがpass以外なら投稿禁止。",
+    "skip_day_policyがtrueなら投稿しない。",
+    "大将の承認なしに投稿しない。",
+    "価格煽り、推測断定、証跡なし断定、過度な煽りがある投稿はrejectedにする。",
+    "seasonalまたはtemporary投稿は有効化条件を満たさない限りキュー投入しない。",
+    "投稿実行ログがないものをposted扱いにしない。"
+  ],
+  "x_draft_save_format": {
+    "draft_id": "",
+    "created_at": "",
+    "post_type": "",
+    "candidate_role": "main_or_backup",
+    "status": "draft_generated",
+    "text": "",
+    "fixed_footer": "#着て稼ぐ #villain @0xmavillain {PASSCODE}",
+    "passcode": "",
+    "source_urls": [],
+    "image": {
+      "required": true,
+      "status": "waiting_for_image",
+      "file_path_or_url": "",
+      "source": "",
+      "rights_notes": ""
+    },
+    "checks": {
+      "source_url_confirmed": "unchecked",
+      "image_attached": "unchecked",
+      "passcode_confirmed": "unchecked",
+      "prohibited_content_check": "unchecked",
+      "skip_day_policy": false,
+      "daisho_approval": "unchecked"
+    }
+  },
+  "auto_post_on_conditions": {
+    "current_status": "disabled",
+    "requirements_before_turning_on": [
+      "大将がauto_post_enabled:trueを明示指示する",
+      "投稿キュー方式で一定期間事故なく運用できている",
+      "画像添付、元ネタURL、Passcode、禁止事項チェック、大将承認の全項目が機械的に検証できる",
+      "rejected/skipped/approved/postedの履歴が正しく残る",
+      "投稿実行前に最終停止できる手動ストップ手段がある",
+      "X APIまたは外部投稿手段の権限、レート制限、失敗時挙動が別DBで定義済み",
+      "テスト投稿用の非公開または安全な検証手順が完了している"
+    ],
+    "still_forbidden_in_this_version": [
+      "Xへのログイン操作",
+      "投稿ボタン押下",
+      "外部API投稿",
+      "承認なし投稿",
+      "画像なし投稿"
+    ]
+  }
+}
