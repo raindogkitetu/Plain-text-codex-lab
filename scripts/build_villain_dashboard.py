@@ -20,6 +20,7 @@ AUTO_PLAN_PATH = ROOT / "data" / "villain_auto_post_plan.json"
 HISTORY_PATH = ROOT / "data" / "villain_post_history.json"
 FINAL_SAFETY_REPORT_PATH = ROOT / "reports" / "villain_final_safety_check.md"
 PREFLIGHT_REPORT_PATH = ROOT / "reports" / "x_api_preflight_check.md"
+QUEUE_PREVIEW_REPORT_PATH = ROOT / "reports" / "villain_queue_preview.md"
 DASHBOARD_PATH = ROOT / "reports" / "villain_dashboard.md"
 
 
@@ -46,6 +47,30 @@ def count_payloads(payloads: list[dict], key_path: tuple[str, ...], expected: ob
         if current == expected:
             count += 1
     return count
+
+
+def queue_summary(queue: list[dict]) -> dict:
+    waiting_for_image = sum(
+        1 for item in queue if item.get("status") == "waiting_for_image"
+    )
+    approved = sum(1 for item in queue if item.get("status") == "approved")
+    missing_image = sum(
+        1 for item in queue if not item.get("image", {}).get("file_path_or_url")
+    )
+    blocked = sum(
+        1
+        for item in queue
+        if item.get("status") != "approved"
+        or not item.get("image", {}).get("file_path_or_url")
+        or item.get("checks", {}).get("passcode_confirmed") != "pass"
+    )
+    return {
+        "waiting_for_image": waiting_for_image,
+        "approved": approved,
+        "missing_image": missing_image,
+        "blocked": blocked,
+        "preview_exists": QUEUE_PREVIEW_REPORT_PATH.exists(),
+    }
 
 
 def final_safety_status() -> str:
@@ -103,6 +128,7 @@ def main() -> None:
     )
     blocked_count = len(payloads)
     postable_count = count_payloads(payloads, ("safety", "postable_judgment"), True)
+    queue_counts = queue_summary(queue)
     live_posting = "DISABLED"
     final_status = final_safety_status()
     x_preflight_status = preflight_status()
@@ -129,6 +155,11 @@ def main() -> None:
         "## Counts",
         "",
         f"- Queue items: `{len(queue)}`",
+        f"- Queue waiting_for_image: `{queue_counts['waiting_for_image']}`",
+        f"- Queue approved: `{queue_counts['approved']}`",
+        f"- Queue missing image: `{queue_counts['missing_image']}`",
+        f"- Queue blocked: `{queue_counts['blocked']}`",
+        f"- Queue preview report: `{'exists' if queue_counts['preview_exists'] else 'missing'}`",
         f"- Dry-run payloads: `{len(payloads)}`",
         f"- Human-approved payloads: `{approved_count}`",
         f"- BLOCKED payloads: `{blocked_count}`",

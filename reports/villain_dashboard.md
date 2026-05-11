@@ -1,6 +1,6 @@
 # Villain Posting OS Dashboard
 
-- Generated at: `2026-05-10T13:35:39.964216+00:00`
+- Generated at: `2026-05-11T12:30:42.331797+00:00`
 - live posting: `DISABLED`
 - final safety: `BLOCKED`
 - x api preflight: `NOT_READY`
@@ -18,6 +18,11 @@
 ## Counts
 
 - Queue items: `1`
+- Queue waiting_for_image: `1`
+- Queue approved: `0`
+- Queue missing image: `1`
+- Queue blocked: `1`
+- Queue preview report: `exists`
 - Dry-run payloads: `1`
 - Human-approved payloads: `1`
 - BLOCKED payloads: `1`
