@@ -26,6 +26,13 @@
 - Values must stay empty until a future approved setup phase.
 - Do not create `.env` in this repository.
 
+## X API Setup Manual
+
+- `docs/x_api_setup_manual.md` exists.
+- It documents the future connection order.
+- Current phase remains NOT_READY / DISABLED / BLOCKED.
+- Do not connect X API or create `.env` yet.
+
 ## Guardrails
 
 - No live posting.
