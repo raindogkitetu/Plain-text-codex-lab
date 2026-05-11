@@ -1,6 +1,6 @@
 # Villain Final Safety Check
 
-- Generated at: `2026-05-10T13:27:18.980061+00:00`
+- Generated at: `2026-05-11T13:44:16.843150+00:00`
 - Overall judgment: `BLOCKED`
 - Live posting: `not allowed`
 - Payload count: `1`
@@ -16,6 +16,7 @@ This report is read-only. It does not log in to X, authenticate with an API, upl
 - `manual_approval_required` must remain true.
 - `dry_run_only` must be false.
 - `api_connected` must be true.
+- `write_action_kill_switch` must be false after explicit unlock review.
 - Queue item must be approved.
 - Image must be ready.
 - Final caption must be ready.
@@ -28,6 +29,7 @@ This report is read-only. It does not log in to X, authenticate with an API, upl
 - auto_post_enabled is false
 - dry_run_only is true
 - api_connected is false
+- write_action_kill_switch is true
 - posting_execution_allowed is false
 - external_api_integration_allowed is false
 - x_login_operation_allowed is false
@@ -53,6 +55,7 @@ This report is read-only. It does not log in to X, authenticate with an API, upl
 - auto_post_enabled is false
 - dry_run_only is true
 - api_connected is false
+- write_action_kill_switch is true
 - posting_execution_allowed is false
 - external_api_integration_allowed is false
 - x_login_operation_allowed is false

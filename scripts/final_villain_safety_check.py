@@ -58,6 +58,8 @@ def global_blockers(x_config: dict, auto_plan: dict) -> list[str]:
         blockers.append("dry_run_only is true")
     if connection.get("api_connected") is False:
         blockers.append("api_connected is false")
+    if guard.get("write_action_kill_switch") is True:
+        blockers.append("write_action_kill_switch is true")
     if guard.get("manual_approval_required") is not True:
         blockers.append("manual_approval_required is not true")
     if policy.get("posting_execution_allowed") is False:
@@ -163,6 +165,7 @@ def main() -> None:
         "- `manual_approval_required` must remain true.",
         "- `dry_run_only` must be false.",
         "- `api_connected` must be true.",
+        "- `write_action_kill_switch` must be false after explicit unlock review.",
         "- Queue item must be approved.",
         "- Image must be ready.",
         "- Final caption must be ready.",

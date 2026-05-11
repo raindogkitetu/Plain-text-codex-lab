@@ -1,6 +1,6 @@
 # Villain Posting OS Dashboard
 
-- Generated at: `2026-05-11T12:30:42.331797+00:00`
+- Generated at: `2026-05-11T13:44:16.843298+00:00`
 - live posting: `DISABLED`
 - final safety: `BLOCKED`
 - x api preflight: `NOT_READY`
@@ -11,6 +11,7 @@
 - `manual_approval_required`: `true`
 - `dry_run_only`: `true`
 - `api_connected`: `false`
+- `write_action_kill_switch`: `true`
 - `live_post_blocked`: `true`
 - `postable_judgment`: `false`
 - `posting_execution_allowed`: `false`
@@ -34,6 +35,7 @@
 - `api_connected`: `false`
 - `login_required`: `false`
 - `dry_run_only`: `true`
+- `write_action_kill_switch`: `true`
 - Credentials: `environment variable names only`
 - Live API actions: `blocked`
 
