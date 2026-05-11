@@ -10,7 +10,9 @@
     "posting_execution_allowed": false,
     "approval_must_be_explicit": true,
     "implicit_approval_not_allowed": true,
-    "codex_cannot_self_approve": true
+    "codex_cannot_self_approve": true,
+    "approval_is_not_postability": true,
+    "approved_payload_still_blocked_when_kill_switch_true": true
   },
   "approval_statuses": [
     "unchecked",
@@ -71,6 +73,32 @@
     "rough_note_modeが崩れている",
     "無理に書いている感がある"
   ],
+  "postability_separation": {
+    "principle": "人間承認は投稿許可の一部であり、単独では投稿可能判定にならない。",
+    "approval_can_be_true_while_postable_false": true,
+    "postable_judgment_requires": [
+      "dry-run validator が pass",
+      "manual approval が明示承認済み",
+      "write_action_kill_switch が false",
+      "dry_run_only が false",
+      "live_post_blocked が false",
+      "auto_post_enabled が true",
+      "final safety check が BLOCKED ではない"
+    ],
+    "current_phase": {
+      "write_action_kill_switch": true,
+      "dry_run_only": true,
+      "live_post_blocked": true,
+      "auto_post_enabled": false,
+      "postable_judgment": false
+    }
+  },
+  "double_confirmation_gate": {
+    "first_check": "dry-run validator OK",
+    "second_check": "manual approval OK",
+    "final_check": "write_action_kill_switch false",
+    "current_result": "BLOCKED"
+  },
   "approval_record_template": {
     "queue_id": "",
     "approval_status": "unchecked",

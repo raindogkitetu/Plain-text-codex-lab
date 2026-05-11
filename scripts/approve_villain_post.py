@@ -17,6 +17,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PAYLOADS_PATH = ROOT / "data" / "villain_dry_run_payloads.json"
+X_CONFIG_PATH = ROOT / "data" / "x_api_config.json"
 REQUIRED_CONFIRM_TEXT = "POST_APPROVED"
 
 
@@ -46,6 +47,9 @@ def main() -> None:
         raise SystemExit("Approval failed: confirmation text must exactly match POST_APPROVED")
 
     payload_db = read_json(PAYLOADS_PATH)
+    x_config = read_json(X_CONFIG_PATH)
+    connection = x_config.get("connection", {})
+    guard = x_config.get("posting_guard", {})
     payloads = payload_db.get("payloads", [])
     target = next(
         (payload for payload in payloads if payload.get("payload_id") == args.payload_id),
@@ -64,16 +68,21 @@ def main() -> None:
     approval["human_confirm_received"] = True
     approval["human_confirm_text"] = REQUIRED_CONFIRM_TEXT
     approval["daisho_approval_status"] = "approved"
-    approval["approved_for_live_post"] = True
+    approval["approval_status"] = "human_approved"
+    approval["approved_for_live_post"] = False
+    approval["approval_not_postable_reason"] = (
+        "Human approval is recorded separately from postability; write_action_kill_switch, dry_run_only, and live_post_blocked keep this payload non-postable."
+    )
     approval["approved_at"] = datetime.now(timezone.utc).isoformat()
 
-    safety["dry_run_only"] = True
-    safety["api_connected"] = False
+    safety["dry_run_only"] = connection.get("dry_run_only", True)
+    safety["api_connected"] = connection.get("api_connected", False)
+    safety["write_action_kill_switch"] = guard.get("write_action_kill_switch", True)
     safety["live_post_blocked"] = True
-    safety["auto_post_enabled"] = False
+    safety["auto_post_enabled"] = guard.get("auto_post_enabled", False)
     safety["postable_judgment"] = False
     safety["blocked_reason"] = (
-        "Human approval recorded, but dry_run_only is true and live posting remains blocked."
+        "Human approval recorded, but kill switch/dry-run/live-post blocking keeps postable_judgment false."
     )
 
     payload_db["status"] = "dry_run_only"

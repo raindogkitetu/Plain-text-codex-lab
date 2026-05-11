@@ -15,6 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 QUEUE_PATH = ROOT / "data" / "villain_post_queue.json"
 PAYLOADS_PATH = ROOT / "data" / "villain_dry_run_payloads.json"
+VALIDATION_PATH = ROOT / "data" / "villain_dry_run_validation.json"
 X_CONFIG_PATH = ROOT / "data" / "x_api_config.json"
 AUTO_PLAN_PATH = ROOT / "data" / "villain_auto_post_plan.json"
 HISTORY_PATH = ROOT / "data" / "villain_post_history.json"
@@ -113,6 +114,7 @@ def next_actions(payloads: list[dict], queue_count: int) -> list[str]:
 def main() -> None:
     queue_db = read_json(QUEUE_PATH)
     payload_db = read_json(PAYLOADS_PATH)
+    validation_db = read_json(VALIDATION_PATH)
     x_config = read_json(X_CONFIG_PATH)
     auto_plan = read_json(AUTO_PLAN_PATH)
     history_db = read_json(HISTORY_PATH)
@@ -162,6 +164,9 @@ def main() -> None:
         f"- Queue blocked: `{queue_counts['blocked']}`",
         f"- Queue preview report: `{'exists' if queue_counts['preview_exists'] else 'missing'}`",
         f"- Dry-run payloads: `{len(payloads)}`",
+        f"- Dry-run validation status: `{validation_db.get('status', 'missing')}`",
+        f"- Dry-run validation passed: `{validation_db.get('passed_count', 0)}`",
+        f"- Dry-run validation failed: `{validation_db.get('failed_count', 0)}`",
         f"- Human-approved payloads: `{approved_count}`",
         f"- BLOCKED payloads: `{blocked_count}`",
         f"- History records: `{len(history_db.get('history', []))}`",

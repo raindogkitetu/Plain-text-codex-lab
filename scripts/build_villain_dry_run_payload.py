@@ -42,6 +42,7 @@ def require_safe_config(config: dict) -> None:
         "auto_post_enabled": guard.get("auto_post_enabled") is False,
         "manual_approval_required": guard.get("manual_approval_required") is True,
         "block_if_dry_run_only": guard.get("block_if_dry_run_only") is True,
+        "write_action_kill_switch": guard.get("write_action_kill_switch") is True,
     }
 
     failed = [name for name, ok in required.items() if not ok]
@@ -65,6 +66,7 @@ def build_payload(queue_item: dict, config: dict, index: int, created_at: str) -
         and checks.get("prohibited_content_check") == "pass"
         and checks.get("skip_day_policy") is False
         and checks.get("daisho_approval") == "approved"
+        and guard.get("write_action_kill_switch") is False
         and connection.get("dry_run_only") is False
         and guard.get("auto_post_enabled") is True
     )
@@ -105,8 +107,10 @@ def build_payload(queue_item: dict, config: dict, index: int, created_at: str) -
         "safety": {
             "dry_run_only": connection.get("dry_run_only", True),
             "api_connected": connection.get("api_connected", False),
+            "write_action_kill_switch": guard.get("write_action_kill_switch", True),
             "live_post_blocked": True,
             "auto_post_enabled": guard.get("auto_post_enabled", False),
+            "postable_judgment": False,
             "blocked_reason": "Dry-run preview only. No X login, API auth, media upload, publish, or scheduling is performed.",
         },
         "created_at": created_at,

@@ -1,6 +1,6 @@
 # Villain Final Safety Check
 
-- Generated at: `2026-05-11T13:44:16.843150+00:00`
+- Generated at: `2026-05-11T13:51:52.075747+00:00`
 - Overall judgment: `BLOCKED`
 - Live posting: `not allowed`
 - Payload count: `1`
@@ -42,7 +42,7 @@ This report is read-only. It does not log in to X, authenticate with an API, upl
 - `source_queue_id`: `vln-queue-20260510-001`
 - `status`: `dry_run_preview_ready`
 - `post_type`: `ABOUT_WORDING`
-- `approved_for_live_post`: `true`
+- `approved_for_live_post`: `false`
 - `human_confirm_received`: `true`
 - `dry_run_only`: `true`
 - `api_connected`: `false`
@@ -64,5 +64,6 @@ This report is read-only. It does not log in to X, authenticate with an API, upl
 - image_path is null
 - image_attached is not pass
 - passcode_confirmed is not pass
+- approved_for_live_post is not true
 - live_post_blocked is true
 - postable_judgment is false

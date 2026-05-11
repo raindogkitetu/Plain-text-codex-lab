@@ -1,6 +1,6 @@
 # Villain Posting OS Dashboard
 
-- Generated at: `2026-05-11T13:44:16.843298+00:00`
+- Generated at: `2026-05-11T13:51:52.175666+00:00`
 - live posting: `DISABLED`
 - final safety: `BLOCKED`
 - x api preflight: `NOT_READY`
@@ -25,6 +25,9 @@
 - Queue blocked: `1`
 - Queue preview report: `exists`
 - Dry-run payloads: `1`
+- Dry-run validation status: `validated_blocked`
+- Dry-run validation passed: `1`
+- Dry-run validation failed: `0`
 - Human-approved payloads: `1`
 - BLOCKED payloads: `1`
 - History records: `0`

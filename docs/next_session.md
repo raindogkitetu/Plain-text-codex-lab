@@ -2,13 +2,17 @@
 
 ## Current State
 
-- latest commit: `c0b039a`
+- latest confirmed commit before dry-run gate phase: `e36a528`
 - preflight_status: `NOT_READY`
 - final safety: `BLOCKED`
 - live posting: `DISABLED`
 - auto_post_enabled: `false`
 - dry_run_only: `true`
 - api_connected: `false`
+- X API read-only auth/profile check: `success`
+- username: `@raindog_kitetu`
+- write_action_kill_switch: `true`
+- postable_judgment: `false`
 - manual approval required: `true`
 
 ## Next Candidates
@@ -18,6 +22,8 @@
 - image_ready flow
 - x api setup manual
 - .env.example
+- dry-run validator
+- manual approval / postability separation
 
 ## X API Environment Template
 
@@ -31,11 +37,13 @@
 - `docs/x_api_setup_manual.md` exists.
 - It documents the future connection order.
 - Current phase remains NOT_READY / DISABLED / BLOCKED.
-- Do not connect X API or create `.env` yet.
+- Read-only X API checks succeeded locally.
+- Live posting remains DISABLED / BLOCKED.
 
 ## Guardrails
 
 - No live posting.
-- No X login.
-- No API connection.
+- No X write action.
+- No POST / PUT / PATCH / DELETE API.
+- Keep write_action_kill_switch true until an explicit future unlock phase.
 - No credentials in repository.
