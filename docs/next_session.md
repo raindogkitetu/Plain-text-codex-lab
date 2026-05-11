@@ -19,6 +19,13 @@
 - x api setup manual
 - .env.example
 
+## X API Environment Template
+
+- `.env.example` exists.
+- It contains X API environment variable names only.
+- Values must stay empty until a future approved setup phase.
+- Do not create `.env` in this repository.
+
 ## Guardrails
 
 - No live posting.
