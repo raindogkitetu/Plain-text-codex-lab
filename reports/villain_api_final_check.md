@@ -1,7 +1,7 @@
 # Villain API Final Check
 
-- Generated at: `2026-05-12T06:43:31.393570+00:00`
-- readiness: `BLOCKED`
+- Generated at: `2026-05-12T07:05:55.269221+00:00`
+- readiness: `READY`
 - phase: `dry-run only`
 - create_tweet: `NOT EXECUTED`
 - upload_media: `NOT EXECUTED`
@@ -13,7 +13,7 @@
 - target account: `@raindog_kitetu`
 - selected image queue_id: `vln-imgq-vln-dryrun-20260510-001-001`
 - selected image mode: `OBSERVER_MODE`
-- planned image path: `PLACEHOLDER_IMAGE_PATH_REQUIRES_HUMAN_REPLACEMENT`
+- planned image path: `/Users/raindog/Documents/New project/villain_post_images/villain_observer_001.png`
 
 ## 投稿予定本文
 
@@ -23,10 +23,11 @@ ABOUTの文章、ちょっと強い。
 Love $villain,
 and wear it daily...
 
-毎日着ろって
-普通にすごいこと言ってる。
+毎日着ろって。
 
-でもVillainなら
+普通そんなこと言わない。
+
+でもVillainなら、
 まあ言いそう。
 
 #着て稼ぐ #villain @0xmavillain M5Q1C
@@ -36,9 +37,9 @@ and wear it daily...
 
 ```json
 {
-  "text": "ABOUTの文章、ちょっと強い。\n\nLove $villain,\nand wear it daily...\n\n毎日着ろって\n普通にすごいこと言ってる。\n\nでもVillainなら\nまあ言いそう。\n\n#着て稼ぐ #villain @0xmavillain M5Q1C",
+  "text": "ABOUTの文章、ちょっと強い。\n\nLove $villain,\nand wear it daily...\n\n毎日着ろって。\n\n普通そんなこと言わない。\n\nでもVillainなら、\nまあ言いそう。\n\n#着て稼ぐ #villain @0xmavillain M5Q1C",
   "media": {
-    "image_path": "PLACEHOLDER_IMAGE_PATH_REQUIRES_HUMAN_REPLACEMENT",
+    "image_path": "/Users/raindog/Documents/New project/villain_post_images/villain_observer_001.png",
     "upload_media_not_executed": true
   },
   "target_account": "@raindog_kitetu",
@@ -49,24 +50,18 @@ and wear it daily...
 ## Checks
 
 - `selected_image_exists`: `pass` (actual `1 selected; status approved`, required `exactly 1 selected approved image`)
-- `target_account_confirmed`: `fail` (actual `@raindog_kitetu; confirmed False`, required `@raindog_kitetu confirmed true`)
-- `image_path_exists`: `pass` (actual `PLACEHOLDER_IMAGE_PATH_REQUIRES_HUMAN_REPLACEMENT`, required `image path or placeholder`)
-- `image_path_not_placeholder`: `fail` (actual `placeholder`, required `real image path before upload`)
-- `media_upload_ready`: `fail` (actual `False`, required `True`)
-- `approved_for_live_post`: `fail` (actual `False`, required `True`)
-- `write_action_kill_switch`: `fail` (actual `True`, required `False`)
-- `api_final_human_confirmed`: `fail` (actual `False`, required `True`)
-- `final_status`: `fail` (actual `BLOCKED`, required `READY_FOR_API_IMAGE_POST`)
+- `target_account_confirmed`: `pass` (actual `@raindog_kitetu; confirmed True`, required `@raindog_kitetu confirmed true`)
+- `image_path_exists`: `pass` (actual `/Users/raindog/Documents/New project/villain_post_images/villain_observer_001.png`, required `image path or placeholder`)
+- `image_path_not_placeholder`: `pass` (actual `real path`, required `real image path before upload`)
+- `media_upload_ready`: `pass` (actual `True`, required `True`)
+- `approved_for_live_post`: `pass` (actual `True`, required `True`)
+- `write_action_kill_switch`: `pass` (actual `False`, required `False`)
+- `api_final_human_confirmed`: `pass` (actual `True`, required `True`)
+- `final_status`: `pass` (actual `READY_FOR_API_IMAGE_POST`, required `READY_FOR_API_IMAGE_POST`)
 
 ## 未達理由
 
-- target_account_confirmed
-- image_path_not_placeholder
-- media_upload_ready
-- approved_for_live_post
-- write_action_kill_switch
-- api_final_human_confirmed
-- final_status
+- none
 
 ## Rollback Plan
 

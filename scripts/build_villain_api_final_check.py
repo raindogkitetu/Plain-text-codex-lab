@@ -41,9 +41,31 @@ def selected_images(queue_db: dict) -> list[dict]:
     ]
 
 
-def final_status(image_rules: dict) -> str:
-    # This phase is readiness-only. Until an explicit unlock happens, stay BLOCKED.
-    return "BLOCKED"
+def computed_final_status(
+    payload: dict,
+    selected: list[dict],
+    api_rules: dict,
+    image_rules: dict,
+) -> str:
+    selected_image = selected[0] if len(selected) == 1 else {}
+    approval = payload.get("approval", {})
+    safety = payload.get("safety", {})
+    api_manual = api_rules.get("manual_state", {})
+    image_manual = image_rules.get("manual_state", {})
+    image_path = selected_image.get("image_path") or image_manual.get("image_file_path")
+    ready = (
+        len(selected) == 1
+        and selected_image.get("image_status") == "approved"
+        and api_manual.get("target_account") == "@raindog_kitetu"
+        and api_manual.get("target_account_confirmed") is True
+        and bool(image_path)
+        and image_manual.get("media_upload_ready") is True
+        and approval.get("approved_for_live_post") is True
+        and safety.get("write_action_kill_switch") is False
+        and api_manual.get("api_final_human_confirmed") is True
+        and image_manual.get("api_final_human_confirmed") is True
+    )
+    return image_rules.get("target_status", "READY_FOR_API_IMAGE_POST") if ready else "BLOCKED"
 
 
 def build_checks(
@@ -59,7 +81,7 @@ def build_checks(
     image_manual = image_rules.get("manual_state", {})
     image_path = selected_image.get("image_path") or image_manual.get("image_file_path") or PLACEHOLDER_IMAGE_PATH
     placeholder_used = image_path == PLACEHOLDER_IMAGE_PATH
-    status = final_status(image_rules)
+    status = computed_final_status(payload, selected, api_rules, image_rules)
 
     return [
         {

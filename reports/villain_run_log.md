@@ -64,3 +64,11 @@
 - `approved_for_live_post` を将来どう安全に扱うか整理する。
 - kill switch を解除する前提条件を、まだ解除せずにレビューする。
 - 実投稿機能は追加しないまま、安全確認の粒度を上げる。
+
+## 2026-05-12 First API Image Post
+
+- result: `API image post success`
+- post_url: `https://x.com/raindog_kitetu/status/2054095791770538063`
+- upload_media: `EXECUTED_ONCE`
+- create_tweet: `EXECUTED_ONCE`
+- write_action_kill_switch restored: `true`
