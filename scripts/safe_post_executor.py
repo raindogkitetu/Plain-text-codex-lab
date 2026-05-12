@@ -23,6 +23,7 @@ X_API_CONFIG_PATH = ROOT / "data" / "x_api_config.json"
 FINAL_REVIEW_PATH = ROOT / "reports" / "villain_final_review.md"
 REPORT_PATH = ROOT / "reports" / "villain_safe_post_executor.md"
 APPROVED_STATUS = "APPROVE_TO_POST"
+EXECUTOR_VERSION = "2.0.0"
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -145,6 +146,12 @@ def evaluate_target(
         queue_item.get("approval", {}).get("approved_by_human")
     )
     approved_for_live_post = boolish(queue_item.get("approval", {}).get("approved_for_live_post"))
+    dry_run_only = boolish(x_api_config.get("connection", {}).get("dry_run_only", True))
+    auto_post_enabled = boolish(x_api_config.get("posting_guard", {}).get("auto_post_enabled", False))
+    manual_approval_required = boolish(
+        x_api_config.get("posting_guard", {}).get("manual_approval_required", True)
+    )
+    manual_confirmation_mode = manual_approval_required and not auto_post_enabled
     write_action_kill_switch = boolish(
         x_api_config.get("posting_guard", {}).get("write_action_kill_switch", True)
     )
@@ -161,6 +168,10 @@ def evaluate_target(
         failed_conditions.append("approved_for_live_post_false")
     if write_action_kill_switch:
         failed_conditions.append("write_action_kill_switch_true")
+    if dry_run_only:
+        failed_conditions.append("dry_run_only_true")
+    if not (not auto_post_enabled or manual_confirmation_mode):
+        failed_conditions.append("auto_post_not_manual_confirmation_mode")
     if not passcode_ok:
         failed_conditions.append("passcode_ok_false")
     if not selected_image_exists:
@@ -188,9 +199,23 @@ def evaluate_target(
             "approved_for_live_post": approved_for_live_post,
             "write_action_kill_switch": write_action_kill_switch,
             "passcode_ok": passcode_ok,
+            "dry_run_only": dry_run_only,
+            "auto_post_enabled": auto_post_enabled,
+            "manual_confirmation_mode": manual_confirmation_mode,
             "selected_image_exists": selected_image_exists,
             "already_posted": already_posted,
             "risk": risk,
+        },
+        "required_live_post_checklist": {
+            "human_confirmed == true": human_confirmed,
+            "approved_for_live_post == true": approved_for_live_post,
+            "write_action_kill_switch == false": not write_action_kill_switch,
+            "passcode_ok == true": passcode_ok,
+            "DRY_RUN_ONLY == false": not dry_run_only,
+            "auto_post == false or manual confirmation mode": (not auto_post_enabled or manual_confirmation_mode),
+            "selected_image_exists == true": selected_image_exists,
+            "already_posted == false": not already_posted,
+            "risk != high": risk != "high",
         },
     }
 
@@ -200,6 +225,7 @@ def write_report(results: list[dict[str, Any]]) -> None:
         "# Villain Safe Post Executor",
         "",
         f"- Generated at: `{now_iso()}`",
+        f"- version: `{EXECUTOR_VERSION}`",
         "- status: `DRY_RUN_ONLY`",
         "- live posting: `NOT_EXECUTED`",
         "- X API write: `NOT_USED`",
@@ -207,6 +233,7 @@ def write_report(results: list[dict[str, Any]]) -> None:
         "- create_tweet: `NOT_EXECUTED`",
         "- would_execute_actions: `DISPLAY_ONLY`",
         f"- targets_with_final_review_approve: `{len(results)}`",
+        "- live unlock rule: `ALL_CONDITIONS_REQUIRED`",
         "",
     ]
     if not results:
@@ -234,6 +261,15 @@ def write_report(results: list[dict[str, Any]]) -> None:
             ]
         )
         for key, value in result.get("conditions", {}).items():
+            lines.append(f"- {key}: `{value}`")
+        lines.extend(
+            [
+                "",
+                "### Required Live Post Checklist",
+                "",
+            ]
+        )
+        for key, value in result.get("required_live_post_checklist", {}).items():
             lines.append(f"- {key}: `{value}`")
         lines.extend(
             [
