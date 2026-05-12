@@ -1,0 +1,67 @@
+{
+  "db_name": "Villain Post Metrics DB",
+  "version": "1.0.0",
+  "status": "analysis_only",
+  "purpose": "Villain投稿の結果と仮説を記録し、次の投稿改善に使う。X API writeや実投稿処理は含めない。",
+  "safety": {
+    "live_posting_allowed": false,
+    "x_api_write_allowed": false,
+    "media_upload_allowed": false,
+    "tweet_creation_allowed": false,
+    "env_read_allowed": false
+  },
+  "metric_policy": {
+    "source": "manual_or_read_only_later",
+    "if_unavailable": "manual_pending",
+    "do_not_guess_numbers": true,
+    "hypothesis_allowed": true
+  },
+  "records": [
+    {
+      "post_id": "vln-post-20260512-api-001",
+      "source_payload_id": "vln-dryrun-20260510-001",
+      "source_queue_id": "vln-queue-20260510-001",
+      "post_url": "https://x.com/raindog_kitetu/status/2054095791770538063",
+      "posted_at": "2026-05-12T07:06:14.918224+00:00",
+      "text": "ABOUTの文章、ちょっと強い。\n\nLove $villain,\nand wear it daily...\n\n毎日着ろって。\n\n普通そんなこと言わない。\n\nでもVillainなら、\nまあ言いそう。\n\n#着て稼ぐ #villain @0xmavillain M5Q1C",
+      "image_used": true,
+      "image_path": "/Users/raindog/Documents/New project/villain_post_images/villain_observer_001.png",
+      "metrics_status": "manual_pending",
+      "impressions": null,
+      "likes": null,
+      "reposts": null,
+      "replies": null,
+      "bookmarks": null,
+      "engagement_rate": null,
+      "post_type": "ABOUT_WORDING",
+      "tone_type": "rough_note_mode",
+      "image_type": "OBSERVER_MODE",
+      "text_length": 133,
+      "line_breaks": 12,
+      "villain_score": 95,
+      "quality_score": 100,
+      "risk": "high",
+      "result_summary": "数値は未入力。初回API画像投稿として、ABOUT文言の引っかかりを短文で置いた投稿。",
+      "why_it_worked_hypothesis": [
+        "ABOUTの文言をそのまま説明せず、最初の違和感から入っている。",
+        "Love $villain / wear it daily を引用軸にして、新規にも入口がある。",
+        "画像付きで、Villainの空気を本文だけに背負わせていない。"
+      ],
+      "why_it_failed_hypothesis": [
+        "数値未確認のため失敗要因は未確定。",
+        "文脈を知らない読者には、ABOUT文言の強さが少し伝わりにくい可能性がある。",
+        "Passcode確認がDB上では未確認のため、運用リスクとして残る。"
+      ],
+      "next_improvement": [
+        "24時間後または任意タイミングでインプレッション/いいね/返信/保存を手入力する。",
+        "反応が弱い場合は、ABOUT文言の引用をもう少し前に出す。",
+        "反応が良い場合は、ABOUT_WORDING型を週1候補として残す。"
+      ],
+      "nonempty_lines": 8,
+      "analysis_status": "hypothesis_only",
+      "already_posted": true,
+      "analysis_updated_at": "2026-05-12T12:32:45.981896+00:00"
+    }
+  ],
+  "updated_at": "2026-05-12T12:32:45.981896+00:00"
+}
