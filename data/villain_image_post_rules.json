@@ -1,0 +1,112 @@
+{
+  "db_name": "Villain Image API Post Rules",
+  "version": "0.1.0",
+  "purpose": "画像付きAPI投稿の直前準備ゲートを定義する。現段階では実投稿せず、media uploadも行わない。",
+  "target_status": "READY_FOR_API_IMAGE_POST",
+  "default_status": "BLOCKED",
+  "all_conditions_required": true,
+  "image_modes": {
+    "OBSERVER_MODE": {
+      "description": "孤独な観測者。ネオン都市、後ろ姿、広角、人物30%、世界観70%。",
+      "composition": {
+        "subject_ratio": "30%",
+        "world_ratio": "70%",
+        "camera": "wide angle",
+        "pose": "back view"
+      }
+    },
+    "POSTER_MODE": {
+      "description": "映画ポスター風。中央構図、強いブランド感、高コントラスト、短い英字テキストは任意。",
+      "composition": {
+        "subject_ratio": "50%",
+        "world_ratio": "50%",
+        "camera": "cinematic centered",
+        "pose": "iconic silhouette"
+      }
+    }
+  },
+  "daisho_preferences": {
+    "prefer": [
+      "ネオン都市",
+      "フード人物",
+      "雨",
+      "サイバーパンクアニメ風",
+      "ティール × ピンク",
+      "暗め",
+      "孤独",
+      "映画的",
+      "ポスター風"
+    ],
+    "avoid": [
+      "AI顔アップ",
+      "NFT感強すぎ",
+      "安っぽいネオン"
+    ]
+  },
+  "required_for_api_image_post": [
+    {
+      "id": "caption_present",
+      "label": "投稿本文あり",
+      "required_value": true
+    },
+    {
+      "id": "image_prompt_present",
+      "label": "画像プロンプトあり",
+      "required_value": true
+    },
+    {
+      "id": "image_file_present",
+      "label": "画像ファイルあり",
+      "required_value": true
+    },
+    {
+      "id": "image_size_confirmed",
+      "label": "画像サイズ確認済み",
+      "required_value": true
+    },
+    {
+      "id": "image_rights_confirmed",
+      "label": "画像権利確認済み",
+      "required_value": true
+    },
+    {
+      "id": "media_upload_ready",
+      "label": "media_upload_ready=true",
+      "required_value": true
+    },
+    {
+      "id": "approved_for_live_post",
+      "label": "approved_for_live_post=true",
+      "required_value": true
+    },
+    {
+      "id": "write_action_kill_switch",
+      "label": "write_action_kill_switch=false",
+      "required_value": false
+    },
+    {
+      "id": "api_final_human_confirmed",
+      "label": "api_final_human_confirmed=true",
+      "required_value": true
+    },
+    {
+      "id": "final_status",
+      "label": "FINAL_STATUS=READY_FOR_API_IMAGE_POST",
+      "required_value": "READY_FOR_API_IMAGE_POST"
+    }
+  ],
+  "manual_state": {
+    "image_file_path": null,
+    "image_size_confirmed": false,
+    "image_rights_confirmed": false,
+    "media_upload_ready": false,
+    "api_final_human_confirmed": false
+  },
+  "safety": {
+    "x_api_write_allowed": false,
+    "media_upload_allowed": false,
+    "create_tweet_allowed": false,
+    "env_read_allowed": false,
+    "blocked_if_any_condition_missing": true
+  }
+}
