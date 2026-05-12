@@ -1,0 +1,65 @@
+{
+  "db_name": "Villain API Post Rules",
+  "version": "0.1.0",
+  "purpose": "X API投稿直前テストの安全条件を定義する。現段階では実投稿せず、条件未達なら必ずBLOCKEDにする。",
+  "target_status": "READY_FOR_API_POST",
+  "default_status": "BLOCKED",
+  "all_conditions_required": true,
+  "api_write_allowed_now": false,
+  "create_tweet_allowed_now": false,
+  "conditions": [
+    {
+      "id": "approved_for_live_post",
+      "label": "approved_for_live_post=true",
+      "required_value": true
+    },
+    {
+      "id": "write_action_kill_switch",
+      "label": "write_action_kill_switch=false",
+      "required_value": false
+    },
+    {
+      "id": "final_status",
+      "label": "FINAL_STATUS=READY_FOR_API_POST",
+      "required_value": "READY_FOR_API_POST"
+    },
+    {
+      "id": "postable_count",
+      "label": "postable_count > 0",
+      "required_comparison": "> 0"
+    },
+    {
+      "id": "target_account_confirmed",
+      "label": "投稿先アカウント確認済み",
+      "required_value": true
+    },
+    {
+      "id": "caption_present",
+      "label": "投稿本文が空でない",
+      "required_value": true
+    },
+    {
+      "id": "post_url_not_recorded",
+      "label": "投稿URL未記録",
+      "required_value": true
+    },
+    {
+      "id": "api_final_human_confirmed",
+      "label": "api_final_human_confirmed=true",
+      "required_value": true
+    }
+  ],
+  "manual_state": {
+    "target_account": "@raindog_kitetu",
+    "target_account_confirmed": false,
+    "api_final_human_confirmed": false
+  },
+  "safety": {
+    "env_read_allowed": false,
+    "x_api_write_allowed": false,
+    "create_tweet_allowed": false,
+    "upload_media_allowed": false,
+    "publish_post_allowed": false,
+    "blocked_if_any_condition_missing": true
+  }
+}
