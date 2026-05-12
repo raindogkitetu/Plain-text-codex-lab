@@ -1,0 +1,45 @@
+{
+  "db_name": "Villain Post Quality Scoring Rules",
+  "version": "1.0.0",
+  "purpose": "投稿候補を、伸びやすさと安全性の両面から採点する。",
+  "status": "scoring_only",
+  "max_score": 100,
+  "weights": {
+    "hook_strength": 15,
+    "raindog_voice": 20,
+    "villain_context": 15,
+    "brevity_and_spacing": 10,
+    "new_reader_clarity": 10,
+    "save_or_note_potential": 10,
+    "visual_fit": 10,
+    "safety": 10
+  },
+  "risk_levels": [
+    "low",
+    "medium",
+    "high"
+  ],
+  "risk_factors": [
+    "already_posted",
+    "image_missing",
+    "passcode_unconfirmed",
+    "source_unchecked",
+    "prohibited_content_unchecked_or_fail",
+    "too_salesy",
+    "profit_guarantee_like",
+    "web3_influencer_tone",
+    "template_feel"
+  ],
+  "selection_policy": {
+    "recommended_threshold": 80,
+    "do_not_repost_if_already_posted": true,
+    "prefer_low_risk_over_high_score": true,
+    "scoring_does_not_unlock_posting": true
+  },
+  "safety": {
+    "live_posting_allowed": false,
+    "x_api_write_allowed": false,
+    "upload_media_allowed": false,
+    "create_tweet_allowed": false
+  }
+}
