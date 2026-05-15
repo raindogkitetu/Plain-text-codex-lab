@@ -21,12 +21,17 @@ WEEKDAY_WINDOWS = [
     "07:00-08:30",
     "12:00-13:00",
     "19:00-22:30",
+    "23:00-23:59",
 ]
 WEEKEND_WINDOWS = [
     "09:00-11:00",
     "19:00-23:00",
+    "23:00-23:59",
 ]
 TYPE_BIAS = {
+    "COMMUNITY_INFO": ["23:00-23:59", "19:00-22:30", "19:00-23:00"],
+    "POSTER_SUMMARY": ["23:00-23:59", "19:00-22:30", "19:00-23:00"],
+    "CULTURE_OBSERVER": ["23:00-23:59", "19:00-22:30", "19:00-23:00"],
     "ABOUT_WORDING": ["19:00-22:30", "19:00-23:00"],
     "IMAGE_POST": ["19:00-22:30", "19:00-23:00", "09:00-11:00"],
     "ANNOUNCEMENT": ["12:00-13:00", "19:00-22:30", "19:00-23:00"],
@@ -125,6 +130,7 @@ def write_report(rows: list[dict[str, Any]], history: dict[str, Any], current_js
         f"- day_kind: `{day_kind}`",
         f"- history_count: `{history.get('history_count')}`",
         f"- learning_mode: `{history.get('learning_mode')}`",
+        "- live_x_learning: `23:00 community/culture priority from 2026-05-15 GET-only analysis`",
         "",
         "## Base Windows JST",
         "",

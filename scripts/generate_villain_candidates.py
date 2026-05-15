@@ -26,22 +26,22 @@ MAX_CANDIDATES = 3
 
 SEEDS: list[dict[str, str]] = [
     {
-        "category": "ABOUT_WORDING",
-        "text": "ABOUTの言葉、\nまだ残ってる。\n\n毎日着ろって、\nやっぱり普通じゃない。\n\nでも今日はそこがいい。\n\n" + FOOTER,
-        "image_hint": "OBSERVER_MODE: 雨のネオン街、遠景の看板に『着て稼ぐ』、フード人物は後ろ姿、人物30%/背景70%。",
-        "why_this_might_work": "ABOUT文言の違和感を説明せず、引っかかりだけで置けている。",
+        "category": "COMMUNITY_INFO",
+        "text": "昨日の集会、\nまだ少し残ってる。\n\n説明より、\n人が集まってる事実の方が強い。\n\n$villainは、\nそこがちょっと変。\n\n" + FOOTER,
+        "image_hint": "COMMUNITY_MODE: 夜の街角やカフェ外、$villainを着た少人数の集まり。会話の気配、スマホを見る手元、背中、横顔。文字は少なめ。",
+        "why_this_might_work": "実データで最強だったcommunity_info型。集会/現場感を短く置き、説明ではなく文化の動きを見せる。",
     },
     {
-        "category": "SILENT_DOMINANCE",
-        "text": "強い服って、\n大声じゃない方がいい。\n\n黙ってても、\nちょっと残るやつ。\n\nVillainはそっち。\n\n" + FOOTER,
-        "image_hint": "POSTER_MODE: 暗い路地、中央にフードの背中、強い陰影、文字は『着て稼ぐ』と『$villain』まで。",
-        "why_this_might_work": "煽らずに強さを出し、Villainの静かな熱量へ寄せている。",
+        "category": "POSTER_SUMMARY",
+        "text": "気づくと、\nまた$villainの話になってる。\n\n服の話だけなら、\nたぶんここまで残らない。\n\n" + FOOTER,
+        "image_hint": "POSTER_SUMMARY: $villainを着た人たちの日常コラージュ。駅、夜道、カフェ、コンビニ前。文化が街に残っている感じ。",
+        "why_this_might_work": "poster_summaryは平均130.5 impressions。文化の違和感を一行目に置き、画像で止める。",
     },
     {
-        "category": "SELF_RESPECT",
-        "text": "誰かに見せるため、\nだけじゃない服がある。\n\n自分の側に戻る感じ。\n\n今日はそれでいい。\n\n" + FOOTER,
-        "image_hint": "STREET_MODE: 店の外、雨上がり、顔を見せない人物、服の質感と街の余白を優先。",
-        "why_this_might_work": "説明より体験感を残し、新規にも読めるが綺麗に回収しすぎない。",
+        "category": "CULTURE_OBSERVER",
+        "text": "話題になる服って、\nだいたい服だけじゃない。\n\n誰が着て、\nどこで集まってるかまで含めて、\n少し残る。\n\n" + FOOTER,
+        "image_hint": "CULTURE_OBSERVER: 2〜4人の$villain着用者。広告感なし。会話、視線、街灯、現場の余白。文字は短く。",
+        "why_this_might_work": "勝ち人格のculture_observerを優先。説明する人ではなく、現場を見て短く残す人に寄せる。",
     },
     {
         "category": "EMOTIONAL_DAMAGE",
@@ -107,13 +107,27 @@ def predict_quality(text: str, category: str, image_hint: str, rules: dict[str, 
         "reason": "短文改行で長すぎない。" if compact_ok else "少し長い。",
     }
 
-    new_reader_ok = category in {"ABOUT_WORDING", "SELF_RESPECT", "RELATIONSHIP_POWER"}
+    new_reader_ok = category in {
+        "ABOUT_WORDING",
+        "SELF_RESPECT",
+        "RELATIONSHIP_POWER",
+        "COMMUNITY_INFO",
+        "POSTER_SUMMARY",
+        "CULTURE_OBSERVER",
+    }
     components["new_reader_clarity"] = {
         "score": weights.get("new_reader_clarity", 10) if new_reader_ok else 7,
         "reason": "初見にも入口がある。" if new_reader_ok else "内輪寄りだが読める。",
     }
 
-    note_ok = category in {"ABOUT_WORDING", "SELF_RESPECT", "EMOTIONAL_DAMAGE"}
+    note_ok = category in {
+        "ABOUT_WORDING",
+        "SELF_RESPECT",
+        "EMOTIONAL_DAMAGE",
+        "COMMUNITY_INFO",
+        "POSTER_SUMMARY",
+        "CULTURE_OBSERVER",
+    }
     components["save_or_note_potential"] = {
         "score": weights.get("save_or_note_potential", 10) if note_ok else 7,
         "reason": "note化できる種がある。" if note_ok else "短文単体向き。",
@@ -123,6 +137,22 @@ def predict_quality(text: str, category: str, image_hint: str, rules: dict[str, 
     components["visual_fit"] = {
         "score": weights.get("visual_fit", 10) if visual_ok else 0,
         "reason": "画像の方向性が明確。" if visual_ok else "画像案がない。",
+    }
+
+    community_ok = category in {"COMMUNITY_INFO", "CULTURE_OBSERVER"} or any(
+        word in text for word in ["集会", "集ま", "会話", "人が", "誰が着て"]
+    )
+    components["community_context"] = {
+        "score": weights.get("community_context", 0) if community_ok else 0,
+        "reason": "実データで強いコミュニティ/現場感がある。" if community_ok else "コミュニティ文脈は薄い。",
+    }
+
+    culture_ok = category in {"POSTER_SUMMARY", "CULTURE_OBSERVER"} or any(
+        word in text for word in ["気づくと", "話題", "残る", "文化"]
+    )
+    components["culture_observation"] = {
+        "score": weights.get("culture_observation", 0) if culture_ok else 0,
+        "reason": "文化の違和感を短く観測している。" if culture_ok else "文化観測の引っかかりは弱い。",
     }
 
     unsafe_words = ["必ず稼げる", "保証", "爆益", "買え", "急げ"]
@@ -222,11 +252,11 @@ def main() -> None:
         "generation_policy": {
             "max_candidates_per_run": MAX_CANDIDATES,
             "categories": [
+                "COMMUNITY_INFO",
+                "POSTER_SUMMARY",
+                "CULTURE_OBSERVER",
                 "ABOUT_WORDING",
-                "EMOTIONAL_DAMAGE",
                 "SILENT_DOMINANCE",
-                "RELATIONSHIP_POWER",
-                "SELF_RESPECT",
             ],
             "style_constraints": [
                 "説明しすぎ禁止",
@@ -234,6 +264,9 @@ def main() -> None:
                 "鬼徹っぽさ維持",
                 "一言の強さ優先",
                 "薄い投稿禁止",
+                "old/new mining machine の単なる結果報告を避ける",
+                "服単体紹介だけで終わらせない",
+                "画像付き前提で文化/現場感を置く",
             ],
             "quality_gate": {
                 "connected_to": "data/villain_post_scoring_rules.json",

@@ -1,6 +1,6 @@
 {
   "db_name": "Villain Manual Post Results",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "status": "manual_result_logging_only",
   "purpose": "手動投稿後の結果を記録し、future learning に使う。実投稿・自動投稿・X API write は行わない。",
   "safety": {
@@ -10,6 +10,67 @@
     "create_tweet_allowed": false,
     "upload_media_allowed": false,
     "dry_run_only_required": true
+  },
+  "current_x_learning": {
+    "source": "GET-only current X analysis",
+    "captured_at": "2026-05-15",
+    "metrics_mode": "private_metrics_available",
+    "sample": {
+      "fetched_tweets": 30,
+      "villain_related_analyzed": 20
+    },
+    "top_post": {
+      "category": "community_info",
+      "first_line": "昨日の集会、",
+      "impressions": 200,
+      "likes": 17,
+      "reposts": 2,
+      "replies": 3,
+      "profile_clicks": 1
+    },
+    "category_learning": {
+      "community_info": {
+        "average_impressions": 127.0,
+        "max_impressions": 200,
+        "action": "increase"
+      },
+      "poster_summary": {
+        "average_impressions": 130.5,
+        "examples": [
+          "話題の宇宙人のコーヒー",
+          "気づくと、"
+        ],
+        "action": "increase"
+      },
+      "apparel_focus": {
+        "average_impressions": 40.0,
+        "action": "deprioritize_when_clothing_only"
+      },
+      "observer_ai_record": {
+        "average_impressions": 24.4,
+        "action": "reduce_plain_result_reports"
+      }
+    },
+    "media_learning": {
+      "image_yes_average_impressions": 98.3,
+      "image_no_average_impressions": 23.8,
+      "action": "prefer_image_attached_posts"
+    },
+    "time_learning": {
+      "preferred_window_jst": "23:00-23:59",
+      "secondary_window_jst": "19:00-22:30",
+      "action": "test community/culture posts at 23:00"
+    },
+    "persona_learning": {
+      "increase": [
+        "community_operator",
+        "culture_observer"
+      ],
+      "reduce": [
+        "game_record_observer_when_plain_result_only",
+        "wearer_lifestyle_when_clothing_only"
+      ]
+    }
   },
   "result_fields": [
     "candidate_id",

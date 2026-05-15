@@ -1,18 +1,68 @@
 {
   "db_name": "Villain Post Quality Scoring Rules",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "purpose": "投稿候補を、伸びやすさと安全性の両面から採点する。",
   "status": "scoring_only",
-  "max_score": 100,
+  "max_score": 110,
   "weights": {
-    "hook_strength": 15,
-    "raindog_voice": 20,
-    "villain_context": 15,
+    "hook_strength": 17,
+    "raindog_voice": 16,
+    "villain_context": 12,
     "brevity_and_spacing": 10,
-    "new_reader_clarity": 10,
-    "save_or_note_potential": 10,
-    "visual_fit": 10,
+    "new_reader_clarity": 8,
+    "save_or_note_potential": 8,
+    "visual_fit": 14,
+    "community_context": 8,
+    "culture_observation": 7,
     "safety": 10
+  },
+  "live_x_learning": {
+    "source": "GET-only current X analysis",
+    "captured_at": "2026-05-15",
+    "metrics_mode": "private_metrics_available",
+    "sample": {
+      "fetched_tweets": 30,
+      "villain_related_analyzed": 20
+    },
+    "category_performance": {
+      "community_info": {
+        "average_impressions": 127.0,
+        "max_impressions": 200,
+        "priority": "increase"
+      },
+      "poster_summary": {
+        "average_impressions": 130.5,
+        "max_impressions": 134,
+        "priority": "increase"
+      },
+      "apparel_focus": {
+        "average_impressions": 40.0,
+        "priority": "deprioritize_unless_community_or_image_hook"
+      },
+      "observer_ai_record": {
+        "average_impressions": 24.4,
+        "priority": "reduce_plain_result_reports"
+      }
+    },
+    "media_performance": {
+      "image_yes_average_impressions": 98.3,
+      "image_yes_max_impressions": 200,
+      "image_no_average_impressions": 23.8,
+      "image_no_max_impressions": 49
+    },
+    "winning_patterns": [
+      "community_info",
+      "poster_summary",
+      "image_attached",
+      "23:00 JST community/culture posting",
+      "short cultural friction instead of explanation",
+      "operator/observer voice over product introduction"
+    ],
+    "reduce_patterns": [
+      "plain old/new mining machine result reports",
+      "image-less observer_ai_record repetition",
+      "apparel_focus as clothing-only introduction"
+    ]
   },
   "risk_levels": [
     "low",
@@ -28,7 +78,9 @@
     "too_salesy",
     "profit_guarantee_like",
     "web3_influencer_tone",
-    "template_feel"
+    "template_feel",
+    "plain_ai_record_result",
+    "clothing_only_apparel_intro"
   ],
   "selection_policy": {
     "recommended_threshold": 80,

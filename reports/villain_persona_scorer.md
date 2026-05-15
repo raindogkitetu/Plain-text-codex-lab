@@ -1,6 +1,6 @@
 # Villain Persona Scorer
 
-- Generated at: `2026-05-12T14:11:04.696830+00:00`
+- Generated at: `2026-05-15T13:50:39.900971+00:00`
 - status: `DRY_RUN_ONLY`
 - DB mutation: `NOT_EXECUTED`
 - live posting: `NOT_EXECUTED`
@@ -19,77 +19,48 @@
 
 ## Scores
 
-### `vln-gen-20260512-001`
+### `vln-gen-20260515-001`
 
 - source: `candidate`
-- post_type: `ABOUT_WORDING`
+- post_type: `COMMUNITY_INFO`
 - persona_score: `100`
 - ng_hits: `none`
 
 #### Components
 
 - villain_poison: `18` / 少し毒のある引っかかりがある。
-- irony: `14` / 皮肉やズレの感覚がある。
+- irony: `7` / 皮肉は弱め。
 - short_sentence_power: `18` / 短文の圧が出ている。
 - not_too_insider: `12` / 内輪ノリに閉じすぎていない。
 - avoid_investment_advice: `14` / 金融助言っぽさを避けている。
 - not_too_hyped: `12` / 煽りすぎていない。
 - image_fit: `12` / 画像投稿との相性がある。
+- community_operator: `10` / 実データで強い現場/コミュニティ運用人格がある。
+- culture_observer: `0` / 文化観測の強さは控えめ。
+- plain_ai_record_penalty: `0` / 単純なAI実録連投ではない。
 
 #### Improvement
 
 - 現状で十分。次は画像との温度合わせを見る。
 
 ```text
-ABOUTの言葉、
-まだ残ってる。
+昨日の集会、
+まだ少し残ってる。
 
-毎日着ろって、
-やっぱり普通じゃない。
+説明より、
+人が集まってる事実の方が強い。
 
-でも今日はそこがいい。
-
-#着て稼ぐ #villain @0xmavillain R2J9T
-```
-
-### `vln-gen-20260512-002`
-
-- source: `candidate`
-- post_type: `SILENT_DOMINANCE`
-- persona_score: `100`
-- ng_hits: `none`
-
-#### Components
-
-- villain_poison: `18` / 少し毒のある引っかかりがある。
-- irony: `14` / 皮肉やズレの感覚がある。
-- short_sentence_power: `18` / 短文の圧が出ている。
-- not_too_insider: `12` / 内輪ノリに閉じすぎていない。
-- avoid_investment_advice: `14` / 金融助言っぽさを避けている。
-- not_too_hyped: `12` / 煽りすぎていない。
-- image_fit: `12` / 画像投稿との相性がある。
-
-#### Improvement
-
-- 現状で十分。次は画像との温度合わせを見る。
-
-```text
-強い服って、
-大声じゃない方がいい。
-
-黙ってても、
-ちょっと残るやつ。
-
-Villainはそっち。
+$villainは、
+そこがちょっと変。
 
 #着て稼ぐ #villain @0xmavillain R2J9T
 ```
 
-### `vln-gen-20260512-003`
+### `vln-gen-20260515-002`
 
 - source: `candidate`
-- post_type: `SELF_RESPECT`
-- persona_score: `84`
+- post_type: `POSTER_SUMMARY`
+- persona_score: `94`
 - ng_hits: `none`
 
 #### Components
@@ -101,18 +72,55 @@ Villainはそっち。
 - avoid_investment_advice: `14` / 金融助言っぽさを避けている。
 - not_too_hyped: `12` / 煽りすぎていない。
 - image_fit: `12` / 画像投稿との相性がある。
+- community_operator: `0` / 現場感は薄い。
+- culture_observer: `10` / 説明より文化の違和感を短く残している。
+- plain_ai_record_penalty: `0` / 単純なAI実録連投ではない。
 
 #### Improvement
 
 - 現状で十分。次は画像との温度合わせを見る。
 
 ```text
-誰かに見せるため、
-だけじゃない服がある。
+気づくと、
+また$villainの話になってる。
 
-自分の側に戻る感じ。
+服の話だけなら、
+たぶんここまで残らない。
 
-今日はそれでいい。
+#着て稼ぐ #villain @0xmavillain R2J9T
+```
+
+### `vln-gen-20260515-003`
+
+- source: `candidate`
+- post_type: `CULTURE_OBSERVER`
+- persona_score: `100`
+- ng_hits: `none`
+
+#### Components
+
+- villain_poison: `9` / 毒は控えめ。
+- irony: `7` / 皮肉は弱め。
+- short_sentence_power: `18` / 短文の圧が出ている。
+- not_too_insider: `12` / 内輪ノリに閉じすぎていない。
+- avoid_investment_advice: `14` / 金融助言っぽさを避けている。
+- not_too_hyped: `12` / 煽りすぎていない。
+- image_fit: `12` / 画像投稿との相性がある。
+- community_operator: `10` / 実データで強い現場/コミュニティ運用人格がある。
+- culture_observer: `10` / 説明より文化の違和感を短く残している。
+- plain_ai_record_penalty: `0` / 単純なAI実録連投ではない。
+
+#### Improvement
+
+- 現状で十分。次は画像との温度合わせを見る。
+
+```text
+話題になる服って、
+だいたい服だけじゃない。
+
+誰が着て、
+どこで集まってるかまで含めて、
+少し残る。
 
 #着て稼ぐ #villain @0xmavillain R2J9T
 ```
@@ -133,6 +141,9 @@ Villainはそっち。
 - avoid_investment_advice: `14` / 金融助言っぽさを避けている。
 - not_too_hyped: `12` / 煽りすぎていない。
 - image_fit: `12` / 画像投稿との相性がある。
+- community_operator: `0` / 現場感は薄い。
+- culture_observer: `0` / 文化観測の強さは控えめ。
+- plain_ai_record_penalty: `0` / 単純なAI実録連投ではない。
 
 #### Improvement
 

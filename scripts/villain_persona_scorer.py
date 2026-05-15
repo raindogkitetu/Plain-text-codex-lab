@@ -97,6 +97,28 @@ def score_text(text: str, source: str, item_id: str, post_type: str, image_hint:
         "reason": "画像投稿との相性がある。" if visual_fit_ok else "画像連携は弱め。",
     }
 
+    community_operator_ok = post_type in {"COMMUNITY_INFO", "CULTURE_OBSERVER"} or contains_any(
+        text, ["集会", "集ま", "会話", "人が", "誰が着て"]
+    )
+    components["community_operator"] = {
+        "score": 10 if community_operator_ok else 0,
+        "reason": "実データで強い現場/コミュニティ運用人格がある。" if community_operator_ok else "現場感は薄い。",
+    }
+
+    culture_observer_ok = post_type in {"POSTER_SUMMARY", "CULTURE_OBSERVER"} or contains_any(
+        text, ["気づくと", "話題", "残る", "文化", "服だけじゃない"]
+    )
+    components["culture_observer"] = {
+        "score": 10 if culture_observer_ok else 0,
+        "reason": "説明より文化の違和感を短く残している。" if culture_observer_ok else "文化観測の強さは控えめ。",
+    }
+
+    plain_ai_record = contains_any(text, ["old mining machineの結果", "new mining machineの結果"])
+    components["plain_ai_record_penalty"] = {
+        "score": -12 if plain_ai_record else 0,
+        "reason": "単なる結果報告は直近実データで弱い。" if plain_ai_record else "単純なAI実録連投ではない。",
+    }
+
     total = sum(component["score"] for component in components.values())
     penalties = 0
     if "personal_attack" in hits:

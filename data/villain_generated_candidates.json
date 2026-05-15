@@ -14,18 +14,21 @@
   "generation_policy": {
     "max_candidates_per_run": 3,
     "categories": [
+      "COMMUNITY_INFO",
+      "POSTER_SUMMARY",
+      "CULTURE_OBSERVER",
       "ABOUT_WORDING",
-      "EMOTIONAL_DAMAGE",
-      "SILENT_DOMINANCE",
-      "RELATIONSHIP_POWER",
-      "SELF_RESPECT"
+      "SILENT_DOMINANCE"
     ],
     "style_constraints": [
       "説明しすぎ禁止",
       "長文禁止",
       "鬼徹っぽさ維持",
       "一言の強さ優先",
-      "薄い投稿禁止"
+      "薄い投稿禁止",
+      "old/new mining machine の単なる結果報告を避ける",
+      "服単体紹介だけで終わらせない",
+      "画像付き前提で文化/現場感を置く"
     ],
     "quality_gate": {
       "connected_to": "data/villain_post_scoring_rules.json",
@@ -33,32 +36,32 @@
       "score_below_threshold_queue_add_allowed": false
     }
   },
-  "run_id": "vln-gen-run-20260512",
-  "generated_at": "2026-05-12T12:42:20.977658+00:00",
+  "run_id": "vln-gen-run-20260515",
+  "generated_at": "2026-05-15T13:47:11.137660+00:00",
   "candidates": [
     {
-      "candidate_id": "vln-gen-20260512-001",
+      "candidate_id": "vln-gen-20260515-001",
       "status": "generated",
       "dry_run_only": true,
       "queue_add_allowed": true,
       "queue_add_blocked_reason": "",
-      "category": "ABOUT_WORDING",
-      "text": "ABOUTの言葉、\nまだ残ってる。\n\n毎日着ろって、\nやっぱり普通じゃない。\n\nでも今日はそこがいい。\n\n#着て稼ぐ #villain @0xmavillain R2J9T",
-      "image_hint": "OBSERVER_MODE: 雨のネオン街、遠景の看板に『着て稼ぐ』、フード人物は後ろ姿、人物30%/背景70%。",
+      "category": "COMMUNITY_INFO",
+      "text": "昨日の集会、\nまだ少し残ってる。\n\n説明より、\n人が集まってる事実の方が強い。\n\n$villainは、\nそこがちょっと変。\n\n#着て稼ぐ #villain @0xmavillain R2J9T",
+      "image_hint": "COMMUNITY_MODE: 夜の街角やカフェ外、$villainを着た少人数の集まり。会話の気配、スマホを見る手元、背中、横顔。文字は少なめ。",
       "villain_score": 100,
-      "quality_prediction": 100,
+      "quality_prediction": 103,
       "quality_threshold": 80,
       "quality_components": {
         "hook_strength": {
-          "score": 15,
+          "score": 17,
           "reason": "冒頭に短い引っかかりがある。"
         },
         "raindog_voice": {
-          "score": 20,
+          "score": 16,
           "reason": "ぽろっとした距離感がある。"
         },
         "villain_context": {
-          "score": 15,
+          "score": 12,
           "reason": "Villain文脈が本文またはfooterにある。"
         },
         "brevity_and_spacing": {
@@ -66,16 +69,24 @@
           "reason": "短文改行で長すぎない。"
         },
         "new_reader_clarity": {
-          "score": 10,
+          "score": 8,
           "reason": "初見にも入口がある。"
         },
         "save_or_note_potential": {
-          "score": 10,
+          "score": 8,
           "reason": "note化できる種がある。"
         },
         "visual_fit": {
-          "score": 10,
+          "score": 14,
           "reason": "画像の方向性が明確。"
+        },
+        "community_context": {
+          "score": 8,
+          "reason": "実データで強いコミュニティ/現場感がある。"
+        },
+        "culture_observation": {
+          "score": 0,
+          "reason": "文化観測の引っかかりは弱い。"
         },
         "safety": {
           "score": 10,
@@ -83,82 +94,32 @@
         }
       },
       "risk_prediction": "low",
-      "why_this_might_work": "ABOUT文言の違和感を説明せず、引っかかりだけで置けている。",
-      "generated_at": "2026-05-12T12:42:20.977658+00:00"
+      "why_this_might_work": "実データで最強だったcommunity_info型。集会/現場感を短く置き、説明ではなく文化の動きを見せる。",
+      "generated_at": "2026-05-15T13:47:11.137660+00:00"
     },
     {
-      "candidate_id": "vln-gen-20260512-002",
+      "candidate_id": "vln-gen-20260515-002",
       "status": "generated",
       "dry_run_only": true,
       "queue_add_allowed": true,
       "queue_add_blocked_reason": "",
-      "category": "SILENT_DOMINANCE",
-      "text": "強い服って、\n大声じゃない方がいい。\n\n黙ってても、\nちょっと残るやつ。\n\nVillainはそっち。\n\n#着て稼ぐ #villain @0xmavillain R2J9T",
-      "image_hint": "POSTER_MODE: 暗い路地、中央にフードの背中、強い陰影、文字は『着て稼ぐ』と『$villain』まで。",
-      "villain_score": 99,
-      "quality_prediction": 94,
-      "quality_threshold": 80,
-      "quality_components": {
-        "hook_strength": {
-          "score": 15,
-          "reason": "冒頭に短い引っかかりがある。"
-        },
-        "raindog_voice": {
-          "score": 20,
-          "reason": "ぽろっとした距離感がある。"
-        },
-        "villain_context": {
-          "score": 15,
-          "reason": "Villain文脈が本文またはfooterにある。"
-        },
-        "brevity_and_spacing": {
-          "score": 10,
-          "reason": "短文改行で長すぎない。"
-        },
-        "new_reader_clarity": {
-          "score": 7,
-          "reason": "内輪寄りだが読める。"
-        },
-        "save_or_note_potential": {
-          "score": 7,
-          "reason": "短文単体向き。"
-        },
-        "visual_fit": {
-          "score": 10,
-          "reason": "画像の方向性が明確。"
-        },
-        "safety": {
-          "score": 10,
-          "reason": "過度な煽り・利益保証・薄さを避けている。"
-        }
-      },
-      "risk_prediction": "low",
-      "why_this_might_work": "煽らずに強さを出し、Villainの静かな熱量へ寄せている。",
-      "generated_at": "2026-05-12T12:42:20.977658+00:00"
-    },
-    {
-      "candidate_id": "vln-gen-20260512-003",
-      "status": "generated",
-      "dry_run_only": true,
-      "queue_add_allowed": true,
-      "queue_add_blocked_reason": "",
-      "category": "SELF_RESPECT",
-      "text": "誰かに見せるため、\nだけじゃない服がある。\n\n自分の側に戻る感じ。\n\n今日はそれでいい。\n\n#着て稼ぐ #villain @0xmavillain R2J9T",
-      "image_hint": "STREET_MODE: 店の外、雨上がり、顔を見せない人物、服の質感と街の余白を優先。",
+      "category": "POSTER_SUMMARY",
+      "text": "気づくと、\nまた$villainの話になってる。\n\n服の話だけなら、\nたぶんここまで残らない。\n\n#着て稼ぐ #villain @0xmavillain R2J9T",
+      "image_hint": "POSTER_SUMMARY: $villainを着た人たちの日常コラージュ。駅、夜道、カフェ、コンビニ前。文化が街に残っている感じ。",
       "villain_score": 100,
-      "quality_prediction": 100,
+      "quality_prediction": 96,
       "quality_threshold": 80,
       "quality_components": {
         "hook_strength": {
-          "score": 15,
+          "score": 17,
           "reason": "冒頭に短い引っかかりがある。"
         },
         "raindog_voice": {
-          "score": 20,
-          "reason": "ぽろっとした距離感がある。"
+          "score": 10,
+          "reason": "少し整いすぎ。"
         },
         "villain_context": {
-          "score": 15,
+          "score": 12,
           "reason": "Villain文脈が本文またはfooterにある。"
         },
         "brevity_and_spacing": {
@@ -166,16 +127,24 @@
           "reason": "短文改行で長すぎない。"
         },
         "new_reader_clarity": {
-          "score": 10,
+          "score": 8,
           "reason": "初見にも入口がある。"
         },
         "save_or_note_potential": {
-          "score": 10,
+          "score": 8,
           "reason": "note化できる種がある。"
         },
         "visual_fit": {
-          "score": 10,
+          "score": 14,
           "reason": "画像の方向性が明確。"
+        },
+        "community_context": {
+          "score": 0,
+          "reason": "コミュニティ文脈は薄い。"
+        },
+        "culture_observation": {
+          "score": 7,
+          "reason": "文化の違和感を短く観測している。"
         },
         "safety": {
           "score": 10,
@@ -183,8 +152,66 @@
         }
       },
       "risk_prediction": "low",
-      "why_this_might_work": "説明より体験感を残し、新規にも読めるが綺麗に回収しすぎない。",
-      "generated_at": "2026-05-12T12:42:20.977658+00:00"
+      "why_this_might_work": "poster_summaryは平均130.5 impressions。文化の違和感を一行目に置き、画像で止める。",
+      "generated_at": "2026-05-15T13:47:11.137660+00:00"
+    },
+    {
+      "candidate_id": "vln-gen-20260515-003",
+      "status": "generated",
+      "dry_run_only": true,
+      "queue_add_allowed": true,
+      "queue_add_blocked_reason": "",
+      "category": "CULTURE_OBSERVER",
+      "text": "話題になる服って、\nだいたい服だけじゃない。\n\n誰が着て、\nどこで集まってるかまで含めて、\n少し残る。\n\n#着て稼ぐ #villain @0xmavillain R2J9T",
+      "image_hint": "CULTURE_OBSERVER: 2〜4人の$villain着用者。広告感なし。会話、視線、街灯、現場の余白。文字は短く。",
+      "villain_score": 100,
+      "quality_prediction": 110,
+      "quality_threshold": 80,
+      "quality_components": {
+        "hook_strength": {
+          "score": 17,
+          "reason": "冒頭に短い引っかかりがある。"
+        },
+        "raindog_voice": {
+          "score": 16,
+          "reason": "ぽろっとした距離感がある。"
+        },
+        "villain_context": {
+          "score": 12,
+          "reason": "Villain文脈が本文またはfooterにある。"
+        },
+        "brevity_and_spacing": {
+          "score": 10,
+          "reason": "短文改行で長すぎない。"
+        },
+        "new_reader_clarity": {
+          "score": 8,
+          "reason": "初見にも入口がある。"
+        },
+        "save_or_note_potential": {
+          "score": 8,
+          "reason": "note化できる種がある。"
+        },
+        "visual_fit": {
+          "score": 14,
+          "reason": "画像の方向性が明確。"
+        },
+        "community_context": {
+          "score": 8,
+          "reason": "実データで強いコミュニティ/現場感がある。"
+        },
+        "culture_observation": {
+          "score": 7,
+          "reason": "文化の違和感を短く観測している。"
+        },
+        "safety": {
+          "score": 10,
+          "reason": "過度な煽り・利益保証・薄さを避けている。"
+        }
+      },
+      "risk_prediction": "low",
+      "why_this_might_work": "勝ち人格のculture_observerを優先。説明する人ではなく、現場を見て短く残す人に寄せる。",
+      "generated_at": "2026-05-15T13:47:11.137660+00:00"
     }
   ]
 }
