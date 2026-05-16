@@ -1,0 +1,65 @@
+{
+  "db_name": "Villain Auto Post Pilot Plan",
+  "version": "1.2.0",
+  "status": "LIVE_PILOT_BLOCKED",
+  "mode": "LIVE_PILOT",
+  "generated_at_jst": "2026-05-16T11:09:35+09:00",
+  "source_mode": "candidate_stream_empty_live_blocked",
+  "target_post_count": {
+    "min": 3,
+    "max": 5,
+    "actual": 0
+  },
+  "live_pilot_limits": {
+    "max_posts_per_day": 5,
+    "posts_already_recorded_today": 0,
+    "remaining_posts_today": 5,
+    "cooldown_between_posts_minutes": 120
+  },
+  "safety": {
+    "live_posting_allowed": true,
+    "x_api_write_allowed": true,
+    "upload_media_allowed": true,
+    "create_tweet_allowed": true,
+    "auto_posting_allowed": false,
+    "would_execute_actions": []
+  },
+  "pilot_policy": {
+    "human_supervision_required_after_post": true,
+    "post_after_publish_review": true,
+    "manual_override_allowed": true,
+    "delete_if_needed": true,
+    "note_creation_enabled": false,
+    "note_seed_only": true,
+    "execution_enabled": true,
+    "execution_enablement_requires_separate_design": false,
+    "density_priority": "slightly_higher_than_overcautious_blocking",
+    "hard_blocks": [
+      "risk_high",
+      "already_posted",
+      "repeated_topic_penalty",
+      "same_image_cooldown",
+      "novelty_too_low",
+      "score_below_80",
+      "max_posts_per_day_reached"
+    ]
+  },
+  "inputs": {
+    "candidate_stream": "data/villain_candidate_stream.json",
+    "daily_selection": "data/villain_daily_selection.json",
+    "novelty_engine": "data/villain_novelty_engine.json",
+    "image_strategy": "data/villain_image_strategy.json",
+    "scoring_rules": "data/villain_post_scoring_rules.json",
+    "generated_candidates": "data/villain_generated_candidates.json",
+    "manual_results": "data/manual_post_results.json",
+    "safe_post_executor": "scripts/safe_post_executor.py"
+  },
+  "warnings": [
+    "pilot_plan_below_target_minimum",
+    "no_image_ready_items",
+    "live_pilot_requires_nonempty_candidate_stream"
+  ],
+  "pilot_plan": [],
+  "rejected_or_blocked_count": 0,
+  "rejected_or_blocked_preview": []
+}
