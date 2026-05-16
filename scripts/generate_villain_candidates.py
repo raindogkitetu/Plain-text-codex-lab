@@ -13,6 +13,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from required_token_layer import MANDATORY_FOOTER, normalize_mandatory_tokens, verification_summary
+
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_PATH = ROOT / "data" / "villain_generated_candidates.json"
@@ -20,7 +22,7 @@ SCORING_RULES_PATH = ROOT / "data" / "villain_post_scoring_rules.json"
 REPORT_PATH = ROOT / "reports" / "villain_generated_candidates.md"
 
 PASSCODE = "R2J9T"
-FOOTER = f"#着て稼ぐ #villain @0xmavillain {PASSCODE}"
+FOOTER = f"{MANDATORY_FOOTER} {PASSCODE}"
 MAX_CANDIDATES = 3
 
 
@@ -167,9 +169,11 @@ def predict_quality(text: str, category: str, image_hint: str, rules: dict[str, 
 
 
 def build_candidate(index: int, seed: dict[str, str], rules: dict[str, Any], generated_at: str) -> dict[str, Any]:
-    score, components = predict_quality(seed["text"], seed["category"], seed["image_hint"], rules)
+    normalized_text = normalize_mandatory_tokens(seed["text"])
+    token_check = verification_summary(seed["text"])
+    score, components = predict_quality(normalized_text, seed["category"], seed["image_hint"], rules)
     minimum = rules.get("selection_policy", {}).get("recommended_threshold", 80)
-    villain_score = min(100, score + (5 if "着て稼ぐ" in seed["text"] else 0))
+    villain_score = min(100, score + (5 if "着て稼ぐ" in normalized_text else 0))
     return {
         "candidate_id": f"vln-gen-{generated_at[:10].replace('-', '')}-{index:03d}",
         "status": "generated",
@@ -177,7 +181,15 @@ def build_candidate(index: int, seed: dict[str, str], rules: dict[str, Any], gen
         "queue_add_allowed": score >= minimum,
         "queue_add_blocked_reason": "" if score >= minimum else "quality_prediction_below_80",
         "category": seed["category"],
-        "text": seed["text"],
+        "text": normalized_text,
+        "token_verification": {
+            "required_layer": "Required Token Layer v1",
+            "mandatory_footer_order": MANDATORY_FOOTER,
+            "missing_before": token_check["missing_before"],
+            "duplicates_before": token_check["duplicates_before"],
+            "normalized": token_check["changed"],
+            "valid_after": token_check["valid_after"],
+        },
         "image_hint": seed["image_hint"],
         "villain_score": villain_score,
         "quality_prediction": score,
@@ -218,6 +230,8 @@ def write_report(db: dict[str, Any]) -> None:
                 f"- quality_prediction: `{candidate.get('quality_prediction')}`",
                 f"- queue_add_allowed: `{str(candidate.get('queue_add_allowed')).lower()}`",
                 f"- risk_prediction: `{candidate.get('risk_prediction')}`",
+                f"- required_tokens_valid_after: `{str(candidate.get('token_verification', {}).get('valid_after')).lower()}`",
+                f"- mandatory_footer_order: `{candidate.get('token_verification', {}).get('mandatory_footer_order')}`",
                 f"- why_this_might_work: {candidate.get('why_this_might_work')}",
                 f"- image_hint: {candidate.get('image_hint')}",
                 "",

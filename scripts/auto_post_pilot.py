@@ -18,6 +18,8 @@ from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
 
+from required_token_layer import MANDATORY_FOOTER, normalize_mandatory_tokens, verification_summary
+
 
 ROOT = Path(__file__).resolve().parents[1]
 STREAM_PATH = ROOT / "data" / "villain_candidate_stream.json"
@@ -246,6 +248,7 @@ def generated_candidates(generated_db: dict[str, Any]) -> list[dict[str, Any]]:
     items: list[dict[str, Any]] = []
     for candidate in generated_db.get("candidates", []):
         category = normalize_category(candidate.get("category", ""))
+        normalized_text = normalize_mandatory_tokens(candidate.get("text", ""))
         items.append(
             {
                 "source": "generated_candidates",
@@ -253,7 +256,8 @@ def generated_candidates(generated_db: dict[str, Any]) -> list[dict[str, Any]]:
                 "status": "fresh",
                 "daily_selection_selected": True,
                 "category": category,
-                "text": candidate.get("text", ""),
+                "text": normalized_text,
+                "token_verification": verification_summary(candidate.get("text", "")),
                 "image_hint": candidate.get("image_hint", ""),
                 "score": candidate.get("quality_prediction", 0),
                 "risk": candidate.get("risk_prediction", "medium"),
@@ -273,6 +277,7 @@ def stream_candidates(stream_db: dict[str, Any]) -> list[dict[str, Any]]:
             continue
         scores = item.get("scores", {})
         image = item.get("image", {})
+        normalized_text = normalize_mandatory_tokens(item.get("text", ""))
         items.append(
             {
                 "source": "candidate_stream",
@@ -281,7 +286,8 @@ def stream_candidates(stream_db: dict[str, Any]) -> list[dict[str, Any]]:
                 "daily_selection_selected": item.get("review", {}).get("human_decision") in {"approved", "timing"}
                 or status in {"fresh", "approved", "aging"},
                 "category": normalize_category(item.get("category", "")),
-                "text": item.get("text", ""),
+                "text": normalized_text,
+                "token_verification": verification_summary(item.get("text", "")),
                 "image_hint": image.get("rights_notes", ""),
                 "image": image,
                 "score": scores.get("quality_prediction") or 80,
@@ -498,8 +504,13 @@ def build_plan(mode: str) -> dict[str, Any]:
                 "source": candidate.get("source"),
                 "source_id": candidate.get("source_id"),
                 "category": category,
-                "text": candidate.get("text", ""),
-                "text_preview": compact_preview(candidate.get("text", "")),
+                "text": normalize_mandatory_tokens(candidate.get("text", "")),
+                "text_preview": compact_preview(normalize_mandatory_tokens(candidate.get("text", ""))),
+                "token_verification": {
+                    "required_layer": "Required Token Layer v1",
+                    "mandatory_footer_order": MANDATORY_FOOTER,
+                    **verification_summary(candidate.get("text", "")),
+                },
                 "image": image,
                 "score": int(candidate.get("score") or 0),
                 "risk": candidate.get("risk", "medium"),
@@ -548,8 +559,13 @@ def build_plan(mode: str) -> dict[str, Any]:
                     "source": candidate.get("source"),
                     "source_id": candidate.get("source_id"),
                     "category": category,
-                    "text": candidate.get("text", ""),
-                    "text_preview": compact_preview(candidate.get("text", "")),
+                    "text": normalize_mandatory_tokens(candidate.get("text", "")),
+                    "text_preview": compact_preview(normalize_mandatory_tokens(candidate.get("text", ""))),
+                    "token_verification": {
+                        "required_layer": "Required Token Layer v1",
+                        "mandatory_footer_order": MANDATORY_FOOTER,
+                        **verification_summary(candidate.get("text", "")),
+                    },
                     "image": image,
                     "score": int(candidate.get("score") or 0),
                     "risk": candidate.get("risk", "medium"),
@@ -721,6 +737,8 @@ def write_report(plan: dict[str, Any]) -> None:
                 f"- pilot_score: `{item.get('pilot_score')}`",
                 f"- image_ready: `{str(image.get('ready')).lower()}`",
                 f"- image: `{image.get('file_path', '')}`",
+                f"- required_tokens_valid_after: `{str(item.get('token_verification', {}).get('valid_after')).lower()}`",
+                f"- mandatory_footer_order: `{item.get('token_verification', {}).get('mandatory_footer_order', MANDATORY_FOOTER)}`",
                 f"- planned_publish_after_jst: `{item.get('planned_publish_after_jst', '')}`",
                 f"- post_after_publish_review: `{str(item.get('post_after_publish_review', False)).lower()}`",
                 f"- manual_override_allowed: `{str(item.get('manual_override_allowed', False)).lower()}`",
