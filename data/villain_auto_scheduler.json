@@ -1,0 +1,38 @@
+{
+  "db_name": "Villain Auto Scheduler",
+  "version": "1.0.0",
+  "status": "configured",
+  "manual_stop": false,
+  "mode": "LIVE_PILOT",
+  "max_posts_per_day": 3,
+  "cooldown_between_posts_minutes": 120,
+  "max_posts_per_run": 1,
+  "allow_write_execution": true,
+  "no_retry_unless_manual": true,
+  "passcode_canonical_source": "data/villain_passcodes.json",
+  "passcode_auto_generation_allowed": false,
+  "required_tokens": [
+    "#着て稼ぐ",
+    "#villain",
+    "$PPP",
+    "@0xmavillain"
+  ],
+  "hard_blocks": [
+    "manual_stop",
+    "max_posts_per_day_reached",
+    "cooldown_active",
+    "risk_high",
+    "already_posted",
+    "same_image_cooldown",
+    "repeated_topic_penalty",
+    "required_tokens_not_verified",
+    "passcode_missing",
+    "passcode_not_in_db"
+  ],
+  "paths": {
+    "state": "data/villain_auto_scheduler_state.json",
+    "log": "logs/villain_auto_scheduler.log",
+    "report": "reports/villain_auto_scheduler.md",
+    "launchd_plist": "launchd/com.raindog.villain-auto-scheduler.plist"
+  }
+}

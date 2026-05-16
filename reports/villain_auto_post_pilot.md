@@ -1,6 +1,6 @@
 # Villain Auto Post Pilot v1
 
-- Generated at JST: `2026-05-16T19:47:16+09:00`
+- Generated at JST: `2026-05-17T00:50:32+09:00`
 - version: `1.3.0`
 - status: `LIMITED_LIVE_EXECUTION_READY`
 - mode: `LIMITED_LIVE_EXECUTION`
@@ -55,6 +55,8 @@
 - source: `generated_candidates` / `vln-gen-20260516-003`
 - score: `110`
 - risk: `low`
+- passcode: `J1M5V`
+- passcode_exists_in_db: `true`
 - novelty: `66`
 - raw_novelty: `70`
 - remixability: `100`
@@ -66,7 +68,7 @@
 - required_tokens_valid_after: `true`
 - required_tokens_verified: `true`
 - mandatory_footer_order: `#着て稼ぐ #villain $PPP @0xmavillain`
-- planned_publish_after_jst: `2026-05-16T21:47+09:00`
+- planned_publish_after_jst: `2026-05-17T08:00+09:00`
 - post_after_publish_review: `true`
 - manual_override_allowed: `true`
 - delete_if_needed: `true`
@@ -92,7 +94,7 @@
 どこで集まってるかまで含めて、
 少し残る。
 
-#着て稼ぐ #villain $PPP @0xmavillain R2J9T
+#着て稼ぐ #villain $PPP @0xmavillain J1M5V
 ```
 
 ### 2. `daytime` / `community_info`
@@ -100,6 +102,8 @@
 - source: `generated_candidates` / `vln-gen-20260516-001`
 - score: `103`
 - risk: `low`
+- passcode: `F3X7M`
+- passcode_exists_in_db: `true`
 - novelty: `70`
 - raw_novelty: `70`
 - remixability: `100`
@@ -111,7 +115,7 @@
 - required_tokens_valid_after: `true`
 - required_tokens_verified: `true`
 - mandatory_footer_order: `#着て稼ぐ #villain $PPP @0xmavillain`
-- planned_publish_after_jst: `2026-05-16T23:47+09:00`
+- planned_publish_after_jst: `2026-05-17T13:00+09:00`
 - post_after_publish_review: `true`
 - manual_override_allowed: `true`
 - delete_if_needed: `true`
@@ -139,7 +143,7 @@
 $villainは、
 そこがちょっと変。
 
-#着て稼ぐ #villain $PPP @0xmavillain R2J9T
+#着て稼ぐ #villain $PPP @0xmavillain F3X7M
 ```
 
 ### 3. `night` / `poster_summary`
@@ -147,6 +151,8 @@ $villainは、
 - source: `generated_candidates` / `vln-gen-20260516-002`
 - score: `96`
 - risk: `low`
+- passcode: `H9J6L`
+- passcode_exists_in_db: `true`
 - novelty: `43`
 - raw_novelty: `57`
 - remixability: `65`
@@ -158,7 +164,7 @@ $villainは、
 - required_tokens_valid_after: `true`
 - required_tokens_verified: `true`
 - mandatory_footer_order: `#着て稼ぐ #villain $PPP @0xmavillain`
-- planned_publish_after_jst: `2026-05-17T01:47+09:00`
+- planned_publish_after_jst: `2026-05-17T20:00+09:00`
 - post_after_publish_review: `true`
 - manual_override_allowed: `true`
 - delete_if_needed: `true`
@@ -184,26 +190,29 @@ $villainは、
 服の話だけなら、
 たぶんここまで残らない。
 
-#着て稼ぐ #villain $PPP @0xmavillain R2J9T
+#着て稼ぐ #villain $PPP @0xmavillain H9J6L
 ```
 
 ## Execution Manifest
 
 - `vln-exec-morning-vln-gen-20260516-003`
+  - passcode: `J1M5V`
   - ready_for_limited_live_execution: `true`
-  - planned_publish_after_jst: `2026-05-16T21:47+09:00`
+  - planned_publish_after_jst: `2026-05-17T08:00+09:00`
   - x_api_write_called_by_this_script: `false`
   - upload_media_called_by_this_script: `false`
   - create_tweet_called_by_this_script: `false`
 - `vln-exec-daytime-vln-gen-20260516-001`
+  - passcode: `F3X7M`
   - ready_for_limited_live_execution: `true`
-  - planned_publish_after_jst: `2026-05-16T23:47+09:00`
+  - planned_publish_after_jst: `2026-05-17T13:00+09:00`
   - x_api_write_called_by_this_script: `false`
   - upload_media_called_by_this_script: `false`
   - create_tweet_called_by_this_script: `false`
 - `vln-exec-night-vln-gen-20260516-002`
+  - passcode: `H9J6L`
   - ready_for_limited_live_execution: `true`
-  - planned_publish_after_jst: `2026-05-17T01:47+09:00`
+  - planned_publish_after_jst: `2026-05-17T20:00+09:00`
   - x_api_write_called_by_this_script: `false`
   - upload_media_called_by_this_script: `false`
   - create_tweet_called_by_this_script: `false`

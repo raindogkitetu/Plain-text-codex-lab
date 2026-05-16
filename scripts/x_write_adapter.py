@@ -30,7 +30,7 @@ from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from required_token_layer import MANDATORY_FOOTER, normalize_mandatory_tokens, verification_summary
+from required_token_layer import MANDATORY_FOOTER, extract_passcode, normalize_mandatory_tokens, passcode_exists, verification_summary
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -195,10 +195,15 @@ def execution_blockers(mode: str, pilot: dict[str, Any], manifest: dict[str, Any
         blockers.append("pilot_item_not_found")
         return blockers
 
-    text = normalize_mandatory_tokens(item.get("text", ""))
+    passcode = item.get("passcode") or extract_passcode(item.get("text", ""))
+    text = normalize_mandatory_tokens(item.get("text", ""), passcode=passcode or None)
     token_check = verification_summary(text)
     if token_check.get("valid_after") is not True:
         blockers.append("required_tokens_not_verified")
+    if not passcode:
+        blockers.append("passcode_missing")
+    elif not passcode_exists(passcode):
+        blockers.append("passcode_not_in_db")
     if item.get("required_tokens_verified") is not True:
         blockers.append("pilot_item_required_tokens_false")
     if item.get("risk") == "high":
@@ -206,7 +211,15 @@ def execution_blockers(mode: str, pilot: dict[str, Any], manifest: dict[str, Any
     if item.get("eligible") is not True:
         blockers.append("pilot_item_not_eligible")
     for blocker in item.get("blockers", []):
-        if blocker in {"already_posted", "same_image_cooldown", "repeated_topic_penalty", "risk_high", "required_tokens_not_verified"}:
+        if blocker in {
+            "already_posted",
+            "same_image_cooldown",
+            "repeated_topic_penalty",
+            "risk_high",
+            "required_tokens_not_verified",
+            "passcode_missing",
+            "passcode_not_in_db",
+        }:
             blockers.append(blocker)
 
     posted_texts, posted_images = manual_texts_and_images(manual_db)
@@ -298,6 +311,9 @@ def write_report(result: dict[str, Any]) -> None:
         f"- url: `{result.get('url', '')}`",
         f"- posted_at: `{result.get('posted_at', '')}`",
         f"- media_used: `{result.get('media_used', '')}`",
+        f"- passcode: `{result.get('passcode', '')}`",
+        f"- required_tokens_verified: `{str(result.get('required_tokens_verified', False)).lower()}`",
+        f"- passcode_verified: `{str(result.get('passcode_verified', False)).lower()}`",
         f"- no_retry_unless_manual: `{str(result.get('no_retry_unless_manual', True)).lower()}`",
         "",
         "## Gates",
@@ -320,12 +336,15 @@ def build_result(args: argparse.Namespace) -> dict[str, Any]:
     manual_db = read_json(MANUAL_RESULTS_PATH)
     manifest = select_manifest_item(pilot, args.execution_id)
     item = pilot_item_for_manifest(pilot, manifest) if manifest else {}
-    text = normalize_mandatory_tokens(item.get("text", "")) if item else ""
+    passcode = item.get("passcode") or extract_passcode(item.get("text", "")) if item else ""
+    text = normalize_mandatory_tokens(item.get("text", ""), passcode=passcode or None) if item else ""
     image = item.get("image", {}) if item else {}
     image_path = image.get("absolute_path") or image.get("file_path", "")
     if image_path and not str(image_path).startswith("/"):
         image_path = str(ROOT / image_path)
     blockers = execution_blockers(args.mode, pilot, manifest, item, manual_db)
+    required_tokens_verified = verification_summary(text).get("valid_after") is True if text else False
+    passcode_verified = bool(passcode and passcode_exists(passcode))
 
     result: dict[str, Any] = {
         "db_name": "Villain X Write Adapter Result",
@@ -341,6 +360,9 @@ def build_result(args: argparse.Namespace) -> dict[str, Any]:
         "url": "",
         "posted_at": "",
         "media_used": image_path,
+        "passcode": passcode,
+        "required_tokens_verified": required_tokens_verified,
+        "passcode_verified": passcode_verified,
         "text": text,
         "blockers": blockers,
         "error": "",
@@ -348,7 +370,8 @@ def build_result(args: argparse.Namespace) -> dict[str, Any]:
         "safety": {
             "max_posts_per_day": MAX_POSTS_PER_DAY,
             "cooldown_between_posts_minutes": COOLDOWN_BETWEEN_POSTS_MINUTES,
-            "required_tokens_verified": verification_summary(text).get("valid_after") is True if text else False,
+            "required_tokens_verified": required_tokens_verified,
+            "passcode_verified": passcode_verified,
             "api_key_output_allowed": False,
             "env_output_allowed": False,
             "unlimited_posting_allowed": False,

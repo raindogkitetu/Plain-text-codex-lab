@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -17,12 +18,14 @@ from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "data" / "villain_required_tokens.json"
+PASSCODES_PATH = ROOT / "data" / "villain_passcodes.json"
 REPORT_PATH = ROOT / "reports" / "villain_required_tokens.md"
 JST = ZoneInfo("Asia/Tokyo")
 
 MANDATORY_TOKENS = ["#着て稼ぐ", "#villain", "$PPP", "@0xmavillain"]
 MANDATORY_FOOTER = " ".join(MANDATORY_TOKENS)
 TEXT_KEYS = {"text", "post_text", "caption", "final_text", "draft_text", "tweet_text", "social_post_text"}
+PASSCODE_RE = re.compile(r"\b[A-Z0-9]{5}\b")
 
 
 def now_jst() -> str:
@@ -44,6 +47,47 @@ def token_counts(text: str) -> dict[str, int]:
     return {token: words.count(token) for token in MANDATORY_TOKENS}
 
 
+def is_passcode_shape(value: str) -> bool:
+    return bool(PASSCODE_RE.fullmatch(value.strip()))
+
+
+def extract_passcode(text: str) -> str:
+    for match in reversed(PASSCODE_RE.findall(text or "")):
+        if match not in MANDATORY_TOKENS:
+            return match
+    return ""
+
+
+def passcode_records() -> list[dict[str, Any]]:
+    try:
+        db = read_json(PASSCODES_PATH)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+    return [item for item in db.get("passcodes", []) if isinstance(item, dict)]
+
+
+def active_passcodes() -> list[str]:
+    return [
+        item.get("code", "")
+        for item in passcode_records()
+        if item.get("status") == "active" and is_passcode_shape(item.get("code", ""))
+    ]
+
+
+def passcode_exists(passcode: str) -> bool:
+    return passcode in set(active_passcodes())
+
+
+def select_passcodes(count: int) -> list[str]:
+    records = [
+        item
+        for item in passcode_records()
+        if item.get("status") == "active" and is_passcode_shape(item.get("code", ""))
+    ]
+    records.sort(key=lambda item: (int(item.get("usage_count", 0)), item.get("last_used_at", ""), item.get("code", "")))
+    return [item.get("code", "") for item in records[:count]]
+
+
 def missing_tokens(text: str) -> list[str]:
     counts = token_counts(text)
     return [token for token in MANDATORY_TOKENS if counts.get(token, 0) == 0]
@@ -54,7 +98,7 @@ def duplicate_tokens(text: str) -> list[str]:
     return [token for token in MANDATORY_TOKENS if counts.get(token, 0) > 1]
 
 
-def normalize_mandatory_tokens(text: str) -> str:
+def normalize_mandatory_tokens(text: str, passcode: str | None = None) -> str:
     """Return text with mandatory tokens deduped and appended in fixed order."""
 
     footer_suffixes: list[str] = []
@@ -68,7 +112,7 @@ def normalize_mandatory_tokens(text: str) -> str:
         has_mandatory = any(word in MANDATORY_TOKENS for word in words)
         remaining = [word for word in words if word not in MANDATORY_TOKENS]
         if has_mandatory:
-            passcode_like = remaining and all(word.isalnum() and 4 <= len(word) <= 8 for word in remaining)
+            passcode_like = remaining and all(is_passcode_shape(word) for word in remaining)
             if passcode_like:
                 footer_suffixes.extend(word for word in remaining if word not in footer_suffixes)
                 continue
@@ -81,9 +125,14 @@ def normalize_mandatory_tokens(text: str) -> str:
     while body_lines and not body_lines[-1].strip():
         body_lines.pop()
 
+    if passcode:
+        if not is_passcode_shape(passcode):
+            raise ValueError("passcode must be 5 uppercase letters/digits")
+        footer_suffixes = [passcode]
+
     footer = MANDATORY_FOOTER
     if footer_suffixes:
-        footer = f"{footer} {' '.join(footer_suffixes)}"
+        footer = f"{footer} {footer_suffixes[0]}"
 
     body = "\n".join(body_lines).strip()
     if body:
@@ -102,6 +151,8 @@ def verify_text(text: str) -> dict[str, Any]:
         "before_counts": before_counts,
         "after_counts": after_counts,
         "final_order": MANDATORY_FOOTER,
+        "passcode": extract_passcode(normalized),
+        "passcode_exists_in_db": passcode_exists(extract_passcode(normalized)),
         "valid_after": not missing_tokens(normalized) and not duplicate_tokens(normalized),
         "normalized_text": normalized,
     }
@@ -118,6 +169,8 @@ def verification_summary(text: str) -> dict[str, Any]:
         "before_counts": check["before_counts"],
         "after_counts": check["after_counts"],
         "final_order": check["final_order"],
+        "passcode": check["passcode"],
+        "passcode_exists_in_db": check["passcode_exists_in_db"],
         "valid_after": check["valid_after"],
     }
 
@@ -191,6 +244,10 @@ def build_config(scan_results: list[dict[str, Any]]) -> dict[str, Any]:
             "run_before_auto_post_pilot_output": True,
             "dedupe_tokens": True,
             "preserve_existing_passcode_suffix": True,
+            "passcode_source": "data/villain_passcodes.json",
+            "passcode_auto_generation_allowed": False,
+            "passcode_missing_blocks_posting": True,
+            "passcode_not_in_db_blocks_posting": True,
             "never_remove_for_brevity_or_novelty": True,
             "posting_execution_allowed": False,
             "x_api_write_allowed": False,

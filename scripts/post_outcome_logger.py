@@ -6,10 +6,13 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
+
+from required_token_layer import extract_passcode
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -128,6 +131,7 @@ def empty_metrics() -> dict[str, Any]:
         "likes": None,
         "reposts": None,
         "replies": None,
+        "bookmarks": None,
         "profile_clicks": None,
         "repost_reuse": None,
     }
@@ -137,6 +141,7 @@ def build_record(adapter: dict[str, Any], pilot: dict[str, Any]) -> dict[str, An
     item = find_pilot_item(pilot, adapter.get("execution_id", ""))
     text = adapter.get("text", "")
     image_path = adapter.get("media_used", "")
+    passcode = adapter.get("passcode") or item.get("passcode") or extract_passcode(text)
     scores = archetype_scores(text, item)
     return {
         "tweet_id": adapter.get("tweet_id", ""),
@@ -144,6 +149,7 @@ def build_record(adapter: dict[str, Any], pilot: dict[str, Any]) -> dict[str, An
         "posted_at_jst": adapter.get("posted_at", ""),
         "candidate_id": item.get("source_id", ""),
         "execution_id": adapter.get("execution_id", ""),
+        "passcode": passcode,
         "image_used": image_path,
         "image_hash": image_hash(image_path),
         "topic_cluster": infer_topic_cluster(text, item),
@@ -161,7 +167,7 @@ def build_record(adapter: dict[str, Any], pilot: dict[str, Any]) -> dict[str, An
         "metrics_1h": empty_metrics(),
         "metrics_24h": empty_metrics(),
         "human_review": {
-            "keep": None,
+            "keep": "pending",
             "delete_reason": "",
             "felt_native": None,
             "felt_ad_like": None,
@@ -176,6 +182,8 @@ def build_record(adapter: dict[str, Any], pilot: dict[str, Any]) -> dict[str, An
         },
         "text": text,
         "logged_at_jst": now_jst(),
+        "updated_at_jst": now_jst(),
+        "update_history": [],
     }
 
 
@@ -188,6 +196,135 @@ def upsert_record(db: dict[str, Any], record: dict[str, Any]) -> tuple[dict[str,
             return db, "updated"
     records.append(record)
     return db, "inserted"
+
+
+def parse_optional_bool(value: str) -> bool | None:
+    normalized = value.strip().lower()
+    if normalized in {"true", "yes", "1"}:
+        return True
+    if normalized in {"false", "no", "0"}:
+        return False
+    if normalized in {"null", "none", "pending", ""}:
+        return None
+    raise argparse.ArgumentTypeError("expected true, false, null, or pending")
+
+
+def parse_keep(value: str) -> bool | str:
+    normalized = value.strip().lower()
+    if normalized == "true":
+        return True
+    if normalized == "false":
+        return False
+    if normalized == "pending":
+        return "pending"
+    raise argparse.ArgumentTypeError("expected true, false, or pending")
+
+
+def ensure_metrics_shape(record: dict[str, Any]) -> None:
+    for key in ("metrics_1h", "metrics_24h"):
+        metrics = record.setdefault(key, {})
+        for metric_key, default in empty_metrics().items():
+            metrics.setdefault(metric_key, default)
+    review = record.setdefault("human_review", {})
+    review.setdefault("keep", "pending")
+    review.setdefault("delete_reason", "")
+    review.setdefault("felt_native", None)
+    review.setdefault("felt_ad_like", None)
+    review.setdefault("notes", "")
+    record.setdefault("update_history", [])
+
+
+def find_outcome_index(db: dict[str, Any], tweet_id: str, candidate_id: str) -> int:
+    for index, record in enumerate(db.get("outcomes", [])):
+        if tweet_id and record.get("tweet_id") == tweet_id:
+            return index
+        if candidate_id and record.get("candidate_id") == candidate_id:
+            return index
+    return -1
+
+
+def update_metric_group(record: dict[str, Any], group: str, args: argparse.Namespace, changed: dict[str, Any]) -> None:
+    metrics = record.setdefault(group, empty_metrics())
+    prefix = "metrics_1h" if group == "metrics_1h" else "metrics_24h"
+    fields = {
+        "impressions": getattr(args, f"{prefix}_impressions"),
+        "likes": getattr(args, f"{prefix}_likes"),
+        "reposts": getattr(args, f"{prefix}_reposts"),
+        "replies": getattr(args, f"{prefix}_replies"),
+        "bookmarks": getattr(args, f"{prefix}_bookmarks"),
+        "profile_clicks": getattr(args, f"{prefix}_profile_clicks"),
+        "repost_reuse": getattr(args, f"{prefix}_repost_reuse"),
+    }
+    group_changed = False
+    for field, value in fields.items():
+        if value is None:
+            continue
+        old_value = metrics.get(field)
+        if old_value == value:
+            continue
+        metrics[field] = value
+        changed[f"{group}.{field}"] = {"old": old_value, "new": value}
+        group_changed = True
+    captured_at = getattr(args, f"{prefix}_captured_at")
+    if captured_at:
+        old_value = metrics.get("captured_at_jst", "")
+        metrics["captured_at_jst"] = captured_at
+        changed[f"{group}.captured_at_jst"] = {"old": old_value, "new": captured_at}
+    elif group_changed and not metrics.get("captured_at_jst"):
+        metrics["captured_at_jst"] = now_jst()
+        changed[f"{group}.captured_at_jst"] = {"old": "", "new": metrics["captured_at_jst"]}
+
+
+def update_manual_review(record: dict[str, Any], args: argparse.Namespace, changed: dict[str, Any]) -> None:
+    review = record.setdefault("human_review", {})
+    updates = {
+        "keep": args.manual_keep,
+        "delete_reason": args.delete_reason,
+        "felt_native": args.felt_native,
+        "felt_ad_like": args.felt_ad_like,
+        "notes": args.notes,
+    }
+    for field, value in updates.items():
+        if value is None and field not in {"felt_native", "felt_ad_like", "keep"}:
+            continue
+        if field in {"felt_native", "felt_ad_like", "keep"} and not getattr(args, f"{field}_provided", False):
+            continue
+        old_value = review.get(field)
+        if old_value == value:
+            continue
+        review[field] = value
+        changed[f"human_review.{field}"] = {"old": old_value, "new": value}
+
+
+def update_existing_outcome(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
+    db = read_json(OUTCOME_PATH)
+    index = find_outcome_index(db, args.tweet_id, args.candidate_id)
+    if index < 0:
+        raise SystemExit("target outcome not found")
+    record = db["outcomes"][index]
+    ensure_metrics_shape(record)
+    changed: dict[str, Any] = {}
+    update_metric_group(record, "metrics_1h", args, changed)
+    update_metric_group(record, "metrics_24h", args, changed)
+    update_manual_review(record, args, changed)
+    if changed:
+        timestamp = now_jst()
+        record["updated_at_jst"] = timestamp
+        record.setdefault("update_history", []).append(
+            {
+                "updated_at_jst": timestamp,
+                "source": "post_outcome_logger_update",
+                "changes": changed,
+            }
+        )
+        db["outcomes"][index] = record
+        db["updated_at_jst"] = timestamp
+        db["last_action"] = "updated_outcome"
+        db["last_updated_tweet_id"] = record.get("tweet_id", "")
+    else:
+        db["last_action"] = "no_changes"
+        db["last_updated_tweet_id"] = record.get("tweet_id", "")
+    return db, db["last_action"]
 
 
 def build_db(adapter: dict[str, Any], pilot: dict[str, Any], existing: dict[str, Any]) -> tuple[dict[str, Any], str]:
@@ -228,26 +365,38 @@ def write_report(db: dict[str, Any], action: str) -> None:
         "## Latest Outcome",
         "",
     ]
-    latest = db.get("outcomes", [])[-1] if db.get("outcomes") else {}
+    latest = {}
+    last_updated = db.get("last_updated_tweet_id", "")
+    for outcome in db.get("outcomes", []):
+        if last_updated and outcome.get("tweet_id") == last_updated:
+            latest = outcome
+            break
+    if not latest:
+        latest = db.get("outcomes", [])[-1] if db.get("outcomes") else {}
     if latest:
+        metrics_1h = latest.get("metrics_1h", {})
+        metrics_24h = latest.get("metrics_24h", {})
         lines.extend(
             [
                 f"- tweet_id: `{latest.get('tweet_id')}`",
                 f"- url: {latest.get('url')}",
                 f"- candidate_id: `{latest.get('candidate_id')}`",
+                f"- passcode: `{latest.get('passcode', '')}`",
                 f"- posted_at_jst: `{latest.get('posted_at_jst')}`",
                 f"- image_hash: `{latest.get('image_hash')}`",
                 f"- topic_cluster: `{latest.get('topic_cluster')}`",
                 f"- archetype_primary: `{latest.get('archetype', {}).get('primary')}`",
                 f"- novelty_score: `{latest.get('scores', {}).get('novelty_score')}`",
                 f"- culture_observer_score: `{latest.get('scores', {}).get('culture_observer_score')}`",
-                f"- metrics_1h: `pending`",
-                f"- metrics_24h: `pending`",
+                f"- metrics_1h: `{metrics_1h}`",
+                f"- metrics_24h: `{metrics_24h}`",
                 f"- manual_review.keep: `{latest.get('human_review', {}).get('keep')}`",
                 f"- manual_review.delete_reason: `{latest.get('human_review', {}).get('delete_reason')}`",
                 f"- felt_native: `{latest.get('human_review', {}).get('felt_native')}`",
                 f"- felt_ad_like: `{latest.get('human_review', {}).get('felt_ad_like')}`",
                 f"- manual_review.notes: `{latest.get('human_review', {}).get('notes')}`",
+                f"- updated_at_jst: `{latest.get('updated_at_jst', '')}`",
+                f"- update_history_count: `{len(latest.get('update_history', []))}`",
                 "",
                 "```text",
                 latest.get("text", ""),
@@ -271,19 +420,53 @@ def write_report(db: dict[str, Any], action: str) -> None:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Log a Villain post outcome from the latest X write adapter result.")
-    parser.add_argument("--source", default="adapter", choices=["adapter"], help="Outcome source.")
-    return parser.parse_args()
+    parser = argparse.ArgumentParser(description="Log or update Villain post outcomes without X write calls.")
+    subparsers = parser.add_subparsers(dest="command")
+
+    log_parser = subparsers.add_parser("log", help="Log latest successful X write adapter result.")
+    log_parser.add_argument("--source", default="adapter", choices=["adapter"], help="Outcome source.")
+
+    update_parser = subparsers.add_parser("update", help="Update metrics and manual review for an existing outcome.")
+    update_parser.add_argument("--tweet-id", default="")
+    update_parser.add_argument("--candidate-id", default="")
+    for prefix in ("metrics-1h", "metrics-24h"):
+        update_parser.add_argument(f"--{prefix}-captured-at", default="")
+        update_parser.add_argument(f"--{prefix}-impressions", type=int)
+        update_parser.add_argument(f"--{prefix}-likes", type=int)
+        update_parser.add_argument(f"--{prefix}-reposts", type=int)
+        update_parser.add_argument(f"--{prefix}-replies", type=int)
+        update_parser.add_argument(f"--{prefix}-bookmarks", type=int)
+        update_parser.add_argument(f"--{prefix}-profile-clicks", type=int)
+        update_parser.add_argument(f"--{prefix}-repost-reuse", type=parse_optional_bool)
+    update_parser.add_argument("--manual-keep", type=parse_keep)
+    update_parser.add_argument("--delete-reason")
+    update_parser.add_argument("--felt-native", type=parse_optional_bool)
+    update_parser.add_argument("--felt-ad-like", type=parse_optional_bool)
+    update_parser.add_argument("--notes")
+
+    args = parser.parse_args()
+    if args.command is None:
+        args.command = "log"
+    argv = set(sys.argv[1:])
+    args.keep_provided = "--manual-keep" in argv
+    args.felt_native_provided = "--felt-native" in argv
+    args.felt_ad_like_provided = "--felt-ad-like" in argv
+    return args
 
 
 def main() -> None:
-    parse_args()
-    adapter = read_json(ADAPTER_PATH)
-    if adapter.get("status") != "SUCCESS" or not adapter.get("tweet_id"):
-        raise SystemExit("latest adapter result is not a successful posted tweet")
-    pilot = read_json(PILOT_PATH)
-    existing = read_json(OUTCOME_PATH)
-    db, action = build_db(adapter, pilot, existing)
+    args = parse_args()
+    if args.command == "update":
+        db, action = update_existing_outcome(args)
+        tweet_id = db.get("last_updated_tweet_id", "")
+    else:
+        adapter = read_json(ADAPTER_PATH)
+        if adapter.get("status") != "SUCCESS" or not adapter.get("tweet_id"):
+            raise SystemExit("latest adapter result is not a successful posted tweet")
+        pilot = read_json(PILOT_PATH)
+        existing = read_json(OUTCOME_PATH)
+        db, action = build_db(adapter, pilot, existing)
+        tweet_id = adapter.get("tweet_id")
     write_json(OUTCOME_PATH, db)
     write_report(db, action)
     print("status=LOCAL_OUTCOME_LOGGING_ONLY")
@@ -292,7 +475,7 @@ def main() -> None:
     print("upload_media=NOT_EXECUTED")
     print("create_tweet=NOT_EXECUTED")
     print(f"action={action}")
-    print(f"tweet_id={adapter.get('tweet_id')}")
+    print(f"tweet_id={tweet_id}")
     print(f"wrote {OUTCOME_PATH.relative_to(ROOT)}")
     print(f"wrote {REPORT_PATH.relative_to(ROOT)}")
 

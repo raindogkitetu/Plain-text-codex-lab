@@ -13,7 +13,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from required_token_layer import MANDATORY_FOOTER, normalize_mandatory_tokens, verification_summary
+from required_token_layer import (
+    MANDATORY_FOOTER,
+    normalize_mandatory_tokens,
+    passcode_exists,
+    select_passcodes,
+    verification_summary,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -21,39 +27,37 @@ OUTPUT_PATH = ROOT / "data" / "villain_generated_candidates.json"
 SCORING_RULES_PATH = ROOT / "data" / "villain_post_scoring_rules.json"
 REPORT_PATH = ROOT / "reports" / "villain_generated_candidates.md"
 
-PASSCODE = "R2J9T"
-FOOTER = f"{MANDATORY_FOOTER} {PASSCODE}"
 MAX_CANDIDATES = 3
 
 
 SEEDS: list[dict[str, str]] = [
     {
         "category": "COMMUNITY_INFO",
-        "text": "昨日の集会、\nまだ少し残ってる。\n\n説明より、\n人が集まってる事実の方が強い。\n\n$villainは、\nそこがちょっと変。\n\n" + FOOTER,
+        "text": "昨日の集会、\nまだ少し残ってる。\n\n説明より、\n人が集まってる事実の方が強い。\n\n$villainは、\nそこがちょっと変。",
         "image_hint": "COMMUNITY_MODE: 夜の街角やカフェ外、$villainを着た少人数の集まり。会話の気配、スマホを見る手元、背中、横顔。文字は少なめ。",
         "why_this_might_work": "実データで最強だったcommunity_info型。集会/現場感を短く置き、説明ではなく文化の動きを見せる。",
     },
     {
         "category": "POSTER_SUMMARY",
-        "text": "気づくと、\nまた$villainの話になってる。\n\n服の話だけなら、\nたぶんここまで残らない。\n\n" + FOOTER,
+        "text": "気づくと、\nまた$villainの話になってる。\n\n服の話だけなら、\nたぶんここまで残らない。",
         "image_hint": "POSTER_SUMMARY: $villainを着た人たちの日常コラージュ。駅、夜道、カフェ、コンビニ前。文化が街に残っている感じ。",
         "why_this_might_work": "poster_summaryは平均130.5 impressions。文化の違和感を一行目に置き、画像で止める。",
     },
     {
         "category": "CULTURE_OBSERVER",
-        "text": "話題になる服って、\nだいたい服だけじゃない。\n\n誰が着て、\nどこで集まってるかまで含めて、\n少し残る。\n\n" + FOOTER,
+        "text": "話題になる服って、\nだいたい服だけじゃない。\n\n誰が着て、\nどこで集まってるかまで含めて、\n少し残る。",
         "image_hint": "CULTURE_OBSERVER: 2〜4人の$villain着用者。広告感なし。会話、視線、街灯、現場の余白。文字は短く。",
         "why_this_might_work": "勝ち人格のculture_observerを優先。説明する人ではなく、現場を見て短く残す人に寄せる。",
     },
     {
         "category": "EMOTIONAL_DAMAGE",
-        "text": "刺さる言葉って、\nたまに雑に来る。\n\nLove $villain.\n\nそれだけで、\nちょっと逃げ場ない。\n\n" + FOOTER,
+        "text": "刺さる言葉って、\nたまに雑に来る。\n\nLove $villain.\n\nそれだけで、\nちょっと逃げ場ない。",
         "image_hint": "OBSERVER_MODE: ネオン看板の反射、孤独な後ろ姿、英字コピーは小さく『Love $villain』。",
         "why_this_might_work": "感情の引っかかりを短く置き、深く説明しない。",
     },
     {
         "category": "RELATIONSHIP_POWER",
-        "text": "服から始まって、\n誰かに届くことがある。\n\nそれくらいの距離が、\n今のVillainには合う。\n\n" + FOOTER,
+        "text": "服から始まって、\n誰かに届くことがある。\n\nそれくらいの距離が、\n今のVillainには合う。",
         "image_hint": "BRIGHT_MODE: 店先の光、2人分の影だけ、顔なし、明るすぎないティールとピンク。",
         "why_this_might_work": "関係性を押しつけず、人へ戻る感覚だけを残している。",
     },
@@ -76,7 +80,7 @@ def nonempty_lines(text: str) -> int:
 
 
 def has_thin_post_risk(text: str) -> bool:
-    body = text.replace(FOOTER, "").strip()
+    body = text.replace(MANDATORY_FOOTER, "").strip()
     return len(body) < 35 or nonempty_lines(body) < 3
 
 
@@ -168,23 +172,30 @@ def predict_quality(text: str, category: str, image_hint: str, rules: dict[str, 
     return total, components
 
 
-def build_candidate(index: int, seed: dict[str, str], rules: dict[str, Any], generated_at: str) -> dict[str, Any]:
-    normalized_text = normalize_mandatory_tokens(seed["text"])
-    token_check = verification_summary(seed["text"])
+def build_candidate(index: int, seed: dict[str, str], rules: dict[str, Any], generated_at: str, passcode: str) -> dict[str, Any]:
+    normalized_text = normalize_mandatory_tokens(seed["text"], passcode=passcode)
+    token_check = verification_summary(normalized_text)
     score, components = predict_quality(normalized_text, seed["category"], seed["image_hint"], rules)
     minimum = rules.get("selection_policy", {}).get("recommended_threshold", 80)
     villain_score = min(100, score + (5 if "着て稼ぐ" in normalized_text else 0))
+    passcode_valid = bool(passcode) and passcode_exists(passcode)
     return {
         "candidate_id": f"vln-gen-{generated_at[:10].replace('-', '')}-{index:03d}",
         "status": "generated",
         "dry_run_only": true_literal(),
-        "queue_add_allowed": score >= minimum,
-        "queue_add_blocked_reason": "" if score >= minimum else "quality_prediction_below_80",
+        "queue_add_allowed": score >= minimum and passcode_valid,
+        "queue_add_blocked_reason": ""
+        if score >= minimum and passcode_valid
+        else ("passcode_missing_or_not_in_db" if not passcode_valid else "quality_prediction_below_80"),
         "category": seed["category"],
+        "passcode": passcode,
         "text": normalized_text,
         "token_verification": {
             "required_layer": "Required Token Layer v1",
             "mandatory_footer_order": MANDATORY_FOOTER,
+            "passcode_source": "data/villain_passcodes.json",
+            "passcode": passcode,
+            "passcode_exists_in_db": passcode_valid,
             "missing_before": token_check["missing_before"],
             "duplicates_before": token_check["duplicates_before"],
             "normalized": token_check["changed"],
@@ -230,6 +241,8 @@ def write_report(db: dict[str, Any]) -> None:
                 f"- quality_prediction: `{candidate.get('quality_prediction')}`",
                 f"- queue_add_allowed: `{str(candidate.get('queue_add_allowed')).lower()}`",
                 f"- risk_prediction: `{candidate.get('risk_prediction')}`",
+                f"- passcode: `{candidate.get('passcode')}`",
+                f"- passcode_exists_in_db: `{str(candidate.get('token_verification', {}).get('passcode_exists_in_db')).lower()}`",
                 f"- required_tokens_valid_after: `{str(candidate.get('token_verification', {}).get('valid_after')).lower()}`",
                 f"- mandatory_footer_order: `{candidate.get('token_verification', {}).get('mandatory_footer_order')}`",
                 f"- why_this_might_work: {candidate.get('why_this_might_work')}",
@@ -250,6 +263,7 @@ def main() -> None:
     rules = read_json(SCORING_RULES_PATH)
     now = datetime.now(timezone.utc).isoformat()
     selected = SEEDS[:MAX_CANDIDATES]
+    passcodes = select_passcodes(len(selected))
     db = {
         "db_name": "Villain Generated Candidates DB",
         "version": "1.0.0",
@@ -287,10 +301,23 @@ def main() -> None:
                 "minimum_score_for_queue_add": rules.get("selection_policy", {}).get("recommended_threshold", 80),
                 "score_below_threshold_queue_add_allowed": False,
             },
+            "passcode": {
+                "enabled": True,
+                "length": 5,
+                "alphabet": "A-Z0-9",
+                "source": "data/villain_passcodes.json",
+                "auto_generation_allowed": False,
+                "missing_blocks_posting": True,
+                "not_in_db_blocks_posting": True,
+                "placement": "after mandatory footer",
+            },
         },
         "run_id": f"vln-gen-run-{now[:10].replace('-', '')}",
         "generated_at": now,
-        "candidates": [build_candidate(index, seed, rules, now) for index, seed in enumerate(selected, 1)],
+        "candidates": [
+            build_candidate(index, seed, rules, now, passcodes[index - 1] if index - 1 < len(passcodes) else "")
+            for index, seed in enumerate(selected, 1)
+        ],
     }
     write_json(OUTPUT_PATH, db)
     write_report(db)

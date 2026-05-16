@@ -1,6 +1,6 @@
 # Villain Required Token Layer v1
 
-- Generated at JST: `2026-05-16T11:20:35+09:00`
+- Generated at JST: `2026-05-16T21:06:15+09:00`
 - status: `active_local_validation`
 - live posting: `NOT_EXECUTED`
 - X API write: `NOT_USED`

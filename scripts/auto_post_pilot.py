@@ -19,7 +19,13 @@ from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from required_token_layer import MANDATORY_FOOTER, normalize_mandatory_tokens, verification_summary
+from required_token_layer import (
+    MANDATORY_FOOTER,
+    extract_passcode,
+    normalize_mandatory_tokens,
+    passcode_exists,
+    verification_summary,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -251,7 +257,8 @@ def generated_candidates(generated_db: dict[str, Any]) -> list[dict[str, Any]]:
     items: list[dict[str, Any]] = []
     for candidate in generated_db.get("candidates", []):
         category = normalize_category(candidate.get("category", ""))
-        normalized_text = normalize_mandatory_tokens(candidate.get("text", ""))
+        passcode = candidate.get("passcode") or extract_passcode(candidate.get("text", ""))
+        normalized_text = normalize_mandatory_tokens(candidate.get("text", ""), passcode=passcode or None)
         items.append(
             {
                 "source": "generated_candidates",
@@ -259,8 +266,9 @@ def generated_candidates(generated_db: dict[str, Any]) -> list[dict[str, Any]]:
                 "status": "fresh",
                 "daily_selection_selected": True,
                 "category": category,
+                "passcode": passcode,
                 "text": normalized_text,
-                "token_verification": verification_summary(candidate.get("text", "")),
+                "token_verification": verification_summary(normalized_text),
                 "image_hint": candidate.get("image_hint", ""),
                 "score": candidate.get("quality_prediction", 0),
                 "risk": candidate.get("risk_prediction", "medium"),
@@ -281,7 +289,8 @@ def stream_candidates(stream_db: dict[str, Any]) -> list[dict[str, Any]]:
             continue
         scores = item.get("scores", {})
         image = item.get("image", {})
-        normalized_text = normalize_mandatory_tokens(item.get("text", ""))
+        passcode = item.get("passcode") or extract_passcode(item.get("text", ""))
+        normalized_text = normalize_mandatory_tokens(item.get("text", ""), passcode=passcode or None)
         items.append(
             {
                 "source": "candidate_stream",
@@ -290,8 +299,9 @@ def stream_candidates(stream_db: dict[str, Any]) -> list[dict[str, Any]]:
                 "daily_selection_selected": item.get("review", {}).get("human_decision") in {"approved", "timing"}
                 or status in {"fresh", "approved", "aging"},
                 "category": normalize_category(item.get("category", "")),
+                "passcode": passcode,
                 "text": normalized_text,
-                "token_verification": verification_summary(item.get("text", "")),
+                "token_verification": verification_summary(normalized_text),
                 "image_hint": image.get("rights_notes", ""),
                 "image": image,
                 "score": scores.get("quality_prediction") or 80,
@@ -486,11 +496,16 @@ def eligibility(
     same_image = image.get("absolute_path") in used_images or image.get("file_path") in used_images
     repeated = repeated_topic(candidate, posted_first_lines)
     required_tokens_verified = candidate.get("token_verification", {}).get("valid_after") is True
+    passcode = candidate.get("passcode") or extract_passcode(text)
 
     if not candidate.get("daily_selection_selected", False):
         blockers.append("daily_selection_selected_false")
     if not required_tokens_verified:
         blockers.append("required_tokens_not_verified")
+    if not passcode:
+        blockers.append("passcode_missing")
+    elif not passcode_exists(passcode):
+        blockers.append("passcode_not_in_db")
     if score < 80:
         blockers.append("score_below_80")
     if risk == "high":
@@ -575,17 +590,20 @@ def build_plan(mode: str) -> dict[str, Any]:
                 pilot_score += 10
             if candidate.get("category") in {"culture_observer", "poster_summary", "community_info"}:
                 pilot_score += 8
+            passcode = candidate.get("passcode") or extract_passcode(candidate.get("text", ""))
+            normalized_text = normalize_mandatory_tokens(candidate.get("text", ""), passcode=passcode or None)
             option = {
                 "slot": slot,
                 "source": candidate.get("source"),
                 "source_id": candidate.get("source_id"),
                 "category": category,
-                "text": normalize_mandatory_tokens(candidate.get("text", "")),
-                "text_preview": compact_preview(normalize_mandatory_tokens(candidate.get("text", ""))),
+                "passcode": passcode,
+                "text": normalized_text,
+                "text_preview": compact_preview(normalized_text),
                 "token_verification": {
                     "required_layer": "Required Token Layer v1",
                     "mandatory_footer_order": MANDATORY_FOOTER,
-                    **verification_summary(candidate.get("text", "")),
+                    **verification_summary(normalized_text),
                 },
                 "image": image,
                 "score": int(candidate.get("score") or 0),
@@ -632,18 +650,21 @@ def build_plan(mode: str) -> dict[str, Any]:
             if not ok:
                 continue
             slot = "morning"
+            passcode = candidate.get("passcode") or extract_passcode(candidate.get("text", ""))
+            normalized_text = normalize_mandatory_tokens(candidate.get("text", ""), passcode=passcode or None)
             pilot_items.append(
                 {
                     "slot": slot,
                     "source": candidate.get("source"),
                     "source_id": candidate.get("source_id"),
                     "category": category,
-                    "text": normalize_mandatory_tokens(candidate.get("text", "")),
-                    "text_preview": compact_preview(normalize_mandatory_tokens(candidate.get("text", ""))),
+                    "passcode": passcode,
+                    "text": normalized_text,
+                    "text_preview": compact_preview(normalized_text),
                     "token_verification": {
                         "required_layer": "Required Token Layer v1",
                         "mandatory_footer_order": MANDATORY_FOOTER,
-                        **verification_summary(candidate.get("text", "")),
+                        **verification_summary(normalized_text),
                     },
                     "image": image,
                     "score": int(candidate.get("score") or 0),
@@ -754,6 +775,8 @@ def build_plan(mode: str) -> dict[str, Any]:
                 "same_image_cooldown",
                 "repeated_topic_penalty",
                 "required_tokens_not_verified",
+                "passcode_missing",
+                "passcode_not_in_db",
                 "max_posts_per_day_reached",
             ],
         },
@@ -791,6 +814,8 @@ def build_plan(mode: str) -> dict[str, Any]:
                 "repeated_topic_penalty",
                 "same_image_cooldown",
                 "required_tokens_not_verified",
+                "passcode_missing",
+                "passcode_not_in_db",
                 "novelty_too_low",
                 "score_below_80",
                 "max_posts_per_day_reached",
@@ -813,6 +838,7 @@ def build_plan(mode: str) -> dict[str, Any]:
                 "execution_id": f"vln-exec-{item.get('slot')}-{item.get('source_id')}",
                 "slot": item.get("slot"),
                 "source_id": item.get("source_id"),
+                "passcode": item.get("passcode"),
                 "planned_publish_after_jst": item.get("planned_publish_after_jst"),
                 "ready_for_limited_live_execution": mode in LIVE_EXECUTION_MODES
                 and item.get("eligible") is True
@@ -899,6 +925,8 @@ def write_report(plan: dict[str, Any]) -> None:
                 f"- source: `{item.get('source')}` / `{item.get('source_id')}`",
                 f"- score: `{item.get('score')}`",
                 f"- risk: `{item.get('risk')}`",
+                f"- passcode: `{item.get('passcode', '')}`",
+                f"- passcode_exists_in_db: `{str(item.get('token_verification', {}).get('passcode_exists_in_db', False)).lower()}`",
                 f"- novelty: `{item.get('novelty_score')}`",
                 f"- raw_novelty: `{item.get('raw_novelty_score')}`",
                 f"- remixability: `{item.get('remixability_score')}`",
@@ -950,6 +978,7 @@ def write_report(plan: dict[str, Any]) -> None:
         lines.extend(
             [
                 f"- `{item.get('execution_id')}`",
+                f"  - passcode: `{item.get('passcode', '')}`",
                 f"  - ready_for_limited_live_execution: `{str(item.get('ready_for_limited_live_execution')).lower()}`",
                 f"  - planned_publish_after_jst: `{item.get('planned_publish_after_jst')}`",
                 "  - x_api_write_called_by_this_script: `false`",

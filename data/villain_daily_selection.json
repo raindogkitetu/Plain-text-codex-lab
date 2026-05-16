@@ -23,7 +23,18 @@
     "required_token_layer": "data/villain_required_tokens.json",
     "selection_does_not_unlock_posting": true,
     "human_final_approval_required": true,
-    "final_text_requires_mandatory_tokens": true
+    "final_text_requires_mandatory_tokens": true,
+    "final_text_requires_passcode": true,
+    "passcode_policy": {
+      "length": 5,
+      "alphabet": "A-Z0-9",
+      "canonical_source": "data/villain_passcodes.json",
+      "auto_generation_allowed": false,
+      "missing_blocks_posting": true,
+      "not_in_db_blocks_posting": true,
+      "placement": "mandatory footer after @0xmavillain",
+      "blocked_codes": []
+    }
   },
   "selection_score_weights": {
     "current_trend_fit": 12,
