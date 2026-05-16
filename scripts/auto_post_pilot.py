@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Build a Villain limited live pilot plan.
+"""Build a Villain limited live pilot/execution plan.
 
-Pilot v1 supports DRY_RUN and LIVE_PILOT planning modes. It reads local
-candidate/strategy JSON, chooses 3-5 supervised posting candidates, and writes a
-report. This script does not contain an X API write adapter; LIVE_PILOT arms a
-limited execution plan only after hard gates pass. It never performs unlimited
-posting. It also stores only lightweight note seeds, not note drafts.
+Pilot v1 supports DRY_RUN, LIVE_PILOT, and LIMITED_LIVE_EXECUTION planning
+modes. It reads local candidate/strategy JSON, chooses 3-5 supervised posting
+candidates, and writes a report. This script does not contain an X API write
+adapter; live modes arm a limited execution manifest only after hard gates pass.
+It never performs unlimited posting. It also stores only lightweight note seeds,
+not note drafts.
 """
 
 from __future__ import annotations
@@ -33,13 +34,13 @@ OUTPUT_PATH = ROOT / "data" / "villain_auto_post_pilot.json"
 REPORT_PATH = ROOT / "reports" / "villain_auto_post_pilot.md"
 
 JST = ZoneInfo("Asia/Tokyo")
-PILOT_VERSION = "1.2.0"
+PILOT_VERSION = "1.3.0"
 TARGET_MIN = 3
 TARGET_MAX = 5
 MAX_POSTS_PER_DAY = 5
 COOLDOWN_BETWEEN_POSTS_MINUTES = 120
 MIN_NOVELTY_FOR_PILOT = 40
-VALID_MODES = {"DRY_RUN", "LIVE_PILOT", "PLAN_ONLY"}
+VALID_MODES = {"DRY_RUN", "LIVE_PILOT", "LIMITED_LIVE_EXECUTION", "PLAN_ONLY"}
 
 CATEGORY_ALIASES = {
     "COMMUNITY_INFO": "community_info",
@@ -65,7 +66,9 @@ SLOT_FALLBACK = {
     "late_night": "fallback_to_best_image_ready_culture_or_community",
 }
 
-LIVE_MODES = {"LIVE_PILOT"}
+LIVE_PILOT_MODES = {"LIVE_PILOT"}
+LIVE_EXECUTION_MODES = {"LIMITED_LIVE_EXECUTION"}
+LIVE_MODES = LIVE_PILOT_MODES | LIVE_EXECUTION_MODES
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -262,6 +265,7 @@ def generated_candidates(generated_db: dict[str, Any]) -> list[dict[str, Any]]:
                 "score": candidate.get("quality_prediction", 0),
                 "risk": candidate.get("risk_prediction", "medium"),
                 "novelty_score": None,
+                "remixability_score": None,
                 "already_posted": False,
                 "why": candidate.get("why_this_might_work", ""),
             }
@@ -293,6 +297,7 @@ def stream_candidates(stream_db: dict[str, Any]) -> list[dict[str, Any]]:
                 "score": scores.get("quality_prediction") or 80,
                 "risk": scores.get("risk_prediction") or "medium",
                 "novelty_score": scores.get("novelty_score"),
+                "remixability_score": scores.get("remixability_score"),
                 "already_posted": bool(item.get("post_execution", {}).get("posted_url")),
                 "why": item.get("learning", {}).get("manual_notes", ""),
             }
@@ -351,6 +356,72 @@ def novelty_penalty(flags: list[str]) -> int:
         "overpolished": 10,
     }
     return sum(penalties.get(flag, 0) for flag in flags)
+
+
+def remixability_score(candidate: dict[str, Any], image: dict[str, Any], novelty_db: dict[str, Any]) -> tuple[int, dict[str, Any]]:
+    explicit = candidate.get("remixability_score")
+    if isinstance(explicit, (int, float)):
+        return int(explicit), {"source": "candidate_score", "signals": [], "components": {}}
+
+    text = candidate.get("text", "")
+    category = candidate.get("category", "")
+    line = first_line(text)
+    image_ready = image.get("ready") is True
+    weights = novelty_db.get("remixability_score_weights", {})
+    components: dict[str, int] = {}
+    signals: list[str] = []
+
+    quoteable = bool(line) and len(line) <= 24
+    components["quoteability"] = weights.get("quoteability", 16) if quoteable else 6
+    if quoteable:
+        signals.append("one_sentence_complete")
+
+    reusable_visual = image_ready and category in {"community_info", "poster_summary", "culture_observer"}
+    components["reusable_visual"] = weights.get("reusable_visual", 18) if reusable_visual else (8 if image_ready else 0)
+    if reusable_visual:
+        signals.append("image_stands_alone")
+
+    community_repost = category in {"community_info", "culture_observer"} or any(
+        word in text for word in ("集会", "集ま", "誰が着て", "人が")
+    )
+    components["community_reposting_probability"] = weights.get("community_reposting_probability", 18) if community_repost else 7
+    if community_repost:
+        signals.append("community_reposting_probability")
+
+    identity = any(word in text for word in ("$villain", "Villain", "#villain")) and category in {
+        "community_info",
+        "poster_summary",
+        "culture_observer",
+    }
+    components["identity_attachment"] = weights.get("identity_attachment", 16) if identity else 8
+    if identity:
+        signals.append("identity_badge_feel")
+
+    nonempty_lines = [item for item in text.splitlines() if item.strip()]
+    portable = 3 <= len(nonempty_lines) <= 9 and len(text) <= 240
+    components["phrase_portability"] = weights.get("phrase_portability", 14) if portable else 6
+    if portable:
+        signals.append("someone_else_can_say_it")
+
+    screenshot_fit = image_ready or quoteable
+    components["screenshot_reuse_fit"] = weights.get("screenshot_reuse_fit", 10) if screenshot_fit else 4
+    if screenshot_fit:
+        signals.append("screenshot_friendly")
+
+    cropable = image_ready and image.get("file_path")
+    components["cropability"] = weights.get("cropability", 8) if cropable else 2
+    if cropable:
+        signals.append("cropability")
+
+    penalty = 0
+    joined = f"{text}\n{image.get('reason', '')}".lower()
+    if any(word in joined for word in ("overpolished", "too clean", "too_symmetric", "generic_ai_visual")):
+        penalty += 10
+    if len(text) > 260:
+        penalty += 8
+
+    score = max(0, min(100, sum(components.values()) - penalty))
+    return score, {"source": "computed", "signals": sorted(set(signals)), "components": components, "penalty": penalty}
 
 
 def repeated_topic(candidate: dict[str, Any], posted_first_lines: set[str]) -> bool:
@@ -414,9 +485,12 @@ def eligibility(
     image_ready = image.get("ready") is True
     same_image = image.get("absolute_path") in used_images or image.get("file_path") in used_images
     repeated = repeated_topic(candidate, posted_first_lines)
+    required_tokens_verified = candidate.get("token_verification", {}).get("valid_after") is True
 
     if not candidate.get("daily_selection_selected", False):
         blockers.append("daily_selection_selected_false")
+    if not required_tokens_verified:
+        blockers.append("required_tokens_not_verified")
     if score < 80:
         blockers.append("score_below_80")
     if risk == "high":
@@ -482,6 +556,7 @@ def build_plan(mode: str) -> dict[str, Any]:
             novelty_score = novelty_floor(candidate, novelty_db)
             saturation_flags = novelty_saturation_flags(candidate, image)
             adjusted_novelty = max(0, novelty_score - novelty_penalty(saturation_flags))
+            remix_score, remix = remixability_score(candidate, image, novelty_db)
             ok, blockers, warnings = eligibility(
                 candidate,
                 image,
@@ -493,6 +568,7 @@ def build_plan(mode: str) -> dict[str, Any]:
             )
             fit = slot_fit(candidate, slot, daily_db)
             pilot_score = int(candidate.get("score") or 0) + adjusted_novelty + fit
+            pilot_score += remix_score
             if image.get("ready"):
                 pilot_score += 16
             if candidate.get("risk") == "low":
@@ -516,6 +592,8 @@ def build_plan(mode: str) -> dict[str, Any]:
                 "risk": candidate.get("risk", "medium"),
                 "novelty_score": adjusted_novelty,
                 "raw_novelty_score": novelty_score,
+                "remixability_score": remix_score,
+                "remixability": remix,
                 "saturation_flags": saturation_flags,
                 "pilot_score": pilot_score,
                 "eligible": ok,
@@ -549,6 +627,7 @@ def build_plan(mode: str) -> dict[str, Any]:
             novelty_score = novelty_floor(candidate, novelty_db)
             saturation_flags = novelty_saturation_flags(candidate, image)
             adjusted_novelty = max(0, novelty_score - novelty_penalty(saturation_flags))
+            remix_score, remix = remixability_score(candidate, image, novelty_db)
             ok, blockers, warnings = eligibility(candidate, image, adjusted_novelty, mode, posted_texts, posted_first_lines, used_images)
             if not ok:
                 continue
@@ -571,8 +650,10 @@ def build_plan(mode: str) -> dict[str, Any]:
                     "risk": candidate.get("risk", "medium"),
                     "novelty_score": adjusted_novelty,
                     "raw_novelty_score": novelty_score,
+                    "remixability_score": remix_score,
+                    "remixability": remix,
                     "saturation_flags": saturation_flags,
-                    "pilot_score": int(candidate.get("score") or 0) + adjusted_novelty,
+                    "pilot_score": int(candidate.get("score") or 0) + adjusted_novelty + remix_score,
                     "eligible": True,
                     "blockers": blockers,
                     "warnings": warnings + ["backup_slot_selected_due_to_low_plan_count"],
@@ -591,13 +672,34 @@ def build_plan(mode: str) -> dict[str, Any]:
         item["post_after_publish_review"] = True
         item["manual_override_allowed"] = True
         item["delete_if_needed"] = True
+        item["required_tokens_verified"] = item.get("token_verification", {}).get("valid_after") is True
+        item["execution_gate"] = {
+            "max_posts_per_day_ok": remaining_today > 0,
+            "cooldown_between_posts_minutes": COOLDOWN_BETWEEN_POSTS_MINUTES,
+            "risk_not_high": item.get("risk") != "high",
+            "already_posted_false": "already_posted" not in item.get("blockers", []),
+            "same_image_cooldown_ok": "same_image_cooldown" not in item.get("blockers", []),
+            "repeated_topic_penalty_ok": "repeated_topic_penalty" not in item.get("blockers", []),
+            "required_tokens_verified": item["required_tokens_verified"],
+        }
+        item["post_publish_learning_plan"] = {
+            "analysis_after_hours": 24,
+            "metrics": ["impressions", "likes", "reposts", "replies", "profile_clicks"],
+            "learning_focus": ["residual_growth", "profile_clicks", "repost_reuse", "remixability"],
+        }
         item["note_seed"] = note_seed_for(item)
 
-    if mode in LIVE_MODES and remaining_today <= 0:
+    if mode in LIVE_EXECUTION_MODES and remaining_today <= 0:
+        status = "LIMITED_LIVE_EXECUTION_BLOCKED"
+    elif mode in LIVE_EXECUTION_MODES and len(pilot_items) >= 1:
+        status = "LIMITED_LIVE_EXECUTION_READY"
+    elif mode in LIVE_EXECUTION_MODES:
+        status = "LIMITED_LIVE_EXECUTION_BLOCKED"
+    elif mode in LIVE_PILOT_MODES and remaining_today <= 0:
         status = "LIVE_PILOT_BLOCKED"
-    elif mode in LIVE_MODES and len(pilot_items) >= 1:
+    elif mode in LIVE_PILOT_MODES and len(pilot_items) >= 1:
         status = "LIMITED_LIVE_PILOT_READY"
-    elif mode in LIVE_MODES:
+    elif mode in LIVE_PILOT_MODES:
         status = "LIVE_PILOT_BLOCKED"
     else:
         status = "PLAN_READY" if len(pilot_items) >= TARGET_MIN else "PARTIAL_PLAN"
@@ -612,6 +714,8 @@ def build_plan(mode: str) -> dict[str, Any]:
         warnings.append("live_pilot_using_generated_candidates_fallback_until_stream_is_populated")
     if mode in LIVE_MODES and remaining_today <= 0:
         warnings.append("max_posts_per_day_reached")
+    if mode in LIVE_EXECUTION_MODES:
+        warnings.append("limited_live_execution_manifest_only_no_x_write_adapter_called")
 
     return {
         "db_name": "Villain Auto Post Pilot Plan",
@@ -631,13 +735,38 @@ def build_plan(mode: str) -> dict[str, Any]:
             "remaining_posts_today": remaining_today,
             "cooldown_between_posts_minutes": COOLDOWN_BETWEEN_POSTS_MINUTES,
         },
+        "limited_live_execution": {
+            "mode_enabled": mode in LIVE_EXECUTION_MODES,
+            "live_execution_mode": "LIMITED_LIVE_EXECUTION",
+            "execution_scope": "supervised_limited_posting_manifest",
+            "posting_adapter_in_this_script": False,
+            "requires_human_supervision": True,
+            "max_posts_per_day": MAX_POSTS_PER_DAY,
+            "cooldown_between_posts_minutes": COOLDOWN_BETWEEN_POSTS_MINUTES,
+            "manual_safety": {
+                "delete_if_needed": True,
+                "manual_override_allowed": True,
+                "post_after_publish_review": True,
+            },
+            "hard_blocks": [
+                "risk_high",
+                "already_posted",
+                "same_image_cooldown",
+                "repeated_topic_penalty",
+                "required_tokens_not_verified",
+                "max_posts_per_day_reached",
+            ],
+        },
         "safety": {
             "live_posting_allowed": mode in LIVE_MODES,
-            "x_api_write_allowed": mode in LIVE_MODES,
-            "upload_media_allowed": mode in LIVE_MODES,
-            "create_tweet_allowed": mode in LIVE_MODES,
+            "x_api_write_allowed_by_this_script": False,
+            "upload_media_allowed_by_this_script": False,
+            "create_tweet_allowed_by_this_script": False,
+            "x_write_adapter_allowed_in_limited_live_execution": mode in LIVE_EXECUTION_MODES,
             "auto_posting_allowed": False,
             "would_execute_actions": [],
+            "api_key_output_allowed": False,
+            "env_output_allowed": False,
         },
         "pilot_policy": {
             "human_supervision_required_after_post": True,
@@ -647,13 +776,21 @@ def build_plan(mode: str) -> dict[str, Any]:
             "note_creation_enabled": False,
             "note_seed_only": True,
             "execution_enabled": mode in LIVE_MODES,
-            "execution_enablement_requires_separate_design": False,
+            "execution_enablement_requires_separate_design": mode not in LIVE_EXECUTION_MODES,
             "density_priority": "slightly_higher_than_overcautious_blocking",
+            "policy_alignment": {
+                "human_control": True,
+                "privacy_respect": True,
+                "no_spam_or_deception": True,
+                "no_sensitive_personal_data_output": True,
+                "source": "OpenAI usage policies effective 2025-10-29",
+            },
             "hard_blocks": [
                 "risk_high",
                 "already_posted",
                 "repeated_topic_penalty",
                 "same_image_cooldown",
+                "required_tokens_not_verified",
                 "novelty_too_low",
                 "score_below_80",
                 "max_posts_per_day_reached",
@@ -668,8 +805,26 @@ def build_plan(mode: str) -> dict[str, Any]:
             "generated_candidates": str(GENERATED_PATH.relative_to(ROOT)),
             "manual_results": str(MANUAL_RESULTS_PATH.relative_to(ROOT)),
             "safe_post_executor": "scripts/safe_post_executor.py",
+            "x_write_adapter": "scripts/x_write_adapter.py",
         },
         "warnings": warnings,
+        "execution_manifest": [
+            {
+                "execution_id": f"vln-exec-{item.get('slot')}-{item.get('source_id')}",
+                "slot": item.get("slot"),
+                "source_id": item.get("source_id"),
+                "planned_publish_after_jst": item.get("planned_publish_after_jst"),
+                "ready_for_limited_live_execution": mode in LIVE_EXECUTION_MODES
+                and item.get("eligible") is True
+                and item.get("required_tokens_verified") is True,
+                "manual_review_after_publish": True,
+                "delete_if_needed": True,
+                "x_api_write_called_by_this_script": False,
+                "upload_media_called_by_this_script": False,
+                "create_tweet_called_by_this_script": False,
+            }
+            for item in pilot_items
+        ],
         "pilot_plan": pilot_items,
         "rejected_or_blocked_count": len(rejected_items),
         "rejected_or_blocked_preview": rejected_items[:10],
@@ -680,6 +835,7 @@ def write_report(plan: dict[str, Any]) -> None:
     mode = plan.get("mode", "DRY_RUN")
     policy = plan.get("pilot_policy", {})
     limits = plan.get("live_pilot_limits", {})
+    execution = plan.get("limited_live_execution", {})
     lines = [
         "# Villain Auto Post Pilot v1",
         "",
@@ -687,24 +843,34 @@ def write_report(plan: dict[str, Any]) -> None:
         f"- version: `{plan.get('version')}`",
         f"- status: `{plan.get('status')}`",
         f"- mode: `{mode}`",
-        "- live posting: `NOT_EXECUTED`",
-        "- X API write: `NOT_USED`",
-        "- upload_media: `NOT_EXECUTED`",
-        "- create_tweet: `NOT_EXECUTED`",
+        "- live posting by this script: `NOT_EXECUTED`",
+        "- X API write by this script: `NOT_USED`",
+        "- upload_media by this script: `NOT_EXECUTED`",
+        "- create_tweet by this script: `NOT_EXECUTED`",
         f"- execution_enabled: `{str(policy.get('execution_enabled', False)).lower()}`",
         f"- source_mode: `{plan.get('source_mode')}`",
         f"- target_post_count: `{plan.get('target_post_count', {}).get('actual')}` / `{TARGET_MIN}-{TARGET_MAX}`",
         "",
         "## Pilot Policy",
         "",
-        "- 完全放置ではなく、人間監督前提のlimited live pilot。",
-        "- DRY_RUNでは計画生成のみ。LIVE_PILOTでは上限内の実弾候補をarmする。",
-        "- このスクリプト実行中にX API writeは呼ばない。実投稿アダプタは別レイヤー。",
+        "- 完全放置BOTではなく、人間監督前提のlimited live運用。",
+        "- DRY_RUNでは計画生成のみ。LIVE_PILOTでは実弾候補をarmする。",
+        "- LIMITED_LIVE_EXECUTIONでは、上限内の実行manifestを作る。",
+        "- このスクリプト実行中にX API writeは呼ばない。投稿adapterは別レイヤー。",
         "- risk high / 重複 / 明らかな低品質 / novelty低すぎ は止める。",
+        "- required_tokens_verified=true をhard gateにする。",
         "- max_posts_per_dayとcooldown_between_postsを必ず見る。",
         "- post_after_publish_review / manual_override_allowed / delete_if_needed を前提にする。",
+        "- remixabilityをscoringに入れ、画像がコミュニティ素材化する確率を見る。",
         "- image_readyを優先するが、pilotではtext-only枠も警告付きで許可可能。",
         "- note本文は作らない。各投稿に軽いnote_seedだけ残す。",
+        "",
+        "## OpenAI Policy Alignment",
+        "",
+        "- 人間の制御を残す: `post_after_publish_review`, `manual_override_allowed`, `delete_if_needed`。",
+        "- プライバシーを尊重し、APIキー/.env/機微情報は出力しない。",
+        "- スパム、欺瞞、なりすまし、無制限投稿を避ける。",
+        "- high risk / repeated / same image / token未検証は止める。",
         "",
         "## Live Pilot Limits",
         "",
@@ -712,6 +878,8 @@ def write_report(plan: dict[str, Any]) -> None:
         f"- posts_already_recorded_today: `{limits.get('posts_already_recorded_today')}`",
         f"- remaining_posts_today: `{limits.get('remaining_posts_today')}`",
         f"- cooldown_between_posts_minutes: `{limits.get('cooldown_between_posts_minutes')}`",
+        f"- limited_live_execution_mode_enabled: `{str(execution.get('mode_enabled', False)).lower()}`",
+        f"- posting_adapter_in_this_script: `{str(execution.get('posting_adapter_in_this_script', False)).lower()}`",
         "",
     ]
     if plan.get("warnings"):
@@ -733,11 +901,14 @@ def write_report(plan: dict[str, Any]) -> None:
                 f"- risk: `{item.get('risk')}`",
                 f"- novelty: `{item.get('novelty_score')}`",
                 f"- raw_novelty: `{item.get('raw_novelty_score')}`",
+                f"- remixability: `{item.get('remixability_score')}`",
+                f"- remixability_signals: `{', '.join(item.get('remixability', {}).get('signals', [])) if item.get('remixability', {}).get('signals') else 'none'}`",
                 f"- saturation_flags: `{', '.join(item.get('saturation_flags', [])) if item.get('saturation_flags') else 'none'}`",
                 f"- pilot_score: `{item.get('pilot_score')}`",
                 f"- image_ready: `{str(image.get('ready')).lower()}`",
                 f"- image: `{image.get('file_path', '')}`",
                 f"- required_tokens_valid_after: `{str(item.get('token_verification', {}).get('valid_after')).lower()}`",
+                f"- required_tokens_verified: `{str(item.get('required_tokens_verified', False)).lower()}`",
                 f"- mandatory_footer_order: `{item.get('token_verification', {}).get('mandatory_footer_order', MANDATORY_FOOTER)}`",
                 f"- planned_publish_after_jst: `{item.get('planned_publish_after_jst', '')}`",
                 f"- post_after_publish_review: `{str(item.get('post_after_publish_review', False)).lower()}`",
@@ -746,6 +917,14 @@ def write_report(plan: dict[str, Any]) -> None:
                 f"- expected_type: `{item.get('expected_type')}`",
                 f"- fallback_action: `{item.get('fallback_action')}`",
                 f"- reason: {item.get('reason')}",
+            ]
+        )
+        gate = item.get("execution_gate", {})
+        lines.extend(
+            [
+                f"- execution_gate_required_tokens: `{str(gate.get('required_tokens_verified', False)).lower()}`",
+                f"- execution_gate_same_image_cooldown_ok: `{str(gate.get('same_image_cooldown_ok', False)).lower()}`",
+                f"- execution_gate_repeated_topic_ok: `{str(gate.get('repeated_topic_penalty_ok', False)).lower()}`",
             ]
         )
         if item.get("warnings"):
@@ -764,16 +943,45 @@ def write_report(plan: dict[str, Any]) -> None:
         )
         lines.extend(["", "```text", item.get("text", ""), "```", ""])
 
+    lines.extend(["## Execution Manifest", ""])
+    if not plan.get("execution_manifest"):
+        lines.extend(["- No execution manifest items.", ""])
+    for item in plan.get("execution_manifest", []):
+        lines.extend(
+            [
+                f"- `{item.get('execution_id')}`",
+                f"  - ready_for_limited_live_execution: `{str(item.get('ready_for_limited_live_execution')).lower()}`",
+                f"  - planned_publish_after_jst: `{item.get('planned_publish_after_jst')}`",
+                "  - x_api_write_called_by_this_script: `false`",
+                "  - upload_media_called_by_this_script: `false`",
+                "  - create_tweet_called_by_this_script: `false`",
+            ]
+        )
+    lines.append("")
+
+    lines.extend(
+        [
+            "## 24h Learning",
+            "",
+            "- 投稿後24hで `residual_growth`, `profile_clicks`, `repost_reuse`, `remixability` を見る。",
+            "- 画像が抜粋再投稿された場合は `repost_reuse=true` として残す。",
+            "- profile_clicksだけでなく、画像単体の二次拡散を学習対象にする。",
+            "",
+        ]
+    )
+
     lines.extend(
         [
             "## Execution Boundary",
             "",
-            "このスクリプトは選定とarmまで。X API write adapterは呼ばない。",
+            "このスクリプトは選定、arm、execution manifest作成まで。X API write adapterは呼ばない。",
             "",
             "- LIVE_PILOT modeでも無制限投稿は禁止。",
+            "- LIMITED_LIVE_EXECUTION modeでも、このスクリプト単体では投稿しない。",
             "- risk highは禁止。",
             "- 同一画像連投は禁止。",
             "- 既投稿再投稿は禁止。",
+            "- APIキー/.env出力は禁止。",
             "- 人間の後追い確認、削除、修正を前提にする。",
             "- note本文、note構成、note投稿準備はしない。",
             "",
@@ -798,7 +1006,10 @@ def parse_args() -> argparse.Namespace:
         "--mode",
         choices=sorted(VALID_MODES),
         default="DRY_RUN",
-        help="DRY_RUN builds a plan; LIVE_PILOT arms a limited live pilot plan without calling X API write.",
+        help=(
+            "DRY_RUN builds a plan; LIVE_PILOT arms candidates; "
+            "LIMITED_LIVE_EXECUTION writes a supervised execution manifest without calling X API write."
+        ),
     )
     return parser.parse_args()
 
