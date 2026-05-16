@@ -450,12 +450,8 @@ def build_plan(mode: str) -> dict[str, Any]:
     raw_candidates = stream_candidates(stream_db)
     source_mode = "candidate_stream"
     if not raw_candidates:
-        if mode in LIVE_MODES:
-            raw_candidates = []
-            source_mode = "candidate_stream_empty_live_blocked"
-        else:
-            raw_candidates = generated_candidates(generated_db)
-            source_mode = "generated_candidates_fallback"
+        raw_candidates = generated_candidates(generated_db)
+        source_mode = "generated_candidates_fallback"
 
     used_images = set(posted_images)
     selected_ids: set[str] = set()
@@ -596,8 +592,8 @@ def build_plan(mode: str) -> dict[str, Any]:
         warnings.append("pilot_plan_below_target_minimum")
     if not any(item.get("image", {}).get("ready") for item in pilot_items):
         warnings.append("no_image_ready_items")
-    if mode in LIVE_MODES and source_mode == "candidate_stream_empty_live_blocked":
-        warnings.append("live_pilot_requires_nonempty_candidate_stream")
+    if mode in LIVE_MODES and source_mode == "generated_candidates_fallback":
+        warnings.append("live_pilot_using_generated_candidates_fallback_until_stream_is_populated")
     if mode in LIVE_MODES and remaining_today <= 0:
         warnings.append("max_posts_per_day_reached")
 
