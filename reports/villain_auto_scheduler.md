@@ -1,11 +1,11 @@
 # Villain Auto Scheduler v1
 
-- Generated at JST: `2026-05-17T00:50:32+09:00`
-- status: `NETWORK_PREFLIGHT_FAILED`
+- Generated at JST: `2026-05-17T00:56:37+09:00`
+- status: `SUCCESS_POSTED_ONCE`
 - mode: `LIVE_PILOT`
-- live posting: `NOT_EXECUTED`
-- upload_media: `NOT_EXECUTED`
-- create_tweet: `NOT_EXECUTED`
+- live posting: `EXECUTED_ONCE`
+- upload_media: `EXECUTED_ONCE`
+- create_tweet: `EXECUTED_ONCE`
 - no_retry_unless_manual: `true`
 
 ## Scheduler Limits
@@ -30,23 +30,23 @@
 
 ## Adapter Check
 
-- status: `READY_NOT_EXECUTED`
+- status: `SUCCESS`
 - mode: `LIMITED_LIVE_EXECUTION`
-- live_posting: `NOT_EXECUTED`
-- upload_media: `NOT_EXECUTED`
-- create_tweet: `NOT_EXECUTED`
+- live_posting: `EXECUTED_ONCE`
+- upload_media: `EXECUTED_ONCE`
+- create_tweet: `EXECUTED_ONCE`
 - required_tokens_verified: `true`
 - passcode_verified: `true`
 - blockers: `none`
 
 ## Network Preflight
 
-- status: `FAILED`
+- status: `PASSED`
 - request_sent: `false`
 - upload_media_called: `false`
 - create_tweet_called: `false`
-- api.twitter.com: dns_resolved=`false`
-- upload.twitter.com: dns_resolved=`false`
+- api.twitter.com: dns_resolved=`true`
+- upload.twitter.com: dns_resolved=`true`
 
 ## Sandbox Finding
 
