@@ -2,7 +2,7 @@
 """Build a Villain limited live pilot/execution plan.
 
 Pilot v1 supports DRY_RUN, LIVE_PILOT, and LIMITED_LIVE_EXECUTION planning
-modes. It reads local candidate/strategy JSON, chooses 3-5 supervised posting
+modes. It reads local candidate/strategy JSON, chooses up to 3 supervised posting
 candidates, and writes a report. This script does not contain an X API write
 adapter; live modes arm a limited execution manifest only after hard gates pass.
 It never performs unlimited posting. It also stores only lightweight note seeds,
@@ -26,6 +26,11 @@ from required_token_layer import (
     passcode_exists,
     verification_summary,
 )
+from media_deduplication import (
+    MEDIA_REUSE_COOLDOWN_DAYS,
+    build_recent_media_history,
+    media_reuse_check,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -36,14 +41,16 @@ IMAGE_STRATEGY_PATH = ROOT / "data" / "villain_image_strategy.json"
 SCORING_RULES_PATH = ROOT / "data" / "villain_post_scoring_rules.json"
 GENERATED_PATH = ROOT / "data" / "villain_generated_candidates.json"
 MANUAL_RESULTS_PATH = ROOT / "data" / "manual_post_results.json"
+OUTCOMES_PATH = ROOT / "data" / "villain_post_outcomes.json"
 OUTPUT_PATH = ROOT / "data" / "villain_auto_post_pilot.json"
 REPORT_PATH = ROOT / "reports" / "villain_auto_post_pilot.md"
+MEDIA_HISTORY_PATH = ROOT / "data" / "recent_media_history.json"
 
 JST = ZoneInfo("Asia/Tokyo")
 PILOT_VERSION = "1.3.0"
 TARGET_MIN = 3
-TARGET_MAX = 5
-MAX_POSTS_PER_DAY = 5
+TARGET_MAX = 3
+MAX_POSTS_PER_DAY = 3
 COOLDOWN_BETWEEN_POSTS_MINUTES = 120
 MIN_NOVELTY_FOR_PILOT = 40
 VALID_MODES = {"DRY_RUN", "LIVE_PILOT", "LIMITED_LIVE_EXECUTION", "PLAN_ONLY"}
@@ -58,7 +65,7 @@ CATEGORY_ALIASES = {
     "RELATIONSHIP_POWER": "culture_observer",
 }
 
-SLOT_ORDER = ["morning", "daytime", "night", "late_night"]
+SLOT_ORDER = ["daytime", "night", "late_night"]
 SLOT_EXPECTED_TYPE = {
     "morning": "instant_reaction_or_light_residual",
     "daytime": "profile_pull_or_explainer",
@@ -152,6 +159,27 @@ def today_post_count(manual_db: dict[str, Any]) -> int:
         if not item.get("post_url"):
             continue
         posted_at = parse_jst(item.get("post_datetime_jst", ""))
+        if posted_at and posted_at.date() == today:
+            count += 1
+    return count
+
+
+def is_success_outcome(record: dict[str, Any]) -> bool:
+    return (
+        bool(record.get("tweet_id"))
+        and bool(record.get("url"))
+        and bool(record.get("posted_at_jst"))
+        and record.get("status") == "SUCCESS"
+    )
+
+
+def outcome_successes_today(outcomes_db: dict[str, Any]) -> int:
+    today = datetime.now(JST).date()
+    count = 0
+    for record in outcomes_db.get("outcomes", []):
+        if not is_success_outcome(record):
+            continue
+        posted_at = parse_jst(record.get("posted_at_jst", ""))
         if posted_at and posted_at.date() == today:
             count += 1
     return count
@@ -486,6 +514,7 @@ def eligibility(
     posted_texts: set[str],
     posted_first_lines: set[str],
     used_images: set[str],
+    media_history: dict[str, Any],
 ) -> tuple[bool, list[str], list[str]]:
     blockers: list[str] = []
     warnings: list[str] = []
@@ -494,6 +523,7 @@ def eligibility(
     score = int(candidate.get("score") or 0)
     image_ready = image.get("ready") is True
     same_image = image.get("absolute_path") in used_images or image.get("file_path") in used_images
+    media_reuse = media_reuse_check(image, media_history) if image.get("ready") else {"blockers": [], "matches": []}
     repeated = repeated_topic(candidate, posted_first_lines)
     required_tokens_verified = candidate.get("token_verification", {}).get("valid_after") is True
     passcode = candidate.get("passcode") or extract_passcode(text)
@@ -516,6 +546,14 @@ def eligibility(
         blockers.append("repeated_topic_penalty")
     if same_image:
         blockers.append("same_image_cooldown")
+    for blocker in media_reuse.get("blockers", []):
+        if blocker in {
+            "same_media_path",
+            "same_media_sha256",
+            "near_duplicate_media_phash",
+            "same_prompt_family_cooldown",
+        }:
+            blockers.append(blocker)
     if novelty_score < MIN_NOVELTY_FOR_PILOT:
         blockers.append("novelty_too_low")
     if not image_ready:
@@ -524,6 +562,8 @@ def eligibility(
             warnings.append("primary_category_prefers_image")
     if len(text) > 260:
         warnings.append("text_long_for_pilot")
+    if media_reuse.get("matches"):
+        warnings.append("recent_media_reuse_match_found")
     return not blockers, blockers, warnings
 
 
@@ -537,8 +577,10 @@ def build_plan(mode: str) -> dict[str, Any]:
     scoring_db = read_json(SCORING_RULES_PATH)
     generated_db = read_json(GENERATED_PATH)
     manual_db = read_json(MANUAL_RESULTS_PATH)
+    outcomes_db = read_json(OUTCOMES_PATH)
     posted_texts, posted_first_lines, posted_images = manual_texts_and_images(manual_db)
-    posts_today = today_post_count(manual_db)
+    media_history = build_recent_media_history(write=True)
+    posts_today = outcome_successes_today(outcomes_db)
     remaining_today = max(0, MAX_POSTS_PER_DAY - posts_today)
     image_by_category = image_recommendations_by_category(image_db)
 
@@ -580,7 +622,9 @@ def build_plan(mode: str) -> dict[str, Any]:
                 posted_texts,
                 posted_first_lines,
                 used_images,
+                media_history,
             )
+            media_reuse = media_reuse_check(image, media_history) if image.get("ready") else {"signature": {}, "blockers": [], "matches": []}
             fit = slot_fit(candidate, slot, daily_db)
             pilot_score = int(candidate.get("score") or 0) + adjusted_novelty + fit
             pilot_score += remix_score
@@ -612,6 +656,7 @@ def build_plan(mode: str) -> dict[str, Any]:
                 "raw_novelty_score": novelty_score,
                 "remixability_score": remix_score,
                 "remixability": remix,
+                "media_deduplication": media_reuse,
                 "saturation_flags": saturation_flags,
                 "pilot_score": pilot_score,
                 "eligible": ok,
@@ -646,10 +691,11 @@ def build_plan(mode: str) -> dict[str, Any]:
             saturation_flags = novelty_saturation_flags(candidate, image)
             adjusted_novelty = max(0, novelty_score - novelty_penalty(saturation_flags))
             remix_score, remix = remixability_score(candidate, image, novelty_db)
-            ok, blockers, warnings = eligibility(candidate, image, adjusted_novelty, mode, posted_texts, posted_first_lines, used_images)
+            ok, blockers, warnings = eligibility(candidate, image, adjusted_novelty, mode, posted_texts, posted_first_lines, used_images, media_history)
             if not ok:
                 continue
-            slot = "morning"
+            media_reuse = media_reuse_check(image, media_history) if image.get("ready") else {"signature": {}, "blockers": [], "matches": []}
+            slot = "daytime"
             passcode = candidate.get("passcode") or extract_passcode(candidate.get("text", ""))
             normalized_text = normalize_mandatory_tokens(candidate.get("text", ""), passcode=passcode or None)
             pilot_items.append(
@@ -673,6 +719,7 @@ def build_plan(mode: str) -> dict[str, Any]:
                     "raw_novelty_score": novelty_score,
                     "remixability_score": remix_score,
                     "remixability": remix,
+                    "media_deduplication": media_reuse,
                     "saturation_flags": saturation_flags,
                     "pilot_score": int(candidate.get("score") or 0) + adjusted_novelty + remix_score,
                     "eligible": True,
@@ -700,6 +747,15 @@ def build_plan(mode: str) -> dict[str, Any]:
             "risk_not_high": item.get("risk") != "high",
             "already_posted_false": "already_posted" not in item.get("blockers", []),
             "same_image_cooldown_ok": "same_image_cooldown" not in item.get("blockers", []),
+            "media_reuse_cooldown_ok": not any(
+                blocker in item.get("blockers", [])
+                for blocker in (
+                    "same_media_path",
+                    "same_media_sha256",
+                    "near_duplicate_media_phash",
+                    "same_prompt_family_cooldown",
+                )
+            ),
             "repeated_topic_penalty_ok": "repeated_topic_penalty" not in item.get("blockers", []),
             "required_tokens_verified": item["required_tokens_verified"],
         }
@@ -773,6 +829,10 @@ def build_plan(mode: str) -> dict[str, Any]:
                 "risk_high",
                 "already_posted",
                 "same_image_cooldown",
+                "same_media_path",
+                "same_media_sha256",
+                "near_duplicate_media_phash",
+                "same_prompt_family_cooldown",
                 "repeated_topic_penalty",
                 "required_tokens_not_verified",
                 "passcode_missing",
@@ -813,6 +873,10 @@ def build_plan(mode: str) -> dict[str, Any]:
                 "already_posted",
                 "repeated_topic_penalty",
                 "same_image_cooldown",
+                "same_media_path",
+                "same_media_sha256",
+                "near_duplicate_media_phash",
+                "same_prompt_family_cooldown",
                 "required_tokens_not_verified",
                 "passcode_missing",
                 "passcode_not_in_db",
@@ -829,6 +893,8 @@ def build_plan(mode: str) -> dict[str, Any]:
             "scoring_rules": str(SCORING_RULES_PATH.relative_to(ROOT)),
             "generated_candidates": str(GENERATED_PATH.relative_to(ROOT)),
             "manual_results": str(MANUAL_RESULTS_PATH.relative_to(ROOT)),
+            "outcomes": str(OUTCOMES_PATH.relative_to(ROOT)),
+            "recent_media_history": str(MEDIA_HISTORY_PATH.relative_to(ROOT)),
             "safe_post_executor": "scripts/safe_post_executor.py",
             "x_write_adapter": "scripts/x_write_adapter.py",
         },
@@ -843,6 +909,7 @@ def build_plan(mode: str) -> dict[str, Any]:
                 "ready_for_limited_live_execution": mode in LIVE_EXECUTION_MODES
                 and item.get("eligible") is True
                 and item.get("required_tokens_verified") is True,
+                "media_reuse_cooldown_ok": item.get("execution_gate", {}).get("media_reuse_cooldown_ok", False),
                 "manual_review_after_publish": True,
                 "delete_if_needed": True,
                 "x_api_write_called_by_this_script": False,
@@ -889,6 +956,7 @@ def write_report(plan: dict[str, Any]) -> None:
         "- post_after_publish_review / manual_override_allowed / delete_if_needed を前提にする。",
         "- remixabilityをscoringに入れ、画像がコミュニティ素材化する確率を見る。",
         "- image_readyを優先するが、pilotではtext-only枠も警告付きで許可可能。",
+        f"- media reuse cooldownは `{MEDIA_REUSE_COOLDOWN_DAYS}` 日。phash/sha256/path/prompt familyで近似重複を止める。",
         "- note本文は作らない。各投稿に軽いnote_seedだけ残す。",
         "",
         "## OpenAI Policy Alignment",
@@ -897,6 +965,7 @@ def write_report(plan: dict[str, Any]) -> None:
         "- プライバシーを尊重し、APIキー/.env/機微情報は出力しない。",
         "- スパム、欺瞞、なりすまし、無制限投稿を避ける。",
         "- high risk / repeated / same image / token未検証は止める。",
+        "- 直近7日以内の同一/近似画像、同一構図、同一prompt familyは止める。",
         "",
         "## Live Pilot Limits",
         "",
@@ -935,6 +1004,8 @@ def write_report(plan: dict[str, Any]) -> None:
                 f"- pilot_score: `{item.get('pilot_score')}`",
                 f"- image_ready: `{str(image.get('ready')).lower()}`",
                 f"- image: `{image.get('file_path', '')}`",
+                f"- media_dedup_blockers: `{', '.join(item.get('media_deduplication', {}).get('blockers', [])) if item.get('media_deduplication', {}).get('blockers') else 'none'}`",
+                f"- media_dedup_matches: `{len(item.get('media_deduplication', {}).get('matches', []))}`",
                 f"- required_tokens_valid_after: `{str(item.get('token_verification', {}).get('valid_after')).lower()}`",
                 f"- required_tokens_verified: `{str(item.get('required_tokens_verified', False)).lower()}`",
                 f"- mandatory_footer_order: `{item.get('token_verification', {}).get('mandatory_footer_order', MANDATORY_FOOTER)}`",
@@ -952,6 +1023,7 @@ def write_report(plan: dict[str, Any]) -> None:
             [
                 f"- execution_gate_required_tokens: `{str(gate.get('required_tokens_verified', False)).lower()}`",
                 f"- execution_gate_same_image_cooldown_ok: `{str(gate.get('same_image_cooldown_ok', False)).lower()}`",
+                f"- execution_gate_media_reuse_cooldown_ok: `{str(gate.get('media_reuse_cooldown_ok', False)).lower()}`",
                 f"- execution_gate_repeated_topic_ok: `{str(gate.get('repeated_topic_penalty_ok', False)).lower()}`",
             ]
         )

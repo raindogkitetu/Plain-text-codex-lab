@@ -58,6 +58,8 @@ DEFAULT_CONFIG = {
         "required_tokens_not_verified",
         "passcode_missing",
         "passcode_not_in_db",
+        "human_review_pending",
+        "previous_post_marked_delete_or_drop",
     ],
     "paths": {
         "state": "data/villain_auto_scheduler_state.json",
@@ -152,36 +154,70 @@ def manual_posts_today() -> int:
     return count
 
 
-def scheduler_successes_today(state: dict[str, Any]) -> int:
+def is_success_outcome(record: dict[str, Any]) -> bool:
+    return (
+        bool(record.get("tweet_id"))
+        and bool(record.get("url"))
+        and bool(record.get("posted_at_jst"))
+        and record.get("status") == "SUCCESS"
+    )
+
+
+def success_outcomes(outcomes_db: dict[str, Any]) -> list[dict[str, Any]]:
+    return [record for record in outcomes_db.get("outcomes", []) if is_success_outcome(record)]
+
+
+def outcome_successes_today(outcomes_db: dict[str, Any]) -> int:
     today = today_jst()
-    return sum(1 for item in state.get("successful_posts", []) if str(item.get("posted_at_jst", "")).startswith(today))
+    return sum(1 for record in success_outcomes(outcomes_db) if str(record.get("posted_at_jst", "")).startswith(today))
 
 
-def latest_success_at(state: dict[str, Any]) -> datetime | None:
-    timestamps = [
-        parse_jst(item.get("posted_at_jst", ""))
-        for item in state.get("successful_posts", [])
-        if item.get("posted_at_jst")
-    ]
-    timestamps = [item for item in timestamps if item is not None]
-    return max(timestamps) if timestamps else None
+def latest_success_outcome(outcomes_db: dict[str, Any]) -> dict[str, Any]:
+    records = []
+    for record in success_outcomes(outcomes_db):
+        posted = parse_jst(record.get("posted_at_jst", ""))
+        if posted:
+            records.append((posted, record))
+    if not records:
+        return {}
+    return max(records, key=lambda item: item[0])[1]
 
 
-def scheduler_blockers(config: dict[str, Any], state: dict[str, Any]) -> list[str]:
+def latest_success_at(outcomes_db: dict[str, Any]) -> datetime | None:
+    latest = latest_success_outcome(outcomes_db)
+    return parse_jst(latest.get("posted_at_jst", "")) if latest else None
+
+
+def human_review_blocker(outcomes_db: dict[str, Any]) -> str:
+    latest = latest_success_outcome(outcomes_db)
+    if not latest:
+        return ""
+    keep = latest.get("human_review", {}).get("keep", "pending")
+    if keep == "pending":
+        return "human_review_pending"
+    if keep is False:
+        return "previous_post_marked_delete_or_drop"
+    return ""
+
+
+def scheduler_blockers(config: dict[str, Any], outcomes_db: dict[str, Any]) -> list[str]:
     blockers: list[str] = []
     if config.get("manual_stop") is True:
         blockers.append("manual_stop")
 
     max_posts = int(config.get("max_posts_per_day", 3))
-    posts_today = manual_posts_today() + scheduler_successes_today(state)
+    posts_today = outcome_successes_today(outcomes_db)
     if posts_today >= max_posts:
         blockers.append("max_posts_per_day_reached")
 
-    latest = latest_success_at(state)
+    latest = latest_success_at(outcomes_db)
     if latest:
         cooldown = timedelta(minutes=int(config.get("cooldown_between_posts_minutes", 120)))
         if datetime.now(JST) < latest + cooldown:
             blockers.append("cooldown_active")
+    review_blocker = human_review_blocker(outcomes_db)
+    if review_blocker:
+        blockers.append(review_blocker)
     return blockers
 
 
@@ -245,6 +281,33 @@ def write_report(result: dict[str, Any]) -> None:
         f"- cooldown_between_posts_minutes: `{result.get('limits', {}).get('cooldown_between_posts_minutes')}`",
         f"- max_posts_per_run: `{result.get('limits', {}).get('max_posts_per_run')}`",
         f"- posts_counted_today: `{result.get('limits', {}).get('posts_counted_today')}`",
+        f"- post_count_source: `{result.get('limits', {}).get('post_count_source')}`",
+        "",
+        "## Daily Slots",
+        "",
+        "- 03:00: maintenance only; no posting.",
+        "- 13:00: daytime posting slot.",
+        "- 20:00: night posting slot.",
+        "- 23:00: late night posting slot.",
+        "",
+        "## Gate Order",
+        "",
+        "1. `manual_stop`",
+        "2. outcome DB daily success count",
+        "3. cooldown from latest successful outcome",
+        "4. `human_review.keep` from latest successful outcome",
+        "5. Auto Post Pilot candidate gates",
+        "6. X Write Adapter gates",
+        "7. network preflight before any write attempt",
+        "",
+        "## Human Review Gate",
+        "",
+        f"- latest_success_tweet_id: `{result.get('human_review_gate', {}).get('latest_tweet_id', '')}`",
+        f"- latest_success_posted_at_jst: `{result.get('human_review_gate', {}).get('latest_posted_at_jst', '')}`",
+        f"- latest_success_keep: `{result.get('human_review_gate', {}).get('latest_keep', '')}`",
+        "- `pending` blocks as `human_review_pending`.",
+        "- `false` blocks as `previous_post_marked_delete_or_drop`.",
+        "- `true` is required before the next post.",
         "",
         "## Stop",
         "",
@@ -327,9 +390,11 @@ def write_report(result: dict[str, Any]) -> None:
 def build_result(args: argparse.Namespace) -> dict[str, Any]:
     config = read_json(CONFIG_PATH, DEFAULT_CONFIG)
     state = read_json(STATE_PATH, {"successful_posts": [], "last_run_at_jst": ""})
+    outcomes_db = read_json(OUTCOMES_PATH, {})
     mode = args.mode
     generated_at = now_jst()
-    base_blockers = scheduler_blockers(config, state)
+    base_blockers = scheduler_blockers(config, outcomes_db)
+    latest_success = latest_success_outcome(outcomes_db)
     result: dict[str, Any] = {
         "db_name": "Villain Auto Scheduler Run",
         "version": "1.0.0",
@@ -349,7 +414,15 @@ def build_result(args: argparse.Namespace) -> dict[str, Any]:
             "max_posts_per_day": int(config.get("max_posts_per_day", 3)),
             "cooldown_between_posts_minutes": int(config.get("cooldown_between_posts_minutes", 120)),
             "max_posts_per_run": int(config.get("max_posts_per_run", 1)),
-            "posts_counted_today": manual_posts_today() + scheduler_successes_today(state),
+            "posts_counted_today": outcome_successes_today(outcomes_db),
+            "post_count_source": "data/villain_post_outcomes.json",
+        },
+        "human_review_gate": {
+            "source": "latest_success_outcome",
+            "latest_tweet_id": latest_success.get("tweet_id", ""),
+            "latest_posted_at_jst": latest_success.get("posted_at_jst", ""),
+            "latest_keep": latest_success.get("human_review", {}).get("keep", "") if latest_success else "",
+            "required_to_continue": True,
         },
         "safety": {
             "passcode_canonical_source": "data/villain_passcodes.json",
@@ -469,7 +542,15 @@ def main() -> None:
         write_json(CONFIG_PATH, DEFAULT_CONFIG)
     result = build_result(args)
     append_log(result)
-    write_json(STATE_PATH, {**read_json(STATE_PATH, {}), "last_run_at_jst": result["generated_at_jst"], "last_status": result["status"]})
+    write_json(
+        STATE_PATH,
+        {
+            **read_json(STATE_PATH, {}),
+            "last_run_at_jst": result["generated_at_jst"],
+            "last_status": result["status"],
+            "last_selected_execution_id": result.get("selected_manifest", {}).get("execution_id", ""),
+        },
+    )
     write_report(result)
     print(f"status={result.get('status')}")
     print(f"mode={result.get('mode')}")

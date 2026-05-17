@@ -31,12 +31,14 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from required_token_layer import MANDATORY_FOOTER, extract_passcode, normalize_mandatory_tokens, passcode_exists, verification_summary
+from media_deduplication import build_recent_media_history, media_reuse_check
 
 
 ROOT = Path(__file__).resolve().parents[1]
 ENV_PATH = ROOT / ".env"
 PILOT_PATH = ROOT / "data" / "villain_auto_post_pilot.json"
 MANUAL_RESULTS_PATH = ROOT / "data" / "manual_post_results.json"
+OUTCOMES_PATH = ROOT / "data" / "villain_post_outcomes.json"
 RESULT_PATH = ROOT / "data" / "villain_x_write_adapter.json"
 REPORT_PATH = ROOT / "reports" / "villain_x_write_adapter.md"
 
@@ -46,7 +48,7 @@ USERNAME = "raindog_kitetu"
 JST = ZoneInfo("Asia/Tokyo")
 VALID_MODES = {"DRY_RUN", "LIVE_PILOT", "LIMITED_LIVE_EXECUTION"}
 REQUIRED_KEYS = ["X_API_KEY", "X_API_SECRET", "X_ACCESS_TOKEN", "X_ACCESS_TOKEN_SECRET"]
-MAX_POSTS_PER_DAY = 5
+MAX_POSTS_PER_DAY = 3
 COOLDOWN_BETWEEN_POSTS_MINUTES = 120
 
 
@@ -145,6 +147,57 @@ def latest_post_at(manual_db: dict[str, Any]) -> datetime | None:
     return max(posted) if posted else None
 
 
+def is_success_outcome(record: dict[str, Any]) -> bool:
+    return (
+        bool(record.get("tweet_id"))
+        and bool(record.get("url"))
+        and bool(record.get("posted_at_jst"))
+        and record.get("status") == "SUCCESS"
+    )
+
+
+def success_outcomes(outcomes_db: dict[str, Any]) -> list[dict[str, Any]]:
+    return [record for record in outcomes_db.get("outcomes", []) if is_success_outcome(record)]
+
+
+def outcome_successes_today(outcomes_db: dict[str, Any]) -> int:
+    today = datetime.now(JST).date()
+    count = 0
+    for record in success_outcomes(outcomes_db):
+        posted_at = parse_jst(record.get("posted_at_jst", ""))
+        if posted_at and posted_at.date() == today:
+            count += 1
+    return count
+
+
+def latest_success_outcome(outcomes_db: dict[str, Any]) -> dict[str, Any]:
+    records = []
+    for record in success_outcomes(outcomes_db):
+        posted_at = parse_jst(record.get("posted_at_jst", ""))
+        if posted_at:
+            records.append((posted_at, record))
+    if not records:
+        return {}
+    return max(records, key=lambda item: item[0])[1]
+
+
+def latest_success_at(outcomes_db: dict[str, Any]) -> datetime | None:
+    latest = latest_success_outcome(outcomes_db)
+    return parse_jst(latest.get("posted_at_jst", "")) if latest else None
+
+
+def human_review_blocker(outcomes_db: dict[str, Any]) -> str:
+    latest = latest_success_outcome(outcomes_db)
+    if not latest:
+        return ""
+    keep = latest.get("human_review", {}).get("keep", "pending")
+    if keep == "pending":
+        return "human_review_pending"
+    if keep is False:
+        return "previous_post_marked_delete_or_drop"
+    return ""
+
+
 def select_manifest_item(pilot: dict[str, Any], execution_id: str) -> dict[str, Any]:
     items = pilot.get("execution_manifest", [])
     if execution_id:
@@ -181,7 +234,14 @@ def manual_texts_and_images(manual_db: dict[str, Any]) -> tuple[set[str], set[st
     return texts, images
 
 
-def execution_blockers(mode: str, pilot: dict[str, Any], manifest: dict[str, Any], item: dict[str, Any], manual_db: dict[str, Any]) -> list[str]:
+def execution_blockers(
+    mode: str,
+    pilot: dict[str, Any],
+    manifest: dict[str, Any],
+    item: dict[str, Any],
+    manual_db: dict[str, Any],
+    outcomes_db: dict[str, Any],
+) -> list[str]:
     blockers: list[str] = []
     if mode != "LIMITED_LIVE_EXECUTION":
         blockers.append("mode_not_limited_live_execution")
@@ -229,15 +289,29 @@ def execution_blockers(mode: str, pilot: dict[str, Any], manifest: dict[str, Any
     image_path = image.get("absolute_path") or image.get("file_path", "")
     if image_path and image_path in posted_images:
         blockers.append("same_image_cooldown")
+    if image.get("ready"):
+        media_history = build_recent_media_history(read_json(OUTCOMES_PATH), write=True)
+        media_check = media_reuse_check(image, media_history)
+        for blocker in media_check.get("blockers", []):
+            if blocker in {
+                "same_media_path",
+                "same_media_sha256",
+                "near_duplicate_media_phash",
+                "same_prompt_family_cooldown",
+            }:
+                blockers.append(blocker)
 
-    posts_today = today_post_count(manual_db)
+    posts_today = outcome_successes_today(outcomes_db)
     if posts_today >= MAX_POSTS_PER_DAY:
         blockers.append("max_posts_per_day_reached")
-    latest = latest_post_at(manual_db)
+    latest = latest_success_at(outcomes_db)
     if latest:
         next_allowed = latest + timedelta(minutes=COOLDOWN_BETWEEN_POSTS_MINUTES)
         if datetime.now(JST) < next_allowed:
             blockers.append("cooldown_between_posts_active")
+    review_blocker = human_review_blocker(outcomes_db)
+    if review_blocker:
+        blockers.append(review_blocker)
     return sorted(set(blockers))
 
 
@@ -334,6 +408,7 @@ def write_report(result: dict[str, Any]) -> None:
 def build_result(args: argparse.Namespace) -> dict[str, Any]:
     pilot = read_json(PILOT_PATH)
     manual_db = read_json(MANUAL_RESULTS_PATH)
+    outcomes_db = read_json(OUTCOMES_PATH)
     manifest = select_manifest_item(pilot, args.execution_id)
     item = pilot_item_for_manifest(pilot, manifest) if manifest else {}
     passcode = item.get("passcode") or extract_passcode(item.get("text", "")) if item else ""
@@ -342,7 +417,7 @@ def build_result(args: argparse.Namespace) -> dict[str, Any]:
     image_path = image.get("absolute_path") or image.get("file_path", "")
     if image_path and not str(image_path).startswith("/"):
         image_path = str(ROOT / image_path)
-    blockers = execution_blockers(args.mode, pilot, manifest, item, manual_db)
+    blockers = execution_blockers(args.mode, pilot, manifest, item, manual_db, outcomes_db)
     required_tokens_verified = verification_summary(text).get("valid_after") is True if text else False
     passcode_verified = bool(passcode and passcode_exists(passcode))
 

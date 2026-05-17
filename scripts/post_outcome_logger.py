@@ -13,6 +13,7 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from required_token_layer import extract_passcode
+from media_deduplication import perceptual_hash, prompt_family_for
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -141,17 +142,23 @@ def build_record(adapter: dict[str, Any], pilot: dict[str, Any]) -> dict[str, An
     item = find_pilot_item(pilot, adapter.get("execution_id", ""))
     text = adapter.get("text", "")
     image_path = adapter.get("media_used", "")
+    image = item.get("image", {})
     passcode = adapter.get("passcode") or item.get("passcode") or extract_passcode(text)
     scores = archetype_scores(text, item)
     return {
         "tweet_id": adapter.get("tweet_id", ""),
         "url": adapter.get("url", ""),
         "posted_at_jst": adapter.get("posted_at", ""),
+        "status": "SUCCESS",
         "candidate_id": item.get("source_id", ""),
         "execution_id": adapter.get("execution_id", ""),
         "passcode": passcode,
         "image_used": image_path,
         "image_hash": image_hash(image_path),
+        "perceptual_hash": perceptual_hash(image_path),
+        "prompt_family": prompt_family_for(image, image_path),
+        "composition": image.get("composition", ""),
+        "layout": image.get("layout", ""),
         "topic_cluster": infer_topic_cluster(text, item),
         "archetype": {
             "primary": primary_archetype(scores),

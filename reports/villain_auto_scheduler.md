@@ -1,11 +1,11 @@
 # Villain Auto Scheduler v1
 
-- Generated at JST: `2026-05-17T00:56:37+09:00`
-- status: `SUCCESS_POSTED_ONCE`
-- mode: `LIVE_PILOT`
-- live posting: `EXECUTED_ONCE`
-- upload_media: `EXECUTED_ONCE`
-- create_tweet: `EXECUTED_ONCE`
+- Generated at JST: `2026-05-17T11:48:01+09:00`
+- status: `BLOCKED`
+- mode: `DRY_RUN`
+- live posting: `NOT_EXECUTED`
+- upload_media: `NOT_EXECUTED`
+- create_tweet: `NOT_EXECUTED`
 - no_retry_unless_manual: `true`
 
 ## Scheduler Limits
@@ -13,7 +13,34 @@
 - max_posts_per_day: `3`
 - cooldown_between_posts_minutes: `120`
 - max_posts_per_run: `1`
-- posts_counted_today: `0`
+- posts_counted_today: `2`
+- post_count_source: `data/villain_post_outcomes.json`
+
+## Daily Slots
+
+- 03:00: maintenance only; no posting.
+- 13:00: daytime posting slot.
+- 20:00: night posting slot.
+- 23:00: late night posting slot.
+
+## Gate Order
+
+1. `manual_stop`
+2. outcome DB daily success count
+3. cooldown from latest successful outcome
+4. `human_review.keep` from latest successful outcome
+5. Auto Post Pilot candidate gates
+6. X Write Adapter gates
+7. network preflight before any write attempt
+
+## Human Review Gate
+
+- latest_success_tweet_id: `2055818579032019407`
+- latest_success_posted_at_jst: `2026-05-17T10:11:59+09:00`
+- latest_success_keep: `pending`
+- `pending` blocks as `human_review_pending`.
+- `false` blocks as `previous_post_marked_delete_or_drop`.
+- `true` is required before the next post.
 
 ## Stop
 
@@ -22,31 +49,15 @@
 
 ## Selected Manifest
 
-- execution_id: `vln-exec-morning-vln-gen-20260516-003`
-- source_id: `vln-gen-20260516-003`
-- slot: `morning`
-- passcode: `J1M5V`
-- ready_for_limited_live_execution: `true`
+- none
 
 ## Adapter Check
 
-- status: `SUCCESS`
-- mode: `LIMITED_LIVE_EXECUTION`
-- live_posting: `EXECUTED_ONCE`
-- upload_media: `EXECUTED_ONCE`
-- create_tweet: `EXECUTED_ONCE`
-- required_tokens_verified: `true`
-- passcode_verified: `true`
-- blockers: `none`
+- not run
 
 ## Network Preflight
 
-- status: `PASSED`
-- request_sent: `false`
-- upload_media_called: `false`
-- create_tweet_called: `false`
-- api.twitter.com: dns_resolved=`true`
-- upload.twitter.com: dns_resolved=`true`
+- not run
 
 ## Sandbox Finding
 
