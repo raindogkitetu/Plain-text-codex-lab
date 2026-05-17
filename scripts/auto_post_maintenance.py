@@ -25,6 +25,8 @@ RESULT_PATH = ROOT / "data" / "villain_auto_maintenance.json"
 SCHEDULER_REPORT_PATH = ROOT / "reports" / "villain_auto_scheduler.md"
 MAINTENANCE_REPORT_PATH = ROOT / "reports" / "villain_auto_maintenance.md"
 HANDOFF_RUNNER_PATH = ROOT / "scripts" / "agent_handoff_runner.py"
+BUILD_REVIEW_BOARD_PATH = ROOT / "scripts" / "build_human_review_board.py"
+IMAGE_SELECTOR_PATH = ROOT / "scripts" / "local_image_selector.py"
 HANDOFF_REPORT_PATH = ROOT / "reports" / "agent_handoff_status.md"
 QUALITY_REPORT_PATH = ROOT / "reports" / "villain_quality_review_summary.md"
 JST = ZoneInfo("Asia/Tokyo")
@@ -63,6 +65,30 @@ def json_sanity_check() -> dict[str, Any]:
         "failures": failures,
     }
 
+
+
+def run_safe_script(script_path: Path, label: str) -> dict[str, Any]:
+    command = [sys.executable, str(script_path)]
+    completed = subprocess.run(
+        command,
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    stdout_lines = [line for line in completed.stdout.splitlines() if line.strip()]
+    stderr_lines = [line for line in completed.stderr.splitlines() if line.strip()]
+    return {
+        "label": label,
+        "status": "SUCCESS" if completed.returncode == 0 else "FAILED",
+        "returncode": completed.returncode,
+        "command": f"python3 scripts/{script_path.name}",
+        "stdout_tail": stdout_lines[-20:],
+        "stderr_tail": stderr_lines[-20:],
+        "posting_executed": False,
+        "upload_media_executed": False,
+        "tweet_creation_executed": False,
+    }
 
 def run_handoff_runner() -> dict[str, Any]:
     command = [sys.executable, str(HANDOFF_RUNNER_PATH)]
