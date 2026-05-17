@@ -8,6 +8,8 @@ recent media history, and writes reports. It has no X write path.
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -22,6 +24,9 @@ STATUS_PATH = ROOT / "status.json"
 RESULT_PATH = ROOT / "data" / "villain_auto_maintenance.json"
 SCHEDULER_REPORT_PATH = ROOT / "reports" / "villain_auto_scheduler.md"
 MAINTENANCE_REPORT_PATH = ROOT / "reports" / "villain_auto_maintenance.md"
+HANDOFF_RUNNER_PATH = ROOT / "scripts" / "agent_handoff_runner.py"
+HANDOFF_REPORT_PATH = ROOT / "reports" / "agent_handoff_status.md"
+QUALITY_REPORT_PATH = ROOT / "reports" / "villain_quality_review_summary.md"
 JST = ZoneInfo("Asia/Tokyo")
 
 
@@ -59,9 +64,37 @@ def json_sanity_check() -> dict[str, Any]:
     }
 
 
+def run_handoff_runner() -> dict[str, Any]:
+    command = [sys.executable, str(HANDOFF_RUNNER_PATH)]
+    completed = subprocess.run(
+        command,
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    stdout_lines = [line for line in completed.stdout.splitlines() if line.strip()]
+    stderr_lines = [line for line in completed.stderr.splitlines() if line.strip()]
+    return {
+        "status": "SUCCESS" if completed.returncode == 0 else "FAILED",
+        "returncode": completed.returncode,
+        "command": "python3 scripts/agent_handoff_runner.py",
+        "stdout_tail": stdout_lines[-20:],
+        "stderr_tail": stderr_lines[-20:],
+        "posting_executed": False,
+        "upload_media_executed": False,
+        "tweet_creation_executed": False,
+        "reports_updated": [
+            str(HANDOFF_REPORT_PATH.relative_to(ROOT)),
+            str(QUALITY_REPORT_PATH.relative_to(ROOT)),
+        ],
+    }
+
+
 def scheduler_report(result: dict[str, Any]) -> str:
     media = result.get("recent_media_history", {})
     sanity = result.get("json_sanity_check", {})
+    handoff = result.get("agent_handoff", {})
     return "\n".join(
         [
             "# Villain Auto Scheduler v1",
@@ -75,6 +108,7 @@ def scheduler_report(result: dict[str, Any]) -> str:
             "## Daily Slots",
             "",
             "- 03:00: maintenance only; refresh JSON sanity, recent media history, and scheduler report.",
+            "- 03:00 maintenance also runs `python3 scripts/agent_handoff_runner.py` for Quality OS handoff reports.",
             "- 13:00: daytime posting slot.",
             "- 20:00: night posting slot.",
             "- 23:00: late night posting slot.",
@@ -109,6 +143,8 @@ def scheduler_report(result: dict[str, Any]) -> str:
             f"- json_sanity_check: `{sanity.get('status')}`",
             f"- json_files_checked: `{sanity.get('checked_count')}`",
             f"- recent_media_entries: `{len(media.get('entries', []))}`",
+            f"- agent_handoff: `{handoff.get('status')}`",
+            f"- agent_handoff_command: `{handoff.get('command')}`",
             "",
             "## Safety",
             "",
@@ -124,6 +160,7 @@ def scheduler_report(result: dict[str, Any]) -> str:
 def maintenance_report(result: dict[str, Any]) -> str:
     sanity = result.get("json_sanity_check", {})
     media = result.get("recent_media_history", {})
+    handoff = result.get("agent_handoff", {})
     lines = [
         "# Villain Auto Maintenance v1",
         "",
@@ -144,7 +181,25 @@ def maintenance_report(result: dict[str, Any]) -> str:
         f"- cooldown_days: `{media.get('cooldown_days')}`",
         f"- entries: `{len(media.get('entries', []))}`",
         "",
+        "## Agent Handoff",
+        "",
+        f"- status: `{handoff.get('status')}`",
+        f"- command: `{handoff.get('command')}`",
+        f"- returncode: `{handoff.get('returncode')}`",
+        "- posting executed: `NO`",
+        "- upload executed: `NO`",
+        "- tweet creation executed: `NO`",
+        f"- reports_updated: `{', '.join(handoff.get('reports_updated', []))}`",
+        "",
     ]
+    if handoff.get("stdout_tail"):
+        lines.extend(["### Handoff Output", ""])
+        lines.extend(f"- `{line}`" for line in handoff.get("stdout_tail", []))
+        lines.append("")
+    if handoff.get("stderr_tail"):
+        lines.extend(["### Handoff Errors", ""])
+        lines.extend(f"- `{line}`" for line in handoff.get("stderr_tail", []))
+        lines.append("")
     if sanity.get("failures"):
         lines.extend(["## Failures", ""])
         lines.extend(f"- `{item.get('path')}`: `{item.get('error')}`" for item in sanity.get("failures", []))
@@ -155,11 +210,12 @@ def maintenance_report(result: dict[str, Any]) -> str:
 def build_result() -> dict[str, Any]:
     sanity = json_sanity_check()
     media_history = build_recent_media_history(write=True)
+    handoff = run_handoff_runner()
     return {
         "db_name": "Villain Auto Maintenance Run",
         "version": "1.0.0",
         "generated_at_jst": now_jst(),
-        "status": "SUCCESS" if sanity.get("status") == "PASSED" else "FAILED",
+        "status": "SUCCESS" if sanity.get("status") == "PASSED" and handoff.get("status") == "SUCCESS" else "FAILED",
         "job": "03:00_maintenance",
         "posting_executed": False,
         "x_api_write_used": False,
@@ -169,6 +225,7 @@ def build_result() -> dict[str, Any]:
             "near_duplicate_hamming_threshold": media_history.get("near_duplicate_hamming_threshold"),
             "entries": media_history.get("entries", []),
         },
+        "agent_handoff": handoff,
     }
 
 
