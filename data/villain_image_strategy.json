@@ -1,0 +1,327 @@
+{
+  "db_name": "Villain Image Strategy OS",
+  "version": "1.0.0",
+  "status": "dry_run_only",
+  "purpose": "X実データで強かった画像あり投稿を基準に、community_info / poster_summary / culture_observer向けの画像選定を強化する。",
+  "updated_at": "2026-05-15",
+  "source_inputs": {
+    "x_current_analysis_report": "reports/villain_x_current_analysis.md",
+    "manual_learning_db": "data/manual_post_results.json",
+    "local_image_directory": "villain_post_images/",
+    "villain_related_posts_analyzed": 20,
+    "metrics_mode": "private_metrics_available"
+  },
+  "safety": {
+    "read_only_analysis": true,
+    "live_posting_allowed": false,
+    "x_api_write_allowed": false,
+    "upload_media_allowed": false,
+    "create_tweet_allowed": false,
+    "queue_mutation_allowed": false,
+    "commit_performed": false
+  },
+  "live_learning_signal": {
+    "image_yes": {
+      "count": 7,
+      "avg_impressions": 98.6,
+      "max_impressions": 201
+    },
+    "image_no": {
+      "count": 13,
+      "avg_impressions": 23.8,
+      "max_impressions": 49
+    },
+    "strong_categories": [
+      {
+        "category": "poster_summary",
+        "avg_impressions": 130.5,
+        "max_impressions": 134,
+        "recommended_image_types": [
+          "poster",
+          "culture",
+          "community"
+        ]
+      },
+      {
+        "category": "community_info",
+        "avg_impressions": 128.0,
+        "max_impressions": 201,
+        "recommended_image_types": [
+          "community",
+          "poster",
+          "culture"
+        ]
+      },
+      {
+        "category": "culture_observer",
+        "evidence": "winning persona from live learning; adjacent to poster_summary/community_info",
+        "recommended_image_types": [
+          "culture",
+          "community",
+          "poster"
+        ]
+      }
+    ],
+    "weaker_patterns": [
+      {
+        "category": "apparel_focus",
+        "avg_impressions": 40.0,
+        "rule": "服単体紹介だけでは主役にしない。日常・集会・文化の文脈に接続する。"
+      },
+      {
+        "category": "observer_ai_record",
+        "avg_impressions": 24.4,
+        "rule": "画像なしの単純観測ログ連投を減らす。使う場合は現場感のある画像と短い違和感に寄せる。"
+      }
+    ]
+  },
+  "image_type_taxonomy": {
+    "community": "集会、会話、複数人、コミュニティの動きが主役の画像。",
+    "poster": "短いコピーや強い構図で投稿を止める画像。poster_summaryと相性が高い。",
+    "culture": "服そのものより、着ている場・日常・違和感・空気を見せる画像。",
+    "apparel": "服・ロゴ・着用状態が主役の画像。単体では弱め、文化文脈と併用する。",
+    "observer": "観測者、夜、都市、背中、記録感が主役の画像。",
+    "meme": "強い文字、煽り、ネタ性が主役の画像。乱用しない。",
+    "unknown": "用途未判定、または手動確認が必要な画像。"
+  },
+  "local_image_inventory": [
+    {
+      "file": "villain_post_images/20260514集会.png",
+      "dimensions": "1122x1402",
+      "primary_type": "community",
+      "secondary_types": [
+        "poster",
+        "culture",
+        "meme"
+      ],
+      "recommended_for_categories": [
+        "community_info",
+        "poster_summary"
+      ],
+      "priority": "S",
+      "best_use": "集会・スペース・コミュニティの動きを短く残す投稿。",
+      "cautions": [
+        "文字量が多いため、本文は短くする。",
+        "固有名詞や日付が含まれるため、投稿前に内容確認する。"
+      ]
+    },
+    {
+      "file": "villain_post_images/cf8fcb9d-0176-43ae-a9a8-0a727eb23625.png",
+      "dimensions": "1402x1122",
+      "primary_type": "poster",
+      "secondary_types": [
+        "culture",
+        "apparel",
+        "community"
+      ],
+      "recommended_for_categories": [
+        "poster_summary",
+        "culture_observer",
+        "community_info"
+      ],
+      "priority": "S",
+      "best_use": "日常・街・着用者の空気を使ったposter_summary/culture_observer投稿。",
+      "cautions": [
+        "$VILLAIN表記が画像内にあるため、本文の表記ゆれを確認する。"
+      ]
+    },
+    {
+      "file": "villain_post_images/生成画像1.png",
+      "dimensions": "1024x1536",
+      "primary_type": "poster",
+      "secondary_types": [
+        "culture",
+        "apparel"
+      ],
+      "recommended_for_categories": [
+        "poster_summary",
+        "culture_observer"
+      ],
+      "priority": "S",
+      "best_use": "$VILLAINは日常だ、系の短い文化観測投稿。",
+      "cautions": [
+        "cf8fcb9d系とテーマが近いため、連投時はコピーをずらす。"
+      ]
+    },
+    {
+      "file": "villain_post_images/0f4d2062-6e30-4a09-aea6-9fee9f0fe69d.png",
+      "dimensions": "1254x1254",
+      "primary_type": "meme",
+      "secondary_types": [
+        "poster",
+        "observer"
+      ],
+      "recommended_for_categories": [
+        "culture_observer"
+      ],
+      "priority": "B",
+      "best_use": "強い一言を置く単発投稿。通常運用では連投しない。",
+      "cautions": [
+        "煽りが強いため、community_infoの温度とは分ける。",
+        "本文まで強くすると広告感が出やすい。"
+      ]
+    },
+    {
+      "file": "villain_post_images/0a9d78af-455a-4778-a98d-c4bcc7081f41.png",
+      "dimensions": "1254x1254",
+      "primary_type": "meme",
+      "secondary_types": [
+        "poster",
+        "observer",
+        "apparel"
+      ],
+      "recommended_for_categories": [
+        "culture_observer"
+      ],
+      "priority": "B",
+      "best_use": "保存される強い標語系。夜帯に少量だけ使う。",
+      "cautions": [
+        "情報量と色が強いため、community_infoの主力画像にはしない。",
+        "服単体紹介に寄せると実データ上の弱いapparel_focusへ戻りやすい。"
+      ]
+    },
+    {
+      "file": "villain_post_images/villain_observer_001.png",
+      "dimensions": "1536x1024",
+      "primary_type": "observer",
+      "secondary_types": [
+        "poster",
+        "culture"
+      ],
+      "recommended_for_categories": [
+        "culture_observer"
+      ],
+      "priority": "C",
+      "best_use": "observer系を使う場合の補助画像。単純なAI記録報告には使わない。",
+      "cautions": [
+        "現状observer_ai_recordは弱いため、主力にはしない。",
+        "サイバーパンク/NFT感が強くなりすぎない本文にする。"
+      ]
+    },
+    {
+      "file": "villain_post_images/99f8c686-07e1-48d0-ad0d-4ce5f14939e2.png",
+      "dimensions": "1402x1122",
+      "primary_type": "poster",
+      "secondary_types": [
+        "culture",
+        "apparel",
+        "community"
+      ],
+      "recommended_for_categories": [
+        "poster_summary",
+        "culture_observer"
+      ],
+      "priority": "S",
+      "best_use": "ショップグッズ由来の着用者画像。服の話を広告にせず、文化として残る投稿に使う。",
+      "cautions": [
+        "集会・昨日などの現実イベント断定には使わない。",
+        "本文は短く、広告コピーに寄せない。"
+      ]
+    }
+  ],
+  "category_image_match_rules": [
+    {
+      "category": "community_info",
+      "preferred_types": [
+        "community",
+        "poster",
+        "culture"
+      ],
+      "avoid_types": [
+        "observer",
+        "unknown"
+      ],
+      "rule": "集会、会話、現場感が見える画像を優先する。本文は短く、説明より事実を置く。"
+    },
+    {
+      "category": "poster_summary",
+      "preferred_types": [
+        "poster",
+        "culture",
+        "community"
+      ],
+      "avoid_types": [
+        "unknown"
+      ],
+      "rule": "画像のコピー/構図で止め、本文は一言の違和感にする。"
+    },
+    {
+      "category": "culture_observer",
+      "preferred_types": [
+        "culture",
+        "community",
+        "poster"
+      ],
+      "avoid_types": [
+        "unknown"
+      ],
+      "rule": "服そのものではなく、誰がどこでどう残しているかを見る。"
+    },
+    {
+      "category": "apparel_focus",
+      "preferred_types": [
+        "culture",
+        "poster",
+        "apparel"
+      ],
+      "avoid_types": [
+        "apparel_only"
+      ],
+      "rule": "apparel単体で終わらせない。着用者・場所・会話の文脈がない場合は投稿優先度を下げる。"
+    },
+    {
+      "category": "observer_ai_record",
+      "preferred_types": [
+        "culture",
+        "observer"
+      ],
+      "avoid_types": [
+        "unknown"
+      ],
+      "rule": "画像なし連投を避ける。単なるold/new mining machine結果報告なら生成しない。"
+    }
+  ],
+  "next_image_recommendations": [
+    {
+      "rank": 1,
+      "file": "villain_post_images/99f8c686-07e1-48d0-ad0d-4ce5f14939e2.png",
+      "category": "poster_summary",
+      "posting_window": "20:00-23:59",
+      "reason": "shop apparel/goods referenceから作った着用者画像。商品紹介ではなく、人が着て空気が移る感じ。"
+    },
+    {
+      "rank": 1,
+      "file": "villain_post_images/20260514集会.png",
+      "category": "community_info",
+      "posting_window": "23:00-23:59",
+      "reason": "実データ最強投稿の型に最も近い。集会、会話、現場感、画像ありの条件が揃っている。"
+    },
+    {
+      "rank": 2,
+      "file": "villain_post_images/cf8fcb9d-0176-43ae-a9a8-0a727eb23625.png",
+      "category": "poster_summary",
+      "posting_window": "23:00-23:59",
+      "reason": "poster_summary平均130.5 impressionsの勝ち型に合う。日常・街・着用者の空気が出ている。"
+    },
+    {
+      "rank": 3,
+      "file": "villain_post_images/生成画像1.png",
+      "category": "culture_observer",
+      "posting_window": "23:00-23:59",
+      "reason": "服単体ではなく、日常に入り込んだ違和感を置ける。culture_observerの補強に向く。"
+    }
+  ],
+  "no_image_reduction_policy": {
+    "default": "community_info / poster_summary / culture_observerは原則画像ありで候補化する。",
+    "allow_no_image_only_when": [
+      "返信や会話文脈で画像が邪魔になる場合。",
+      "速報性が高く、画像確認待ちで文脈が古くなる場合。",
+      "本文単体で強い一文があり、画像で説明しすぎる場合。"
+    ],
+    "generation_gate": [
+      "画像候補がないcommunity_infoは優先度を下げる。",
+      "画像なしobserver_ai_recordは連投しない。",
+      "apparel_focusは画像があっても、文化/現場文脈がなければ主力にしない。"
+    ]
+  }
+}
