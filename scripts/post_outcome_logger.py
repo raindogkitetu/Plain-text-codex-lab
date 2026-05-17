@@ -301,6 +301,19 @@ def update_manual_review(record: dict[str, Any], args: argparse.Namespace, chang
             continue
         review[field] = value
         changed[f"human_review.{field}"] = {"old": old_value, "new": value}
+    if review.get("keep") is False:
+        learning = record.setdefault("learning_flags", {})
+        old_export = learning.get("failure_learning_export")
+        old_reason = learning.get("failure_learning_reason", "")
+        learning["failure_learning_export"] = True
+        learning["failure_learning_reason"] = review.get("delete_reason", "") or review.get("notes", "")
+        if old_export is not True:
+            changed["learning_flags.failure_learning_export"] = {"old": old_export, "new": True}
+        if old_reason != learning["failure_learning_reason"]:
+            changed["learning_flags.failure_learning_reason"] = {
+                "old": old_reason,
+                "new": learning["failure_learning_reason"],
+            }
 
 
 def update_existing_outcome(args: argparse.Namespace) -> tuple[dict[str, Any], str]:

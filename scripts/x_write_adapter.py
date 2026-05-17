@@ -32,6 +32,8 @@ from zoneinfo import ZoneInfo
 
 from required_token_layer import MANDATORY_FOOTER, extract_passcode, normalize_mandatory_tokens, passcode_exists, verification_summary
 from media_deduplication import build_recent_media_history, media_reuse_check
+from context_mismatch_gate import context_gate_blockers, deleted_learning_blockers, topic_image_pairing_blockers
+from post_quality_os import evaluate_candidate
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -39,6 +41,7 @@ ENV_PATH = ROOT / ".env"
 PILOT_PATH = ROOT / "data" / "villain_auto_post_pilot.json"
 MANUAL_RESULTS_PATH = ROOT / "data" / "manual_post_results.json"
 OUTCOMES_PATH = ROOT / "data" / "villain_post_outcomes.json"
+QUALITY_POLICY_PATH = ROOT / "data" / "villain_post_quality_os.json"
 RESULT_PATH = ROOT / "data" / "villain_x_write_adapter.json"
 REPORT_PATH = ROOT / "reports" / "villain_x_write_adapter.md"
 
@@ -274,6 +277,17 @@ def execution_blockers(
         if blocker in {
             "already_posted",
             "same_image_cooldown",
+            "same_media_path",
+            "same_media_sha256",
+            "near_duplicate_media_phash",
+            "same_prompt_family_cooldown",
+            "temporal_context_unverified",
+            "topic_image_pairing_mismatch",
+            "deleted_candidate_blacklist",
+            "deleted_image_cooldown",
+            "deleted_prompt_family_cooldown",
+            "deleted_text_near_match",
+            "deleted_topic_context_cooldown",
             "repeated_topic_penalty",
             "risk_high",
             "required_tokens_not_verified",
@@ -300,6 +314,18 @@ def execution_blockers(
                 "same_prompt_family_cooldown",
             }:
                 blockers.append(blocker)
+    context_blockers, _context_check = context_gate_blockers({**item, "text": text})
+    pairing_blockers, _pairing_check = topic_image_pairing_blockers(text, image)
+    deleted_blockers, _deleted_matches = deleted_learning_blockers({**item, "text": text}, image, outcomes_db)
+    blockers.extend(context_blockers)
+    blockers.extend(blocker for blocker in pairing_blockers if blocker == "topic_image_pairing_mismatch")
+    blockers.extend(
+        blocker
+        for blocker in deleted_blockers
+        if blocker in {"deleted_topic_context_cooldown", "deleted_text_near_match"}
+    )
+    quality_review = evaluate_candidate({**item, "text": text}, outcomes_db, read_json(QUALITY_POLICY_PATH))
+    blockers.extend(quality_review.get("blockers", []))
 
     posts_today = outcome_successes_today(outcomes_db)
     if posts_today >= MAX_POSTS_PER_DAY:
@@ -418,6 +444,7 @@ def build_result(args: argparse.Namespace) -> dict[str, Any]:
     if image_path and not str(image_path).startswith("/"):
         image_path = str(ROOT / image_path)
     blockers = execution_blockers(args.mode, pilot, manifest, item, manual_db, outcomes_db)
+    quality_review = evaluate_candidate({**item, "text": text}, outcomes_db, read_json(QUALITY_POLICY_PATH)) if item else {}
     required_tokens_verified = verification_summary(text).get("valid_after") is True if text else False
     passcode_verified = bool(passcode and passcode_exists(passcode))
 
@@ -440,6 +467,7 @@ def build_result(args: argparse.Namespace) -> dict[str, Any]:
         "passcode_verified": passcode_verified,
         "text": text,
         "blockers": blockers,
+        "quality_review": quality_review,
         "error": "",
         "no_retry_unless_manual": True,
         "safety": {

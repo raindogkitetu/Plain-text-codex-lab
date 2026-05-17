@@ -31,6 +31,13 @@ from media_deduplication import (
     build_recent_media_history,
     media_reuse_check,
 )
+from context_mismatch_gate import (
+    context_gate_blockers,
+    deleted_learning_blockers,
+    topic_image_pairing_blockers,
+    write_gate_report,
+)
+from post_quality_os import evaluate_candidate
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -45,6 +52,7 @@ OUTCOMES_PATH = ROOT / "data" / "villain_post_outcomes.json"
 OUTPUT_PATH = ROOT / "data" / "villain_auto_post_pilot.json"
 REPORT_PATH = ROOT / "reports" / "villain_auto_post_pilot.md"
 MEDIA_HISTORY_PATH = ROOT / "data" / "recent_media_history.json"
+QUALITY_POLICY_PATH = ROOT / "data" / "villain_post_quality_os.json"
 
 JST = ZoneInfo("Asia/Tokyo")
 PILOT_VERSION = "1.3.0"
@@ -515,6 +523,7 @@ def eligibility(
     posted_first_lines: set[str],
     used_images: set[str],
     media_history: dict[str, Any],
+    outcomes_db: dict[str, Any],
 ) -> tuple[bool, list[str], list[str]]:
     blockers: list[str] = []
     warnings: list[str] = []
@@ -524,6 +533,9 @@ def eligibility(
     image_ready = image.get("ready") is True
     same_image = image.get("absolute_path") in used_images or image.get("file_path") in used_images
     media_reuse = media_reuse_check(image, media_history) if image.get("ready") else {"blockers": [], "matches": []}
+    context_blockers, _context_check = context_gate_blockers(candidate)
+    pairing_blockers, _pairing_check = topic_image_pairing_blockers(text, image)
+    deleted_blockers, _deleted_matches = deleted_learning_blockers(candidate, image, outcomes_db)
     repeated = repeated_topic(candidate, posted_first_lines)
     required_tokens_verified = candidate.get("token_verification", {}).get("valid_after") is True
     passcode = candidate.get("passcode") or extract_passcode(text)
@@ -553,7 +565,14 @@ def eligibility(
             "near_duplicate_media_phash",
             "same_prompt_family_cooldown",
         }:
-            blockers.append(blocker)
+                blockers.append(blocker)
+    blockers.extend(context_blockers)
+    blockers.extend(blocker for blocker in pairing_blockers if blocker == "topic_image_pairing_mismatch")
+    blockers.extend(
+        blocker
+        for blocker in deleted_blockers
+        if blocker in {"deleted_topic_context_cooldown", "deleted_text_near_match"}
+    )
     if novelty_score < MIN_NOVELTY_FOR_PILOT:
         blockers.append("novelty_too_low")
     if not image_ready:
@@ -564,6 +583,12 @@ def eligibility(
         warnings.append("text_long_for_pilot")
     if media_reuse.get("matches"):
         warnings.append("recent_media_reuse_match_found")
+    if context_blockers:
+        warnings.append("reality_context_requires_evidence")
+    if pairing_blockers:
+        warnings.append("topic_image_pairing_requires_review")
+    if deleted_blockers:
+        warnings.append("near_deleted_or_dropped_post")
     return not blockers, blockers, warnings
 
 
@@ -575,6 +600,7 @@ def build_plan(mode: str) -> dict[str, Any]:
     novelty_db = read_json(NOVELTY_PATH)
     image_db = read_json(IMAGE_STRATEGY_PATH)
     scoring_db = read_json(SCORING_RULES_PATH)
+    quality_policy = read_json(QUALITY_POLICY_PATH)
     generated_db = read_json(GENERATED_PATH)
     manual_db = read_json(MANUAL_RESULTS_PATH)
     outcomes_db = read_json(OUTCOMES_PATH)
@@ -614,6 +640,8 @@ def build_plan(mode: str) -> dict[str, Any]:
             saturation_flags = novelty_saturation_flags(candidate, image)
             adjusted_novelty = max(0, novelty_score - novelty_penalty(saturation_flags))
             remix_score, remix = remixability_score(candidate, image, novelty_db)
+            passcode = candidate.get("passcode") or extract_passcode(candidate.get("text", ""))
+            normalized_text = normalize_mandatory_tokens(candidate.get("text", ""), passcode=passcode or None)
             ok, blockers, warnings = eligibility(
                 candidate,
                 image,
@@ -623,8 +651,12 @@ def build_plan(mode: str) -> dict[str, Any]:
                 posted_first_lines,
                 used_images,
                 media_history,
+                outcomes_db,
             )
             media_reuse = media_reuse_check(image, media_history) if image.get("ready") else {"signature": {}, "blockers": [], "matches": []}
+            context_blockers, context_check = context_gate_blockers({**candidate, "text": normalized_text})
+            pairing_blockers, pairing_check = topic_image_pairing_blockers(normalized_text, image)
+            deleted_blockers, deleted_matches = deleted_learning_blockers({**candidate, "text": normalized_text}, image, outcomes_db)
             fit = slot_fit(candidate, slot, daily_db)
             pilot_score = int(candidate.get("score") or 0) + adjusted_novelty + fit
             pilot_score += remix_score
@@ -634,8 +666,6 @@ def build_plan(mode: str) -> dict[str, Any]:
                 pilot_score += 10
             if candidate.get("category") in {"culture_observer", "poster_summary", "community_info"}:
                 pilot_score += 8
-            passcode = candidate.get("passcode") or extract_passcode(candidate.get("text", ""))
-            normalized_text = normalize_mandatory_tokens(candidate.get("text", ""), passcode=passcode or None)
             option = {
                 "slot": slot,
                 "source": candidate.get("source"),
@@ -657,6 +687,15 @@ def build_plan(mode: str) -> dict[str, Any]:
                 "remixability_score": remix_score,
                 "remixability": remix,
                 "media_deduplication": media_reuse,
+                "context_mismatch_gate": {
+                    "blockers": sorted(set(context_blockers + pairing_blockers)),
+                    "context_check": context_check,
+                    "pairing_check": pairing_check,
+                },
+                "deleted_learning_gate": {
+                    "blockers": deleted_blockers,
+                    "matches": deleted_matches,
+                },
                 "saturation_flags": saturation_flags,
                 "pilot_score": pilot_score,
                 "eligible": ok,
@@ -666,6 +705,14 @@ def build_plan(mode: str) -> dict[str, Any]:
                 "expected_type": expected_type_for(category, slot),
                 "fallback_action": SLOT_FALLBACK.get(slot, "hold_for_human_review"),
             }
+            quality_review = evaluate_candidate(option, outcomes_db, quality_policy)
+            option["quality_review"] = quality_review
+            if quality_review.get("blockers"):
+                option["blockers"] = sorted(set(option["blockers"] + quality_review.get("blockers", [])))
+                option["eligible"] = False
+                ok = False
+            if quality_review.get("warnings"):
+                option["warnings"] = sorted(set(option["warnings"] + quality_review.get("warnings", [])))
             if ok:
                 slot_options.append(option)
             else:
@@ -691,13 +738,16 @@ def build_plan(mode: str) -> dict[str, Any]:
             saturation_flags = novelty_saturation_flags(candidate, image)
             adjusted_novelty = max(0, novelty_score - novelty_penalty(saturation_flags))
             remix_score, remix = remixability_score(candidate, image, novelty_db)
-            ok, blockers, warnings = eligibility(candidate, image, adjusted_novelty, mode, posted_texts, posted_first_lines, used_images, media_history)
+            ok, blockers, warnings = eligibility(candidate, image, adjusted_novelty, mode, posted_texts, posted_first_lines, used_images, media_history, outcomes_db)
             if not ok:
                 continue
             media_reuse = media_reuse_check(image, media_history) if image.get("ready") else {"signature": {}, "blockers": [], "matches": []}
             slot = "daytime"
             passcode = candidate.get("passcode") or extract_passcode(candidate.get("text", ""))
             normalized_text = normalize_mandatory_tokens(candidate.get("text", ""), passcode=passcode or None)
+            context_blockers, context_check = context_gate_blockers({**candidate, "text": normalized_text})
+            pairing_blockers, pairing_check = topic_image_pairing_blockers(normalized_text, image)
+            deleted_blockers, deleted_matches = deleted_learning_blockers({**candidate, "text": normalized_text}, image, outcomes_db)
             pilot_items.append(
                 {
                     "slot": slot,
@@ -720,6 +770,15 @@ def build_plan(mode: str) -> dict[str, Any]:
                     "remixability_score": remix_score,
                     "remixability": remix,
                     "media_deduplication": media_reuse,
+                    "context_mismatch_gate": {
+                        "blockers": sorted(set(context_blockers + pairing_blockers)),
+                        "context_check": context_check,
+                        "pairing_check": pairing_check,
+                    },
+                    "deleted_learning_gate": {
+                        "blockers": deleted_blockers,
+                        "matches": deleted_matches,
+                    },
                     "saturation_flags": saturation_flags,
                     "pilot_score": int(candidate.get("score") or 0) + adjusted_novelty + remix_score,
                     "eligible": True,
@@ -730,6 +789,15 @@ def build_plan(mode: str) -> dict[str, Any]:
                     "fallback_action": "hold_for_human_review",
                 }
             )
+            quality_review = evaluate_candidate(pilot_items[-1], outcomes_db, quality_policy)
+            pilot_items[-1]["quality_review"] = quality_review
+            if quality_review.get("blockers"):
+                pilot_items[-1]["blockers"] = sorted(set(pilot_items[-1]["blockers"] + quality_review.get("blockers", [])))
+                pilot_items[-1]["eligible"] = False
+                rejected_items.append(pilot_items.pop())
+                continue
+            if quality_review.get("warnings"):
+                pilot_items[-1]["warnings"] = sorted(set(pilot_items[-1]["warnings"] + quality_review.get("warnings", [])))
             selected_ids.add(candidate.get("source_id"))
             if len(pilot_items) >= TARGET_MIN:
                 break
@@ -754,6 +822,19 @@ def build_plan(mode: str) -> dict[str, Any]:
                     "same_media_sha256",
                     "near_duplicate_media_phash",
                     "same_prompt_family_cooldown",
+                )
+            ),
+            "context_evidence_ok": "temporal_context_unverified" not in item.get("blockers", []),
+            "topic_image_pairing_ok": "topic_image_pairing_mismatch" not in item.get("blockers", [])
+            and "topic_image_pairing_unverified" not in item.get("blockers", []),
+            "deleted_learning_ok": not any(
+                blocker in item.get("blockers", [])
+                for blocker in (
+                    "deleted_candidate_blacklist",
+                    "deleted_image_cooldown",
+                    "deleted_prompt_family_cooldown",
+                    "deleted_text_near_match",
+                    "deleted_topic_context_cooldown",
                 )
             ),
             "repeated_topic_penalty_ok": "repeated_topic_penalty" not in item.get("blockers", []),
@@ -794,6 +875,59 @@ def build_plan(mode: str) -> dict[str, Any]:
     if mode in LIVE_EXECUTION_MODES:
         warnings.append("limited_live_execution_manifest_only_no_x_write_adapter_called")
 
+    gate_report = {
+        "db_name": "Villain Context Mismatch Gate",
+        "version": "1.0.0",
+        "generated_at_jst": now_jst(),
+        "reality_context_terms": [
+            "昨日",
+            "今日",
+            "明日",
+            "集会",
+            "現場",
+            "イベント",
+            "発表",
+        ],
+        "policy": {
+            "context_evidence_required": True,
+            "topic_image_pairing_required": True,
+            "deleted_keep_false_nearby_candidates_blocked": True,
+            "x_api_write_allowed": False,
+        },
+        "deleted_or_dropped_sources": [
+            {
+                "tweet_id": record.get("tweet_id", ""),
+                "execution_id": record.get("execution_id", ""),
+                "candidate_id": record.get("candidate_id", ""),
+                "image_used": record.get("image_used", ""),
+                "prompt_family": record.get("prompt_family", ""),
+                "topic_cluster": record.get("topic_cluster", ""),
+                "delete_reason": record.get("human_review", {}).get("delete_reason", ""),
+            }
+            for record in outcomes_db.get("outcomes", [])
+            if record.get("human_review", {}).get("keep") is False
+        ],
+        "selected_items": [
+            {
+                "source_id": item.get("source_id", ""),
+                "blockers": item.get("blockers", []),
+                "context_mismatch_gate": item.get("context_mismatch_gate", {}),
+                "deleted_learning_gate": item.get("deleted_learning_gate", {}),
+            }
+            for item in pilot_items
+        ],
+        "rejected_preview": [
+            {
+                "source_id": item.get("source_id", ""),
+                "blockers": item.get("blockers", []),
+                "context_mismatch_gate": item.get("context_mismatch_gate", {}),
+                "deleted_learning_gate": item.get("deleted_learning_gate", {}),
+            }
+            for item in rejected_items[:10]
+        ],
+    }
+    write_gate_report(gate_report)
+
     return {
         "db_name": "Villain Auto Post Pilot Plan",
         "version": PILOT_VERSION,
@@ -833,6 +967,14 @@ def build_plan(mode: str) -> dict[str, Any]:
                 "same_media_sha256",
                 "near_duplicate_media_phash",
                 "same_prompt_family_cooldown",
+                "temporal_context_unverified",
+                "topic_image_pairing_mismatch",
+                "topic_image_pairing_unverified",
+                "deleted_candidate_blacklist",
+                "deleted_image_cooldown",
+                "deleted_prompt_family_cooldown",
+                "deleted_text_near_match",
+                "deleted_topic_context_cooldown",
                 "repeated_topic_penalty",
                 "required_tokens_not_verified",
                 "passcode_missing",
@@ -877,6 +1019,14 @@ def build_plan(mode: str) -> dict[str, Any]:
                 "same_media_sha256",
                 "near_duplicate_media_phash",
                 "same_prompt_family_cooldown",
+                "temporal_context_unverified",
+                "topic_image_pairing_mismatch",
+                "topic_image_pairing_unverified",
+                "deleted_candidate_blacklist",
+                "deleted_image_cooldown",
+                "deleted_prompt_family_cooldown",
+                "deleted_text_near_match",
+                "deleted_topic_context_cooldown",
                 "required_tokens_not_verified",
                 "passcode_missing",
                 "passcode_not_in_db",
@@ -966,6 +1116,8 @@ def write_report(plan: dict[str, Any]) -> None:
         "- スパム、欺瞞、なりすまし、無制限投稿を避ける。",
         "- high risk / repeated / same image / token未検証は止める。",
         "- 直近7日以内の同一/近似画像、同一構図、同一prompt familyは止める。",
+        "- 昨日/今日/明日/集会/現場/イベント/発表など現実文脈語は、根拠ファイルまたは明示承認なしでは止める。",
+        "- keep=false の投稿に近い candidate/image/prompt_family/topic は次候補から除外する。",
         "",
         "## Live Pilot Limits",
         "",
@@ -1006,6 +1158,11 @@ def write_report(plan: dict[str, Any]) -> None:
                 f"- image: `{image.get('file_path', '')}`",
                 f"- media_dedup_blockers: `{', '.join(item.get('media_deduplication', {}).get('blockers', [])) if item.get('media_deduplication', {}).get('blockers') else 'none'}`",
                 f"- media_dedup_matches: `{len(item.get('media_deduplication', {}).get('matches', []))}`",
+                f"- context_gate_blockers: `{', '.join(item.get('context_mismatch_gate', {}).get('blockers', [])) if item.get('context_mismatch_gate', {}).get('blockers') else 'none'}`",
+                f"- deleted_learning_blockers: `{', '.join(item.get('deleted_learning_gate', {}).get('blockers', [])) if item.get('deleted_learning_gate', {}).get('blockers') else 'none'}`",
+                f"- quality_status: `{item.get('quality_review', {}).get('final_quality_status', 'not_run')}`",
+                f"- quality_blockers: `{', '.join(item.get('quality_review', {}).get('blockers', [])) if item.get('quality_review', {}).get('blockers') else 'none'}`",
+                f"- quality_warnings: `{', '.join(item.get('quality_review', {}).get('warnings', [])) if item.get('quality_review', {}).get('warnings') else 'none'}`",
                 f"- required_tokens_valid_after: `{str(item.get('token_verification', {}).get('valid_after')).lower()}`",
                 f"- required_tokens_verified: `{str(item.get('required_tokens_verified', False)).lower()}`",
                 f"- mandatory_footer_order: `{item.get('token_verification', {}).get('mandatory_footer_order', MANDATORY_FOOTER)}`",
@@ -1024,6 +1181,9 @@ def write_report(plan: dict[str, Any]) -> None:
                 f"- execution_gate_required_tokens: `{str(gate.get('required_tokens_verified', False)).lower()}`",
                 f"- execution_gate_same_image_cooldown_ok: `{str(gate.get('same_image_cooldown_ok', False)).lower()}`",
                 f"- execution_gate_media_reuse_cooldown_ok: `{str(gate.get('media_reuse_cooldown_ok', False)).lower()}`",
+                f"- execution_gate_context_evidence_ok: `{str(gate.get('context_evidence_ok', False)).lower()}`",
+                f"- execution_gate_topic_image_pairing_ok: `{str(gate.get('topic_image_pairing_ok', False)).lower()}`",
+                f"- execution_gate_deleted_learning_ok: `{str(gate.get('deleted_learning_ok', False)).lower()}`",
                 f"- execution_gate_repeated_topic_ok: `{str(gate.get('repeated_topic_penalty_ok', False)).lower()}`",
             ]
         )

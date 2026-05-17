@@ -1,0 +1,55 @@
+{
+  "db_name": "Villain Post Quality OS",
+  "version": "1.0.0",
+  "status": "configured",
+  "purpose": "Safetyではなく、自然さ・文脈接地・画像本文整合・鬼徹人格の投稿前検問を行う。",
+  "x_api_write_allowed": false,
+  "upload_media_allowed": false,
+  "create_tweet_allowed": false,
+  "hard_block_policy": {
+    "temporal_context_unverified": {
+      "enabled": true,
+      "description": "時系列語と現実イベント語が組み合わさり、根拠ファイルまたはhuman_context_approvalがない場合に止める。",
+      "temporal_terms": ["昨日", "今日", "明日", "今夜", "今朝", "さっき"],
+      "event_terms": ["集会", "現場", "イベント", "発表", "リリース", "開催", "会場"],
+      "do_not_block_temporal_word_alone": true
+    },
+    "topic_image_pairing_mismatch": {
+      "enabled": true,
+      "description": "本文topicを画像metadataが支えていない場合に止める。"
+    },
+    "deleted_near_match": {
+      "enabled": true,
+      "blockers": ["deleted_topic_context_cooldown", "deleted_text_near_match"],
+      "description": "keep=falseの近傍topic/textは止める。"
+    }
+  },
+  "review_required_policy": {
+    "ad_like_detection": {
+      "enabled": true,
+      "review_threshold": 55,
+      "hard_block": false
+    },
+    "native_tone_check": {
+      "enabled": true,
+      "review_below": 65,
+      "hard_block": false
+    },
+    "persona_consistency_check": {
+      "enabled": true,
+      "review_below": 65,
+      "hard_block": false
+    }
+  },
+  "context_evidence": {
+    "accepted_fields": ["context_evidence.source_file", "context_evidence.verified", "human_context_approval", "review.explicit_context_approval"],
+    "core_question": "この投稿は何を見て言っているのか？"
+  },
+  "latest_failure_case": {
+    "tweet_id": "2055938300708626713",
+    "reason": "content/context mismatch",
+    "felt_native": false,
+    "felt_ad_like": true,
+    "issue": "現実確認なしに昨日の集会系文脈を使った"
+  }
+}
