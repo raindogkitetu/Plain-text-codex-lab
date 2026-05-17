@@ -1,0 +1,280 @@
+{
+  "db_name": "Villain Novelty Engine DB",
+  "version": "1.0.0-design",
+  "status": "design_only",
+  "purpose": "quality/residual/selectionだけでは拾えない『見たことない』強さを定量化し、飽和した見え方を避ける。",
+  "safety": {
+    "live_posting_allowed": false,
+    "x_api_write_allowed": false,
+    "upload_media_allowed": false,
+    "create_tweet_allowed": false,
+    "auto_posting_allowed": false,
+    "commit_performed": false
+  },
+  "novelty_definition": {
+    "short": "過去のVillain投稿・画像・文体・人格パターンからどれだけズレていて、それでもVillain文脈として読めるか。",
+    "not_randomness": "ただ奇抜なだけではnoveltyではない。Villainらしさを保ったまま、見慣れた型から外れていること。",
+    "goal": "伸びそうな型を反復するだけでなく、タイムラインで『これは何だ』と止まる未視聴感を作る。"
+  },
+  "novelty_score_weights": {
+    "visual_novelty": 16,
+    "context_novelty": 14,
+    "persona_novelty": 12,
+    "location_novelty": 10,
+    "composition_novelty": 12,
+    "texture_novelty": 10,
+    "lifestyle_residue": 14,
+    "unpredictability": 12
+  },
+  "remixability_definition": {
+    "short": "投稿全体ではなく、画像・一文・空気が他人に拾われ、再投稿・切り抜き・引用・スクショで二次拡散されやすい度合い。",
+    "why_it_matters": "ボス側アカウントが鬼徹の投稿画像を抜粋して再投稿したことで、画像そのものがコミュニティ素材化し始めている。",
+    "not_brand_ad": "完成された広告投稿ではなく、他人が自分の言葉や文化表現として使える素材であること。",
+    "goal": "画像単体でも成立し、一文だけでも空気が伝わり、コミュニティ内で再利用される投稿素材を増やす。"
+  },
+  "remixability_score_weights": {
+    "quoteability": 16,
+    "reusable_visual": 18,
+    "community_reposting_probability": 18,
+    "identity_attachment": 16,
+    "phrase_portability": 14,
+    "screenshot_reuse_fit": 10,
+    "cropability": 8
+  },
+  "remixability_signals": {
+    "one_sentence_complete": {
+      "score": 10,
+      "meaning": "一文だけで意味と空気が残る。"
+    },
+    "image_stands_alone": {
+      "score": 14,
+      "meaning": "本文なしでも文化/identity/現場感が伝わる。"
+    },
+    "someone_else_can_say_it": {
+      "score": 12,
+      "meaning": "他人が自分の言葉として引用・再投稿しやすい。"
+    },
+    "screenshot_friendly": {
+      "score": 10,
+      "meaning": "スクショや切り抜きで文脈が壊れにくい。"
+    },
+    "caption_light_image_strong": {
+      "score": 12,
+      "meaning": "説明より画像が主役になり、二次利用されやすい。"
+    },
+    "identity_badge_feel": {
+      "score": 12,
+      "meaning": "見る人が『これは自分たちの空気』として持ち帰れる。"
+    }
+  },
+  "remixability_penalties": {
+    "too_complete_as_ad": {
+      "penalty": -12,
+      "reason": "広告として完成しすぎると、他人が再利用する余白が消える。"
+    },
+    "too_personal_to_raindog": {
+      "penalty": -10,
+      "reason": "鬼徹個人に閉じすぎると、他人の言葉として使いにくい。"
+    },
+    "requires_long_context": {
+      "penalty": -10,
+      "reason": "背景説明がないと伝わらない素材は切り抜きに弱い。"
+    },
+    "overbranded": {
+      "penalty": -8,
+      "reason": "ロゴや導線が強すぎると、コミュニティ素材ではなく広告に見える。"
+    }
+  },
+  "live_observations": [
+    {
+      "observed_at_jst": "2026-05-16",
+      "case_id": "boss_account_image_excerpt_repost",
+      "source": "operator_observation",
+      "summary": "ボス側アカウントが鬼徹の投稿画像を抜粋して再投稿した。投稿全体ではなく画像そのものが拾われた。",
+      "flow": [
+        "post",
+        "image_becomes_community_material",
+        "reused_by_other_account",
+        "secondary_distribution",
+        "impression_acceleration"
+      ],
+      "interpretation": "単なるRTではなく、画像がコミュニティ文化素材としてremixabilityを持ち始めた兆候。",
+      "observed_strengths": [
+        "image_stands_alone",
+        "one_sentence_complete",
+        "someone_else_can_say_it",
+        "community_reposting_probability",
+        "identity_attachment",
+        "screenshot_friendly",
+        "cropability"
+      ],
+      "strategic_shift": "完成された広告投稿より、他人が拾いやすい素材を増やす。"
+    }
+  ],
+  "saturation_detectors": {
+    "same_black_hoodie": {
+      "condition": "black hoodie or black back-logo clothing dominates recent image set",
+      "penalty": -12,
+      "countermove": "服を主役から外し、机・レシート・会話ログ・集会後の痕跡を主役にする。"
+    },
+    "same_city_night": {
+      "condition": "night city / neon / rainy street repeats within 72h",
+      "penalty": -10,
+      "countermove": "朝、室内、コンビニ袋、作業机、移動中など生活の場所へずらす。"
+    },
+    "same_back_view": {
+      "condition": "back-view wearer composition repeats within 72h",
+      "penalty": -10,
+      "countermove": "顔を出さずに、手元・机・服の端・スマホ画面・椅子の背などへ寄る。"
+    },
+    "repeated_phrase": {
+      "condition": "first-line or key phrase pattern repeats within 48h",
+      "penalty": -12,
+      "countermove": "『説明より』『気づくと』『残る』系を連続使用しない。"
+    },
+    "repeated_structure": {
+      "condition": "short observation + twist + footer structure repeats too often",
+      "penalty": -8,
+      "countermove": "一文投稿、会話ログ風、メモ断片、箇条書き未満の断片へ崩す。"
+    }
+  },
+  "lifestyle_residue_signals": {
+    "hand_blur": {
+      "score": 8,
+      "meaning": "綺麗すぎない現場感。"
+    },
+    "dirt_or_wear": {
+      "score": 8,
+      "meaning": "新品広告ではなく、使われた痕跡。"
+    },
+    "receipt": {
+      "score": 7,
+      "meaning": "生活の具体物。買った/移動した/そこにいた証拠。"
+    },
+    "work_desk": {
+      "score": 8,
+      "meaning": "作業とVillainが混ざる場所。"
+    },
+    "coffee": {
+      "score": 6,
+      "meaning": "日常の温度。宇宙人コーヒー文脈とも接続可能。"
+    },
+    "discord": {
+      "score": 8,
+      "meaning": "コミュニティの裏側。ただし個人情報は出さない。"
+    },
+    "after_gathering": {
+      "score": 10,
+      "meaning": "集会後の残り香。community_infoとresidualに強い。"
+    },
+    "unfinished_feeling": {
+      "score": 9,
+      "meaning": "完成広告ではなく、まだ動いている感じ。"
+    }
+  },
+  "ad_feel_penalties": {
+    "overpolished": {
+      "penalty": -12,
+      "reason": "完成度が高すぎると広告に見える。"
+    },
+    "too_clean": {
+      "penalty": -10,
+      "reason": "生活痕がなく、生成画像感が強くなる。"
+    },
+    "too_symmetric": {
+      "penalty": -8,
+      "reason": "構図が整いすぎるとポスター広告になる。"
+    },
+    "generic_ai_visual": {
+      "penalty": -14,
+      "reason": "AIっぽい夜景・人物・ロゴ配置は既視感が強い。"
+    },
+    "catalog_product_shot": {
+      "penalty": -10,
+      "reason": "服単体紹介に戻ると実データ上弱い。"
+    }
+  },
+  "rotation_policy": {
+    "image_novelty": {
+      "rotate_every_hours": 72,
+      "avoid_repeating": [
+        "same image file",
+        "same black hoodie back view",
+        "same rainy neon city",
+        "same collage grid"
+      ],
+      "increase": [
+        "desk residue",
+        "receipt",
+        "coffee",
+        "after gathering",
+        "partial object",
+        "unfinished composition"
+      ]
+    },
+    "wording_novelty": {
+      "rotate_every_posts": 2,
+      "avoid_repeating": [
+        "説明より",
+        "気づくと",
+        "残る",
+        "ちょっと変"
+      ],
+      "increase": [
+        "one-line fragment",
+        "log-like note",
+        "overheard phrase",
+        "unfinished memo",
+        "short contradiction"
+      ]
+    },
+    "persona_novelty": {
+      "rotate_every_posts": 3,
+      "personas": [
+        "culture_observer",
+        "community_operator",
+        "quiet_apparel_witness",
+        "afterparty_recorder",
+        "desk_side_builder",
+        "anti_ad_copywriter"
+      ],
+      "rule": "同じ人格を3連続で使わない。culture_observerを軸にしつつ、生活痕や作業者視点へずらす。"
+    }
+  },
+  "integration_points": {
+    "image_strategy": "local_image_inventoryにnovelty tagsとad_feel_riskを追加する候補。",
+    "candidate_stream": "stream item scoresにnovelty_score, remixability_score, saturation_flags, lifestyle_residue_scoreを追加する候補。",
+    "daily_selection": "selection scoreにnovelty_scoreとremixability_scoreを加え、same_image_cooldownやsame_persona_decayと連動する。",
+    "residual_learning": "24hで残ったnovelty要素と二次利用/再投稿観測をactual_residual_typeと一緒に記録する。",
+    "generated_candidates": "seed generationで『完成度』だけでなく生活痕/未完成感/場所のズレ/切り抜きやすさを混ぜる。"
+  },
+  "stream_score_extension_proposal": {
+    "scores": {
+      "novelty_score": null,
+      "remixability_score": null,
+      "visual_novelty": null,
+      "context_novelty": null,
+      "persona_novelty": null,
+      "quoteability": null,
+      "reusable_visual": null,
+      "community_reposting_probability": null,
+      "identity_attachment": null,
+      "phrase_portability": null,
+      "lifestyle_residue_score": null,
+      "ad_feel_risk": null
+    },
+    "novelty": {
+      "saturation_flags": [],
+      "lifestyle_residue_signals": [],
+      "rotation_hint": "",
+      "why_it_feels_new": ""
+    },
+    "remixability": {
+      "remixability_signals": [],
+      "reuse_surface": "",
+      "why_others_can_pick_it_up": "",
+      "recommended_format": ""
+    }
+  },
+  "updated_at_jst": "2026-05-16"
+}
