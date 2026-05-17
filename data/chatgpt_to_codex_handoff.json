@@ -1,0 +1,32 @@
+{
+  "db_name": "ChatGPT to Codex Handoff",
+  "version": "1.0.0",
+  "status": "active",
+  "updated_at_jst": "",
+  "purpose": "ChatGPTが方針・判定基準・受け入れ条件を書き、Codexが実装と検証に使うためのinbox。",
+  "current_strategy": {
+    "theme": "Villain Auto Posting OS quality improvement loop",
+    "principle": "Safetyだけではなく、自然さ・文脈接地・画像本文整合・鬼徹人格を投稿前に検問する。",
+    "core_question": "この投稿は何を見て言っているのか？"
+  },
+  "policy_targets": {
+    "quality_policy": "data/villain_post_quality_os.json",
+    "quality_runner": "scripts/post_quality_os.py",
+    "quality_report": "reports/villain_quality_review_summary.md",
+    "handoff_result": "data/codex_to_chatgpt_handoff.json"
+  },
+  "acceptance_criteria": [
+    "posting/upload/create_tweetを実行しない",
+    "tracking_codeを生成しない",
+    "passcodeはdata/villain_passcodes.jsonのactive値のみ使用する",
+    "keep=false投稿の近傍候補を品質gateで止める",
+    "Quality Review Summaryにblockers/warnings/human checklistを出す",
+    "Codexの実装・検証結果をdata/codex_to_chatgpt_handoff.jsonに残す"
+  ],
+  "open_questions_for_codex": [
+    "context_evidence source fileの標準形式を決める必要がある",
+    "候補が全部BLOCKEDのときのrefill処理は未実装",
+    "画像metadataが薄い候補のtopic-image判定をどう補強するか"
+  ],
+  "next_requested_action": "Run agent handoff validation and report current state."
+}

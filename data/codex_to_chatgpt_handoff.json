@@ -1,0 +1,47 @@
+{
+  "db_name": "Codex to ChatGPT Handoff",
+  "version": "1.0.0",
+  "status": "READY_FOR_CHATGPT_REVIEW",
+  "generated_at_jst": "2026-05-17T18:29:51+09:00",
+  "purpose": "Codexが実装結果・検証結果・未解決課題・次アクションをChatGPTへ返すためのoutbox。",
+  "posting_executed": false,
+  "upload_media_executed": false,
+  "tweet_creation_executed": false,
+  "implementation_result": {
+    "summary": "Agent handoff loop validated through repo-local protocol, policy, quality runner, and reports.",
+    "changed_files": [
+      "docs/agent_handoff_protocol.md",
+      "data/chatgpt_to_codex_handoff.json",
+      "data/codex_to_chatgpt_handoff.json",
+      "data/agent_handoff_state.json",
+      "scripts/agent_handoff_runner.py",
+      "reports/agent_handoff_status.md"
+    ],
+    "quality_status": "BLOCKED",
+    "blockers": [
+      "deleted_text_near_match",
+      "deleted_topic_context_cooldown",
+      "temporal_context_unverified",
+      "topic_image_pairing_mismatch"
+    ],
+    "warnings": [
+      "deleted_nearby_match_found"
+    ]
+  },
+  "validation": {
+    "json_valid": true,
+    "quality_review_runner": true,
+    "tracking_code_absent": true,
+    "x_write_not_used": true
+  },
+  "unresolved_issues": [
+    "context_evidence source fileの標準形式を決める必要がある",
+    "候補が全部BLOCKEDのときのrefill処理は未実装",
+    "画像metadataが薄い候補のtopic-image判定をどう補強するか"
+  ],
+  "next_actions": [
+    "ChatGPT updates data/chatgpt_to_codex_handoff.json when policy changes.",
+    "Codex runs scripts/agent_handoff_runner.py after local implementation or review.",
+    "User approves only final READY/REVIEW_REQUIRED/BLOCKED summary."
+  ]
+}
