@@ -181,11 +181,22 @@ def is_success_outcome(record: dict[str, Any]) -> bool:
     )
 
 
+def is_effective_success_outcome(record: dict[str, Any]) -> bool:
+    if not is_success_outcome(record):
+        return False
+    review = record.get("human_review", {})
+    if review.get("keep") is False:
+        return False
+    if record.get("effective_post") is False or record.get("x_deleted_by_human") is True:
+        return False
+    return True
+
+
 def outcome_successes_today(outcomes_db: dict[str, Any]) -> int:
     today = datetime.now(JST).date()
     count = 0
     for record in outcomes_db.get("outcomes", []):
-        if not is_success_outcome(record):
+        if not is_effective_success_outcome(record):
             continue
         posted_at = parse_jst(record.get("posted_at_jst", ""))
         if posted_at and posted_at.date() == today:

@@ -159,8 +159,19 @@ def is_success_outcome(record: dict[str, Any]) -> bool:
     )
 
 
+def is_effective_success_outcome(record: dict[str, Any]) -> bool:
+    if not is_success_outcome(record):
+        return False
+    review = record.get("human_review", {})
+    if review.get("keep") is False:
+        return False
+    if record.get("effective_post") is False or record.get("x_deleted_by_human") is True:
+        return False
+    return True
+
+
 def success_outcomes(outcomes_db: dict[str, Any]) -> list[dict[str, Any]]:
-    return [record for record in outcomes_db.get("outcomes", []) if is_success_outcome(record)]
+    return [record for record in outcomes_db.get("outcomes", []) if is_effective_success_outcome(record)]
 
 
 def outcome_successes_today(outcomes_db: dict[str, Any]) -> int:
