@@ -12,6 +12,16 @@ ChatGPT and Codex do not need to hold an autonomous hidden conversation. Instead
 
 ## Handoff Files
 
+Contract source:
+
+- `docs/handoff_contract.md`
+  - schema versions
+  - review state machine
+  - repair actions
+  - repair quality intelligence
+  - GitHub handoff boundary
+  - safety invariants
+
 ### ChatGPT Writes
 
 - `docs/agent_handoff_protocol.md`
@@ -43,6 +53,8 @@ ChatGPT and Codex do not need to hold an autonomous hidden conversation. Instead
   - safe next action
 - `reports/agent_handoff_status.md`
   - latest handoff health
+  - repair quality summary
+  - recurring repair failure clusters
   - whether policy, runner, reports, and review queue are aligned
 - implementation files under `scripts/`, `data/`, `reports/`, and `launchd/` when requested by the user
 
@@ -55,10 +67,14 @@ ChatGPT and Codex do not need to hold an autonomous hidden conversation. Instead
 5. Run local quality evaluation only.
 6. Write `data/villain_quality_review_queue.json`.
 7. Write `reports/villain_quality_review_summary.md`.
-8. Write Codex result to `data/codex_to_chatgpt_handoff.json`.
-9. Write handoff status to `reports/agent_handoff_status.md`.
-10. Do not post, upload media, or create tweets.
-11. Leave unresolved issues in the handoff files or the quality review report.
+8. Consume review-only `repair_action` entries when present.
+9. Write `data/villain_repair_execution.json`.
+10. Write `data/villain_repaired_candidates.json`.
+11. Write `data/villain_repair_quality_analytics.json`.
+12. Write Codex result to `data/codex_to_chatgpt_handoff.json`.
+13. Write handoff status to `reports/agent_handoff_status.md`.
+14. Do not post, upload media, or create tweets.
+15. Leave unresolved issues in the handoff files or the quality review report.
 
 ## Runner
 
@@ -74,9 +90,30 @@ It should:
 
 1. Validate required handoff files exist.
 2. Read latest candidates from `data/villain_auto_post_pilot.json`.
-2. Run `scripts/post_quality_os.py` logic by importing it, not by posting.
-3. Emit `posting_executed=false`, `upload_media_executed=false`, and `tweet_creation_executed=false`.
-4. Record unresolved issues and next actions for the next agent pass.
+3. Run `scripts/post_quality_os.py` logic by importing it, not by posting.
+4. Run `scripts/handoff_repair_runner.py` review-only repair and repair quality logic.
+5. Emit `posting_executed=false`, `upload_media_executed=false`, and `tweet_creation_executed=false`.
+6. Record unresolved issues and next actions for the next agent pass.
+
+## Repair Quality Intelligence
+
+Repair quality intelligence evaluates repaired candidates without approving them.
+
+It records:
+
+- `repair_quality_score`
+- `repair_regression_risk`
+- `repair_confidence`
+- reviewer feedback linkage
+- repaired-vs-original diff summary
+- repair outcome analytics
+- recurring repair failure clustering
+
+Any repaired candidate remains review-only:
+
+- `human_approved_for_posting=false`
+- `safe_to_post=false`
+- posting execution remains blocked until an explicit human approval path exists
 
 ## Quality Review Decision States
 

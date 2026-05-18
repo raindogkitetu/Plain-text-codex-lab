@@ -1,0 +1,330 @@
+{
+  "chatgpt_decision_consumed": {
+    "approved_for_review": [
+      {
+        "candidate_id": "vln-gen-20260517-shop-001",
+        "reason": "Keep in human review board as READY candidate, but not approved for posting."
+      }
+    ],
+    "archive_or_drop_candidates": [
+      {
+        "candidate_match": "candidates blocked by deleted_text_near_match plus deleted_topic_context_cooldown",
+        "reason": "Likely repeats deleted/failed pattern; prefer archive/drop over repair unless manually rescued."
+      }
+    ],
+    "context_evidence_required": [
+      {
+        "candidate_match": "any candidate using yesterday/今日/集会/recent-event framing",
+        "reason": "Recent event context requires real evidence. '昨日の集会' style context is prohibited without verification."
+      },
+      {
+        "candidate_id": "vln-gen-20260516-001",
+        "reason": "temporal context unverified."
+      }
+    ],
+    "decision": "REVIEW_READY_NOT_POST_READY",
+    "image_replacement_required": [
+      {
+        "image": "20260514集会.png",
+        "reason": "Do not use for READY posting candidates. Prior failure reason was content/context mismatch."
+      },
+      {
+        "candidate_match": "topic_image_pairing_mismatch candidates",
+        "reason": "Replace image before returning to review."
+      }
+    ],
+    "must_remain_blocked": [
+      {
+        "candidate_id": "vln-gen-20260516-001",
+        "reason": "deleted-near match and temporal context unverified."
+      },
+      {
+        "candidate_id": "vln-gen-20260516-003",
+        "reason": "topic-image mismatch and deleted topic cooldown."
+      }
+    ],
+    "next_codex_actions": [
+      "Write this decision to data/chatgpt_to_codex_handoff.json.",
+      "Keep queue_health_status=BLOCKED, review_board_status=READY, posting_execution_status=BLOCKED.",
+      "Keep safe_to_review=true and safe_to_post=false.",
+      "Do not execute posting, upload_media, create_tweet, or tracking_code generation.",
+      "Keep vln-gen-20260517-shop-001 in review board only.",
+      "Mark any READY candidate using 20260514集会.png as not approved for posting.",
+      "Maintain block on vln-gen-20260516-001 and vln-gen-20260516-003.",
+      "Add refill candidates that avoid deleted topic cooldown, deleted near-match text, temporal claims, and 20260514集会.png.",
+      "Update reports/agent_handoff_status.md and reports/villain_quality_review_summary.md with separated statuses."
+    ],
+    "not_approved_for_posting": [
+      {
+        "candidate_id": "vln-gen-20260517-shop-001",
+        "reason": "Human review only. safe_to_post must remain false until explicit human approval."
+      },
+      {
+        "candidate_match": "any READY candidate using 20260514集会.png",
+        "reason": "Image is associated with recent content/context mismatch failure and must not be posted without replacement or evidence."
+      }
+    ],
+    "policy_clarification": [
+      "READY means eligible for human review, not eligible for posting.",
+      "safe_to_post=false remains the default and must not be changed without explicit human approval.",
+      "Human approval is required before any posting path can run.",
+      "The active passcode must come only from data/villain_passcodes.json.",
+      "Recent-event or temporal claims require context evidence.",
+      "Deleted learning cooldown must override aesthetic fit when there is conflict."
+    ],
+    "refill_required": true,
+    "repair_candidates": [
+      {
+        "candidate_match": "BLOCKED candidates blocked only by temporal_context_unverified",
+        "repair_type": "context_evidence_required"
+      },
+      {
+        "candidate_match": "BLOCKED candidates blocked only by topic_image_pairing_mismatch",
+        "repair_type": "image_replacement_required"
+      }
+    ]
+  },
+  "db_name": "Codex to ChatGPT Handoff",
+  "generated_at_jst": "2026-05-17T23:49:27+09:00",
+  "implementation_result": {
+    "blockers": [
+      "deleted_text_near_match",
+      "deleted_topic_context_cooldown",
+      "temporal_context_unverified",
+      "topic_image_pairing_mismatch"
+    ],
+    "changed_files": [
+      "docs/agent_handoff_protocol.md",
+      "data/chatgpt_to_codex_handoff.json",
+      "data/codex_to_chatgpt_handoff.json",
+      "data/agent_handoff_state.json",
+      "scripts/agent_handoff_runner.py",
+      "scripts/handoff_repair_runner.py",
+      "data/villain_repair_quality_analytics.json",
+      "reports/agent_handoff_status.md"
+    ],
+    "quality_status": "BLOCKED",
+    "summary": "Agent handoff loop validated through repo-local protocol, policy, quality runner, and reports.",
+    "warnings": [
+      "deleted_nearby_match_found"
+    ]
+  },
+  "maintenance_summary": {
+    "blocked_candidate_count": 6,
+    "blocked_reason_frequency": {
+      "deleted_text_near_match": 3,
+      "deleted_topic_context_cooldown": 6,
+      "temporal_context_unverified": 3,
+      "topic_image_pairing_mismatch": 3
+    },
+    "chatgpt_next_codex_actions": [
+      "Write this decision to data/chatgpt_to_codex_handoff.json.",
+      "Keep queue_health_status=BLOCKED, review_board_status=READY, posting_execution_status=BLOCKED.",
+      "Keep safe_to_review=true and safe_to_post=false.",
+      "Do not execute posting, upload_media, create_tweet, or tracking_code generation.",
+      "Keep vln-gen-20260517-shop-001 in review board only.",
+      "Mark any READY candidate using 20260514集会.png as not approved for posting.",
+      "Maintain block on vln-gen-20260516-001 and vln-gen-20260516-003.",
+      "Add refill candidates that avoid deleted topic cooldown, deleted near-match text, temporal claims, and 20260514集会.png.",
+      "Update reports/agent_handoff_status.md and reports/villain_quality_review_summary.md with separated statuses."
+    ],
+    "chatgpt_refill_required": true,
+    "deleted_learning_cooldown_remaining": [
+      {
+        "candidate_id": "vln-gen-20260516-001",
+        "cooldown_until_jst": "2026-05-24T18:22:16+09:00",
+        "execution_id": "vln-exec-daytime-vln-gen-20260516-001",
+        "image_used": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/20260514集会.png",
+        "reason": "Deleted by human: content/context mismatch. Not yesterday's gathering and post did not fit actual situation.",
+        "remaining_hours": 162.5,
+        "topic_cluster": "community_gathering_signal",
+        "tweet_id": "2055938300708626713"
+      }
+    ],
+    "executable_ready_count": 0,
+    "posting_execution_status": "BLOCKED",
+    "queue_health_status": "BLOCKED",
+    "ready_candidate_count": 3,
+    "review_board_status": "READY",
+    "review_required_candidate_count": 0,
+    "safe_to_post": false,
+    "safe_to_review": true,
+    "stale_cleanup": {
+      "remaining_count": 9,
+      "removed_count": 0,
+      "strategy": "dedupe_current_review_items_by_candidate_execution_slot_image"
+    },
+    "unresolved_issues_summary": [
+      "context_evidence source fileの標準形式を決める必要がある",
+      "候補が全部BLOCKEDのときのrefill処理は未実装",
+      "画像metadataが薄い候補のtopic-image判定をどう補強するか",
+      "READYだがhuman_approved_for_posting=falseの候補をreview inboxとして別表示できるか",
+      "Deleted learning cooldown is active for recent failed posts."
+    ]
+  },
+  "next_actions": [
+    "ChatGPT updates data/chatgpt_to_codex_handoff.json when policy changes.",
+    "Codex runs scripts/agent_handoff_runner.py after local implementation or review.",
+    "User approves only final READY/REVIEW_REQUIRED/BLOCKED summary."
+  ],
+  "posting_executed": false,
+  "purpose": "Codexが実装結果・検証結果・未解決課題・次アクションをChatGPTへ返すためのoutbox。",
+  "repair_actions": [
+    {
+      "blockers": [
+        "deleted_text_near_match",
+        "deleted_topic_context_cooldown",
+        "temporal_context_unverified"
+      ],
+      "candidate_id": "vln-gen-20260516-001",
+      "execution_id": "vln-exec-daytime-vln-gen-20260516-001",
+      "repair_action": {
+        "reason": "Candidate repeats a deleted/failed text and topic pattern.",
+        "required": true,
+        "type": "archive_or_drop"
+      },
+      "slot": "daytime"
+    },
+    {
+      "blockers": [
+        "deleted_topic_context_cooldown",
+        "topic_image_pairing_mismatch"
+      ],
+      "candidate_id": "vln-gen-20260516-003",
+      "execution_id": "vln-exec-daytime-vln-gen-20260516-003",
+      "repair_action": {
+        "reason": "Text topic and image metadata do not support each other.",
+        "required": true,
+        "type": "image_replacement_required"
+      },
+      "slot": "daytime"
+    },
+    {
+      "blockers": [
+        "deleted_text_near_match",
+        "deleted_topic_context_cooldown",
+        "temporal_context_unverified"
+      ],
+      "candidate_id": "vln-gen-20260516-001",
+      "execution_id": "vln-exec-night-vln-gen-20260516-001",
+      "repair_action": {
+        "reason": "Candidate repeats a deleted/failed text and topic pattern.",
+        "required": true,
+        "type": "archive_or_drop"
+      },
+      "slot": "night"
+    },
+    {
+      "blockers": [
+        "deleted_topic_context_cooldown",
+        "topic_image_pairing_mismatch"
+      ],
+      "candidate_id": "vln-gen-20260516-003",
+      "execution_id": "vln-exec-night-vln-gen-20260516-003",
+      "repair_action": {
+        "reason": "Text topic and image metadata do not support each other.",
+        "required": true,
+        "type": "image_replacement_required"
+      },
+      "slot": "night"
+    },
+    {
+      "blockers": [
+        "deleted_text_near_match",
+        "deleted_topic_context_cooldown",
+        "temporal_context_unverified"
+      ],
+      "candidate_id": "vln-gen-20260516-001",
+      "execution_id": "vln-exec-late_night-vln-gen-20260516-001",
+      "repair_action": {
+        "reason": "Candidate repeats a deleted/failed text and topic pattern.",
+        "required": true,
+        "type": "archive_or_drop"
+      },
+      "slot": "late_night"
+    },
+    {
+      "blockers": [
+        "deleted_topic_context_cooldown",
+        "topic_image_pairing_mismatch"
+      ],
+      "candidate_id": "vln-gen-20260516-003",
+      "execution_id": "vln-exec-late_night-vln-gen-20260516-003",
+      "repair_action": {
+        "reason": "Text topic and image metadata do not support each other.",
+        "required": true,
+        "type": "image_replacement_required"
+      },
+      "slot": "late_night"
+    }
+  ],
+  "repair_execution": {
+    "context_evidence_request_count": 3,
+    "recurring_repair_failure_clusters": [
+      {
+        "cluster": "ARCHIVED_FROM_REVIEW:archive_or_drop",
+        "count": 3,
+        "recurring": true
+      },
+      {
+        "cluster": "REPAIRED_FOR_REVIEW_ONLY:image_replacement_required",
+        "count": 3,
+        "recurring": true
+      }
+    ],
+    "repair_quality_summary": {
+      "average_repair_confidence": 70.0,
+      "average_repair_quality_score": 85.0,
+      "evaluated_repaired_candidate_count": 3,
+      "repair_regression_risk_frequency": {
+        "medium": 3
+      },
+      "safe_to_post": false
+    },
+    "repair_result_count": 6,
+    "repair_status_frequency": {
+      "ARCHIVED_FROM_REVIEW": 3,
+      "REPAIRED_FOR_REVIEW_ONLY": 3
+    },
+    "repaired_candidate_count": 3,
+    "safe_to_post": false,
+    "status": "COMPLETED_REVIEW_ONLY"
+  },
+  "review_state_machine": {
+    "allowed_states": [
+      "INBOX_RECEIVED",
+      "QUALITY_REVIEW_BUILT",
+      "READY_FOR_CHATGPT_REVIEW",
+      "CHATGPT_DECISION_CONSUMED",
+      "READY_FOR_HUMAN_REVIEW",
+      "POSTING_BLOCKED",
+      "CONTRACT_BLOCKED"
+    ],
+    "current_state": "CHATGPT_DECISION_CONSUMED",
+    "safe_to_post_default": false,
+    "terminal_posting_states_disabled": [
+      "POSTING_READY",
+      "POSTING_EXECUTED"
+    ]
+  },
+  "schema_version": "handoff.codex_to_chatgpt.v1",
+  "status": "READY_FOR_CHATGPT_REVIEW",
+  "tweet_creation_executed": false,
+  "unresolved_issues": [
+    "context_evidence source fileの標準形式を決める必要がある",
+    "候補が全部BLOCKEDのときのrefill処理は未実装",
+    "画像metadataが薄い候補のtopic-image判定をどう補強するか",
+    "READYだがhuman_approved_for_posting=falseの候補をreview inboxとして別表示できるか",
+    "Deleted learning cooldown is active for recent failed posts."
+  ],
+  "upload_media_executed": false,
+  "validation": {
+    "contract_source": "docs/handoff_contract.md",
+    "json_valid": true,
+    "quality_review_runner": true,
+    "schema_version_present": true,
+    "tracking_code_absent": true,
+    "x_write_not_used": true
+  },
+  "version": "1.0.0"
+}

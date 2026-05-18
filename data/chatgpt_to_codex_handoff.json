@@ -1,0 +1,121 @@
+{
+  "acceptance_criteria": [
+    "posting/upload/create_tweetを実行しない",
+    "tracking_codeを生成しない",
+    "passcodeはdata/villain_passcodes.jsonのactive値のみ使用する",
+    "keep=false投稿の近傍候補を品質gateで止める",
+    "Quality Review Summaryにblockers/warnings/human checklistを出す",
+    "Codexの実装・検証結果をdata/codex_to_chatgpt_handoff.jsonに残す"
+  ],
+  "chatgpt_review_decision": {
+    "approved_for_review": [
+      {
+        "candidate_id": "vln-gen-20260517-shop-001",
+        "reason": "Keep in human review board as READY candidate, but not approved for posting."
+      }
+    ],
+    "archive_or_drop_candidates": [
+      {
+        "candidate_match": "candidates blocked by deleted_text_near_match plus deleted_topic_context_cooldown",
+        "reason": "Likely repeats deleted/failed pattern; prefer archive/drop over repair unless manually rescued."
+      }
+    ],
+    "context_evidence_required": [
+      {
+        "candidate_match": "any candidate using yesterday/今日/集会/recent-event framing",
+        "reason": "Recent event context requires real evidence. '昨日の集会' style context is prohibited without verification."
+      },
+      {
+        "candidate_id": "vln-gen-20260516-001",
+        "reason": "temporal context unverified."
+      }
+    ],
+    "decision": "REVIEW_READY_NOT_POST_READY",
+    "image_replacement_required": [
+      {
+        "image": "20260514集会.png",
+        "reason": "Do not use for READY posting candidates. Prior failure reason was content/context mismatch."
+      },
+      {
+        "candidate_match": "topic_image_pairing_mismatch candidates",
+        "reason": "Replace image before returning to review."
+      }
+    ],
+    "must_remain_blocked": [
+      {
+        "candidate_id": "vln-gen-20260516-001",
+        "reason": "deleted-near match and temporal context unverified."
+      },
+      {
+        "candidate_id": "vln-gen-20260516-003",
+        "reason": "topic-image mismatch and deleted topic cooldown."
+      }
+    ],
+    "next_codex_actions": [
+      "Write this decision to data/chatgpt_to_codex_handoff.json.",
+      "Keep queue_health_status=BLOCKED, review_board_status=READY, posting_execution_status=BLOCKED.",
+      "Keep safe_to_review=true and safe_to_post=false.",
+      "Do not execute posting, upload_media, create_tweet, or tracking_code generation.",
+      "Keep vln-gen-20260517-shop-001 in review board only.",
+      "Mark any READY candidate using 20260514集会.png as not approved for posting.",
+      "Maintain block on vln-gen-20260516-001 and vln-gen-20260516-003.",
+      "Add refill candidates that avoid deleted topic cooldown, deleted near-match text, temporal claims, and 20260514集会.png.",
+      "Update reports/agent_handoff_status.md and reports/villain_quality_review_summary.md with separated statuses."
+    ],
+    "not_approved_for_posting": [
+      {
+        "candidate_id": "vln-gen-20260517-shop-001",
+        "reason": "Human review only. safe_to_post must remain false until explicit human approval."
+      },
+      {
+        "candidate_match": "any READY candidate using 20260514集会.png",
+        "reason": "Image is associated with recent content/context mismatch failure and must not be posted without replacement or evidence."
+      }
+    ],
+    "policy_clarification": [
+      "READY means eligible for human review, not eligible for posting.",
+      "safe_to_post=false remains the default and must not be changed without explicit human approval.",
+      "Human approval is required before any posting path can run.",
+      "The active passcode must come only from data/villain_passcodes.json.",
+      "Recent-event or temporal claims require context evidence.",
+      "Deleted learning cooldown must override aesthetic fit when there is conflict."
+    ],
+    "refill_required": true,
+    "repair_candidates": [
+      {
+        "candidate_match": "BLOCKED candidates blocked only by temporal_context_unverified",
+        "repair_type": "context_evidence_required"
+      },
+      {
+        "candidate_match": "BLOCKED candidates blocked only by topic_image_pairing_mismatch",
+        "repair_type": "image_replacement_required"
+      }
+    ]
+  },
+  "current_strategy": {
+    "core_question": "この投稿は何を見て言っているのか？",
+    "principle": "Safetyだけではなく、自然さ・文脈接地・画像本文整合・鬼徹人格を投稿前に検問する。",
+    "theme": "Villain Auto Posting OS quality improvement loop"
+  },
+  "db_name": "ChatGPT to Codex Handoff",
+  "next_requested_action": "Consume ChatGPT review decision, keep posting disabled, and prepare review-only refill candidates.",
+  "open_questions_for_codex": [
+    "context_evidence source fileの標準形式を決める必要がある",
+    "候補が全部BLOCKEDのときのrefill処理は未実装",
+    "画像metadataが薄い候補のtopic-image判定をどう補強するか",
+    "READYだがhuman_approved_for_posting=falseの候補をreview inboxとして別表示できるか"
+  ],
+  "policy_targets": {
+    "handoff_result": "data/codex_to_chatgpt_handoff.json",
+    "quality_policy": "data/villain_post_quality_os.json",
+    "quality_report": "reports/villain_quality_review_summary.md",
+    "quality_runner": "scripts/post_quality_os.py"
+  },
+  "posting_execution_status": "BLOCKED",
+  "purpose": "ChatGPTが方針・判定基準・受け入れ条件を書き、Codexが実装と検証に使うためのinbox。",
+  "safe_to_post": false,
+  "schema_version": "handoff.chatgpt_to_codex.v1",
+  "status": "active",
+  "updated_at_jst": "2026-05-17T23:22:42+09:00",
+  "version": "1.0.0"
+}

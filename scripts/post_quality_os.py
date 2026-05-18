@@ -68,7 +68,7 @@ def read_json(path: Path) -> dict[str, Any]:
 
 def write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def compact_text(text: str, limit: int = 180) -> str:
@@ -124,6 +124,62 @@ def review_status(blockers: list[str], warnings: list[str]) -> str:
     return "READY"
 
 
+def explicit_human_approved(candidate: dict[str, Any]) -> bool:
+    review = candidate.get("review", {})
+    manual_review = candidate.get("manual_review", {})
+    return bool(
+        candidate.get("human_approved_for_posting") is True
+        or candidate.get("explicit_human_approved") is True
+        or review.get("human_decision") == "approved"
+        or manual_review.get("keep") is True and manual_review.get("approve_for_posting") is True
+    )
+
+
+def repair_action_for(blockers: list[str], warnings: list[str]) -> dict[str, Any]:
+    blocker_set = set(blockers)
+    if "deleted_text_near_match" in blocker_set and "deleted_topic_context_cooldown" in blocker_set:
+        return {
+            "type": "archive_or_drop",
+            "required": True,
+            "reason": "Candidate repeats a deleted/failed text and topic pattern.",
+        }
+    if "temporal_context_unverified" in blocker_set:
+        return {
+            "type": "context_evidence_required",
+            "required": True,
+            "reason": "Temporal or real-event claim needs evidence before review can continue.",
+        }
+    if "topic_image_pairing_mismatch" in blocker_set:
+        return {
+            "type": "image_replacement_required",
+            "required": True,
+            "reason": "Text topic and image metadata do not support each other.",
+        }
+    if warnings:
+        return {
+            "type": "human_review_required",
+            "required": True,
+            "reason": "Subjective quality signal needs review before any later approval.",
+        }
+    return {
+        "type": "none",
+        "required": False,
+        "reason": "No repair needed for human review.",
+    }
+
+
+def item_review_state(status: str, human_approved: bool) -> str:
+    if status == "BLOCKED":
+        return "CANDIDATE_BLOCKED"
+    if status == "REVIEW_REQUIRED":
+        return "CANDIDATE_REVIEW_REQUIRED"
+    if status == "READY" and human_approved:
+        return "CANDIDATE_APPROVED_FOR_POSTING"
+    if status == "READY":
+        return "CANDIDATE_READY_FOR_HUMAN_REVIEW"
+    return "CANDIDATE_UNKNOWN"
+
+
 def evaluate_candidate(candidate: dict[str, Any], outcomes_db: dict[str, Any], policy: dict[str, Any]) -> dict[str, Any]:
     text = candidate.get("text", "")
     image = candidate.get("image", {})
@@ -155,6 +211,7 @@ def evaluate_candidate(candidate: dict[str, Any], outcomes_db: dict[str, Any], p
     warnings = sorted(set(warnings))
 
     status = review_status(hard_blockers, warnings)
+    human_approved = explicit_human_approved(candidate)
     return {
         "candidate_id": candidate.get("source_id") or candidate.get("candidate_id", ""),
         "execution_id": candidate.get("execution_id", ""),
@@ -164,6 +221,9 @@ def evaluate_candidate(candidate: dict[str, Any], outcomes_db: dict[str, Any], p
         "text": text,
         "text_preview": compact_text(text),
         "final_quality_status": status,
+        "review_state": item_review_state(status, human_approved),
+        "human_approved_for_posting": human_approved,
+        "repair_action": repair_action_for(hard_blockers, warnings),
         "blockers": hard_blockers,
         "warnings": warnings,
         "context_terms": context_check.get("terms", []),
@@ -214,11 +274,27 @@ def build_review() -> dict[str, Any]:
         status = "BLOCKED"
     elif any(item["final_quality_status"] == "REVIEW_REQUIRED" for item in reviews):
         status = "REVIEW_REQUIRED"
+    queue_health_status = "BLOCKED" if any(item["final_quality_status"] == "BLOCKED" for item in reviews) else "CLEAR"
+    review_board_status = "READY" if reviews else "EMPTY"
+    executable_ready_count = sum(
+        1
+        for item in reviews
+        if item["final_quality_status"] == "READY" and item.get("human_approved_for_posting") is True
+    )
+    posting_execution_status = "READY" if executable_ready_count > 0 else "BLOCKED"
     return {
         "db_name": "Villain Quality Review Queue",
+        "schema_version": "handoff.review_queue.v1",
         "version": "1.0.0",
         "generated_at_jst": now_jst(),
         "status": status,
+        "review_state": "READY_FOR_HUMAN_REVIEW" if reviews else "EMPTY_REVIEW_BOARD",
+        "queue_health_status": queue_health_status,
+        "review_board_status": review_board_status,
+        "posting_execution_status": posting_execution_status,
+        "executable_ready_count": executable_ready_count,
+        "safe_to_review": bool(reviews),
+        "safe_to_post": False,
         "posting_executed": False,
         "upload_media_executed": False,
         "tweet_creation_executed": False,
@@ -233,6 +309,12 @@ def write_report(review: dict[str, Any]) -> None:
         "",
         f"- Generated at JST: `{review.get('generated_at_jst')}`",
         f"- final_status: `{review.get('status')}`",
+        f"- queue_health_status: `{review.get('queue_health_status')}`",
+        f"- review_board_status: `{review.get('review_board_status')}`",
+        f"- posting_execution_status: `{review.get('posting_execution_status')}`",
+        f"- executable_ready_count: `{review.get('executable_ready_count')}`",
+        f"- safe_to_review: `{str(review.get('safe_to_review')).lower()}`",
+        f"- safe_to_post: `{str(review.get('safe_to_post')).lower()}`",
         "- posting executed: `NO`",
         "- upload executed: `NO`",
         "- tweet creation executed: `NO`",
@@ -252,6 +334,9 @@ def write_report(review: dict[str, Any]) -> None:
                 f"- passcode: `{item.get('passcode')}`",
                 f"- image: `{item.get('image')}`",
                 f"- final_quality_status: `{item.get('final_quality_status')}`",
+                f"- review_state: `{item.get('review_state')}`",
+                f"- human_approved_for_posting: `{str(item.get('human_approved_for_posting')).lower()}`",
+                f"- repair_action: `{item.get('repair_action', {}).get('type')}`",
                 f"- blockers: `{', '.join(item.get('blockers', [])) if item.get('blockers') else 'none'}`",
                 f"- warnings: `{', '.join(item.get('warnings', [])) if item.get('warnings') else 'none'}`",
                 f"- context terms: `{', '.join(item.get('context_terms', [])) if item.get('context_terms') else 'none'}`",
