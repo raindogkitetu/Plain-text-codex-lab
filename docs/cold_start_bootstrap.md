@@ -31,6 +31,7 @@
 - trajectory logging
 - ChatGPT bridge
 - decision ingestor
+- GitHub ChatGPT review bot
 
 ## 4. Current Schemas
 
@@ -55,12 +56,13 @@ Read these before making changes:
 4. `docs/agent_handoff_protocol.md`
 5. `reports/agent_handoff_status.md`
 6. `reports/chatgpt_bridge_prompt.md`
-7. `reports/villain_quality_review_summary.md`
-8. `data/agent_handoff_state.json`
-9. `data/agent_handoff_trajectory.json`
-10. `data/villain_quality_review_queue.json`
-11. `data/codex_to_chatgpt_handoff.json`
-12. `data/chatgpt_to_codex_handoff.json`
+7. `reports/chatgpt_github_review_bot.md`
+8. `reports/villain_quality_review_summary.md`
+9. `data/agent_handoff_state.json`
+10. `data/agent_handoff_trajectory.json`
+11. `data/villain_quality_review_queue.json`
+12. `data/codex_to_chatgpt_handoff.json`
+13. `data/chatgpt_to_codex_handoff.json`
 
 ## 6. Current Known Risks
 
@@ -83,10 +85,10 @@ Read these before making changes:
 - review_board_status=READY
 - queue_health_status=BLOCKED
 - executable_ready_count=0
+- GitHub review bot may update review JSON only; it must not approve posting.
 
 ## 8. Next Pending Implementation
 
-- handoff-only commit/push mode
 - repair regression analytics refinement
 - reviewer learning
 - repair outcome clustering
@@ -103,15 +105,16 @@ Read these before making changes:
 4. Inspect `reports/agent_handoff_status.md`.
 5. Inspect `reports/villain_quality_review_summary.md`.
 6. Inspect `reports/chatgpt_bridge_prompt.md` if ChatGPT bridge state matters.
-7. Inspect latest trajectory in `data/agent_handoff_trajectory.json`.
-8. Inspect latest state in `data/agent_handoff_state.json`.
-9. Validate safety invariants:
+7. Inspect `reports/chatgpt_github_review_bot.md` if GitHub review automation is active.
+8. Inspect latest trajectory in `data/agent_handoff_trajectory.json`.
+9. Inspect latest state in `data/agent_handoff_state.json`.
+10. Validate safety invariants:
    - `safe_to_post=false`
    - `posting_execution_status=BLOCKED`
    - `upload_media` not executed
    - `create_tweet` not executed
    - no `tracking_code` generation
-10. Continue from the latest review state.
+11. Continue from the latest review state.
 
 ## 10. Default Commands
 
@@ -131,6 +134,12 @@ ChatGPT decision ingestor:
 
 ```bash
 python3 scripts/chatgpt_decision_ingestor.py
+```
+
+GitHub ChatGPT review bot dry-run:
+
+```bash
+python3 scripts/github_chatgpt_review_bot.py --dry-run
 ```
 
 Handoff-only publication dry-run:
@@ -154,7 +163,7 @@ python3 scripts/handoff_commit_push.py --commit --push --message "chore: publish
 Validation:
 
 ```bash
-PYTHONPYCACHEPREFIX=/private/tmp/codex_pycache python3 -m py_compile scripts/agent_handoff_runner.py scripts/handoff_repair_runner.py scripts/chatgpt_bridge_prompt_builder.py scripts/chatgpt_decision_ingestor.py scripts/handoff_commit_push.py
+PYTHONPYCACHEPREFIX=/private/tmp/codex_pycache python3 -m py_compile scripts/agent_handoff_runner.py scripts/handoff_repair_runner.py scripts/chatgpt_bridge_prompt_builder.py scripts/chatgpt_decision_ingestor.py scripts/github_chatgpt_review_bot.py scripts/handoff_commit_push.py
 jq empty data/*.json status.json
 ```
 

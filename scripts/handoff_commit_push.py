@@ -37,13 +37,16 @@ WHITELIST = [
     "reports/agent_handoff_status.md",
     "reports/villain_quality_review_summary.md",
     "reports/chatgpt_bridge_prompt.md",
+    "reports/chatgpt_github_review_bot.md",
     "scripts/agent_handoff_runner.py",
     "scripts/chatgpt_bridge_prompt_builder.py",
     "scripts/chatgpt_decision_ingestor.py",
+    "scripts/github_chatgpt_review_bot.py",
     "scripts/handoff_commit_push.py",
     "scripts/handoff_repair_runner.py",
     "scripts/post_quality_os.py",
     "scripts/auto_post_maintenance.py",
+    ".github/workflows/villain-chatgpt-review.yml",
 ]
 
 FORBIDDEN_EXACT = {
@@ -174,6 +177,7 @@ def validate_invariants() -> tuple[bool, list[str]]:
         "scripts/agent_handoff_runner.py",
         "scripts/chatgpt_bridge_prompt_builder.py",
         "scripts/chatgpt_decision_ingestor.py",
+        "scripts/github_chatgpt_review_bot.py",
         "scripts/handoff_repair_runner.py",
         "scripts/post_quality_os.py",
         "scripts/auto_post_maintenance.py",

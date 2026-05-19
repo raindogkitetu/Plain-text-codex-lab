@@ -156,6 +156,34 @@ Bridge invariants:
 - `safe_to_post=true` is rejected unless a separate explicit human approval artifact exists
 - the human reviews the final decision summary, not the raw file gathering
 
+### GitHub ChatGPT Review Bot
+
+GitHub Actions may run the bridge review without the user manually copying files between Codex and ChatGPT.
+
+Workflow:
+
+- `.github/workflows/villain-chatgpt-review.yml` runs on `workflow_dispatch` and hourly schedule.
+- `scripts/chatgpt_bridge_prompt_builder.py` refreshes `reports/chatgpt_bridge_prompt.md`.
+- `scripts/github_chatgpt_review_bot.py` sends that prompt to the OpenAI API using `OPENAI_API_KEY`.
+- The bot writes the validated review decision to `data/chatgpt_to_codex_handoff.json`.
+- `scripts/chatgpt_decision_ingestor.py` consumes the decision and updates trajectory/report files.
+- The workflow commits only review-state files back to GitHub.
+
+Required GitHub configuration:
+
+- Repository secret: `OPENAI_API_KEY`
+- Optional repository variable: `OPENAI_MODEL`
+
+GitHub review bot invariants:
+
+- no GitHub issues are created
+- no scheduler execution is run
+- no upload or tweet creation code is called
+- no tracking code or passcode is generated
+- `safe_to_post=false` is forced before writing the decision
+- `posting_execution_status=BLOCKED` is forced before writing the decision
+- the bot can approve review/repair/refill actions only; it cannot approve posting
+
 ### Image Review Bridge
 
 Codex must include an image review packet in `reports/chatgpt_bridge_prompt.md` whenever generated/shop-derived images are available.

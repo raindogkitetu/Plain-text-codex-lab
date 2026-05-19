@@ -1,36 +1,185 @@
 {
   "chatgpt_review_decision": {
-    "decision": "CONSTANT_REVIEW_ENABLED",
-    "frequency": "HOURLY",
-    "github_issue_created": false,
-    "issue_creation_allowed": false,
+    "archive_or_drop": [
+      {
+        "candidate_id": "vln-gen-20260516-001",
+        "reason": "Prior deleted/context-mismatch pattern plus temporal wording. Archive/drop unless explicit verified evidence is provided."
+      }
+    ],
+    "blocked_candidates": [
+      {
+        "candidate_id": "vln-gen-20260516-001",
+        "decision": "REJECT",
+        "reason": "Deleted-near repetition, deleted topic cooldown, and temporal_context_unverified remain valid blockers."
+      },
+      {
+        "candidate_id": "vln-gen-20260516-003",
+        "decision": "REPAIR",
+        "reason": "Topic-image mismatch and deleted topic cooldown remain valid blockers."
+      },
+      {
+        "candidate_id": "vln-gen-20260516-002",
+        "decision": "HOLD",
+        "reason": "Previously READY but tied to 20260514集会.png risk. Do not use without image replacement."
+      }
+    ],
+    "decision": "REVIEW_READY_NOT_POST_READY",
+    "human_summary": "現在の実行判断は投稿可ではなくレビュー可。新しい2件は画像と本文の噛み合わせが自然で、人間レビューに出してよい。投稿はまだ禁止。",
+    "image_review_decisions": [
+      {
+        "decision": "USE",
+        "fit_for_candidate_ids": [
+          "vln-stream-20260519-stock-001"
+        ],
+        "image_id": "wearable_stock_010_thermos_workdesk",
+        "image_path": "villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png",
+        "reason": "Natural desk-residue image; not strongly ad-like; pairs well with thermos/life-use text."
+      },
+      {
+        "decision": "USE",
+        "fit_for_candidate_ids": [
+          "vln-stream-20260519-stock-002"
+        ],
+        "image_id": "wearable_stock_011_bag_entryway",
+        "image_path": "villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png",
+        "reason": "Natural entryway/after-use image; pairs well with bag/持ち物/帰宅後 text."
+      },
+      {
+        "decision": "HOLD",
+        "fit_for_candidate_ids": [],
+        "image_id": "wearable_stock_007_cap_mirror_person",
+        "image_path": "villain_post_images/wearable_stock/wearable_stock_007_cap_mirror_person.png",
+        "reason": "Likely useful stock, but not currently paired. Hold until specific text candidate exists."
+      },
+      {
+        "decision": "HOLD",
+        "fit_for_candidate_ids": [],
+        "image_id": "wearable_stock_008_bucket_mirror_person",
+        "image_path": "villain_post_images/wearable_stock/wearable_stock_008_bucket_mirror_person.png",
+        "reason": "Likely useful stock, but not currently paired. Hold until specific text candidate exists."
+      },
+      {
+        "decision": "HOLD",
+        "fit_for_candidate_ids": [],
+        "image_id": "wearable_stock_009_cap_rain_street",
+        "image_path": "villain_post_images/wearable_stock/wearable_stock_009_cap_rain_street.png",
+        "reason": "Potentially strong atmosphere, but should not be scheduled without matching text."
+      },
+      {
+        "decision": "HOLD",
+        "fit_for_candidate_ids": [],
+        "image_id": "wearable_stock_001_cap_afterhours",
+        "image_path": "villain_post_images/wearable_stock/wearable_stock_001_cap_afterhours.png",
+        "reason": "Poster-like stock. Keep available but avoid recurring use unless text angle fits."
+      },
+      {
+        "decision": "HOLD",
+        "fit_for_candidate_ids": [],
+        "image_id": "wearable_stock_002_bucket_street",
+        "image_path": "villain_post_images/wearable_stock/wearable_stock_002_bucket_street.png",
+        "reason": "Usable direction but poster-like. Prefer more natural lifestyle photos for live review."
+      },
+      {
+        "decision": "HOLD",
+        "fit_for_candidate_ids": [],
+        "image_id": "wearable_stock_003_bag_workdesk",
+        "image_path": "villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png",
+        "reason": "Earlier stock direction is acceptable but less natural than wearable_stock_011_bag_entryway."
+      },
+      {
+        "decision": "HOLD",
+        "fit_for_candidate_ids": [],
+        "image_id": "wearable_stock_004_cap_mirror_crop",
+        "image_path": "villain_post_images/wearable_stock/wearable_stock_004_cap_mirror_crop.png",
+        "reason": "May be useful for future cap text, but not selected for current review candidates."
+      },
+      {
+        "decision": "HOLD",
+        "fit_for_candidate_ids": [],
+        "image_id": "wearable_stock_005_bucket_backview_after",
+        "image_path": "villain_post_images/wearable_stock/wearable_stock_005_bucket_backview_after.png",
+        "reason": "Potentially useful, but needs matching after-scene text."
+      },
+      {
+        "decision": "HOLD",
+        "fit_for_candidate_ids": [],
+        "image_id": "wearable_stock_006_thermos_desk_residue",
+        "image_path": "villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png",
+        "reason": "Older thermos direction. Current candidate should prefer wearable_stock_010_thermos_workdesk."
+      },
+      {
+        "decision": "HOLD",
+        "fit_for_candidate_ids": [],
+        "image_id": "wearable_stock_012_hoodie_mirror_person",
+        "image_path": "villain_post_images/wearable_stock/wearable_stock_012_hoodie_mirror_person.png",
+        "reason": "Potentially useful hoodie stock, but not currently paired. Hold until specific text candidate exists."
+      }
+    ],
     "next_codex_actions": [
-      "Keep hourly ChatGPT review bridge prompt updated.",
-      "Keep safe_to_post=false and posting_execution_status=BLOCKED.",
+      "Write this JSON to data/chatgpt_to_codex_handoff.json.",
       "Do not create GitHub issues.",
-      "Do not execute posting from handoff review.",
-      "Continue maintenance candidate refill and image review packet generation."
+      "Do not post.",
+      "Do not upload media.",
+      "Do not create tweets.",
+      "Keep safe_to_post=false.",
+      "Keep posting_execution_status=BLOCKED.",
+      "Present exactly two human review cards: vln-stream-20260519-stock-002 and vln-stream-20260519-stock-001.",
+      "Mark both candidates as review-ready only, not post-ready.",
+      "Use wearable_stock_011_bag_entryway.png only with vln-stream-20260519-stock-002.",
+      "Use wearable_stock_010_thermos_workdesk.png only with vln-stream-20260519-stock-001.",
+      "Do not use 20260514集会.png.",
+      "Archive/drop vln-gen-20260516-001.",
+      "Keep vln-gen-20260516-003 blocked until image replacement or text rewrite.",
+      "Regenerate/commit current agent_handoff_state.json and villain_quality_review_queue.json if they are stale versus bridge prompt."
     ],
-    "policy_clarification": [
-      "Constant review means review-only, not posting approval.",
-      "Image review and candidate pairing decisions may be consumed by Codex.",
-      "Human-supervised posting remains controlled by scheduler/write adapter gates."
+    "posting_execution_status": "BLOCKED",
+    "repair_actions": [
+      {
+        "action": "IMAGE_REPLACEMENT_REQUIRED",
+        "candidate_id": "vln-gen-20260516-003",
+        "reason": "Existing image does not support gathering/social context. Replace image or rewrite text."
+      },
+      {
+        "action": "IMAGE_REPLACEMENT_REQUIRED",
+        "candidate_id": "vln-gen-20260516-002",
+        "reason": "Do not continue using 20260514集会.png for READY candidates."
+      }
     ],
-    "posting_allowed": false,
-    "status": "CONSTANT_REVIEW_ENABLED"
+    "review_ready_candidates": [
+      {
+        "candidate_id": "vln-stream-20260519-stock-002",
+        "decision": "USE",
+        "execution_id": "vln-exec-daytime-vln-stream-20260519-stock-002",
+        "image_path": "villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png",
+        "reason": "Text and image pairing is natural: bag/持ち物/帰ってきた後/生活痕 are aligned. Low ad-like risk. Suitable for human review, not posting approval.",
+        "review_only": true,
+        "text_image_pairing": "PAIR_OK_FOR_REVIEW"
+      },
+      {
+        "candidate_id": "vln-stream-20260519-stock-001",
+        "decision": "USE",
+        "execution_id": "vln-exec-night-vln-stream-20260519-stock-001",
+        "image_path": "villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png",
+        "reason": "Text and image pairing is natural: desk/thermos/生活の一部/使われた跡 are aligned. Low ad-like risk. Suitable for human review, not posting approval.",
+        "review_only": true,
+        "text_image_pairing": "PAIR_OK_FOR_REVIEW"
+      }
+    ],
+    "safe_to_post": false,
+    "schema_version": "handoff.chatgpt_decision.v1",
+    "unresolved_issues": [
+      {
+        "action": "Codex should regenerate and commit the current queue/state JSON so bridge prompt, reports, and queue files agree.",
+        "issue": "data/agent_handoff_state.json and data/villain_quality_review_queue.json appear older than reports/chatgpt_bridge_prompt.md and reports/agent_handoff_status.md."
+      },
+      {
+        "action": "Avoid 20260514集会.png, temporal claims, and gathering-context wording until cooldown clears or verified evidence exists.",
+        "issue": "Deleted learning cooldown remains active for tweet_id 2055938300708626713."
+      }
+    ]
   },
   "posting_execution_status": "BLOCKED",
-  "raw_chatgpt_signal": {
-    "frequency": "HOURLY",
-    "github_issue_created": false,
-    "issue_creation_allowed": false,
-    "posting_allowed": false,
-    "posting_execution_status": "BLOCKED",
-    "safe_to_post": false,
-    "status": "CONSTANT_REVIEW_ENABLED"
-  },
-  "received_at_jst": "2026-05-19T21:54:40+09:00",
   "safe_to_post": false,
   "schema_version": "handoff.chatgpt_to_codex.v1",
-  "source": "chatgpt_constant_review_signal"
+  "source": "manual_chatgpt_review_json"
 }
