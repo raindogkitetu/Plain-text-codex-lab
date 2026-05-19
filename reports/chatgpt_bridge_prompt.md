@@ -15,23 +15,25 @@ Return only JSON matching the expected response schema. Do not ask Codex to post
 
 ## Current Summary
 
-- generated_at_jst: `2026-05-17T23:52:19+09:00`
-- bridge_prompt_hash: `3040b1ec24c887b2caa621717a37f302611c90f1e5530452f4854a3c007bdf59`
+- generated_at_jst: `2026-05-19T21:58:33+09:00`
+- bridge_prompt_hash: `5d49716199463fb9fed6bfe99dc3143895ef00279c2f147ad8f3e96cf3df05c9`
 - codex_outbox_status: `READY_FOR_CHATGPT_REVIEW`
 - review_state: `CHATGPT_DECISION_CONSUMED`
-- queue_health_status: `BLOCKED`
+- queue_health_status: `CLEAR`
 - review_board_status: `READY`
 - posting_execution_status: `BLOCKED`
 - safe_to_review: `true`
 - safe_to_post: `false`
-- state_last_run: `{'blocked_candidate_count': 6, 'blocked_reason_frequency': {'deleted_text_near_match': 3, 'deleted_topic_context_cooldown': 6, 'temporal_context_unverified': 3, 'topic_image_pairing_mismatch': 3}, 'executable_ready_count': 0, 'posting_execution_status': 'BLOCKED', 'quality_status': 'BLOCKED', 'queue_health_status': 'BLOCKED', 'ready_candidate_count': 3, 'review_board_status': 'READY', 'review_items': 9, 'review_required_candidate_count': 0, 'review_state': 'CHATGPT_DECISION_CONSUMED', 'safe_to_post': False, 'safe_to_review': True, 'status': 'READY_FOR_CHATGPT_REVIEW', 'unresolved_issues': ['context_evidence source fileの標準形式を決める必要がある', '候補が全部BLOCKEDのときのrefill処理は未実装', '画像metadataが薄い候補のtopic-image判定をどう補強するか', 'READYだがhuman_approved_for_posting=falseの候補をreview inboxとして別表示できるか', 'Deleted learning cooldown is active for recent failed posts.']}`
+- state_last_run: `{'blocked_candidate_count': 0, 'blocked_reason_frequency': {}, 'executable_ready_count': 0, 'posting_execution_status': 'BLOCKED', 'quality_status': 'READY', 'queue_health_status': 'CLEAR', 'ready_candidate_count': 2, 'review_board_status': 'READY', 'review_items': 2, 'review_required_candidate_count': 0, 'review_state': 'CHATGPT_DECISION_CONSUMED', 'safe_to_post': False, 'safe_to_review': True, 'status': 'READY_FOR_CHATGPT_REVIEW', 'unresolved_issues': ['Deleted learning cooldown is active for recent failed posts.']}`
 
 ## Task For ChatGPT
 
 1. Decide whether current candidates should stay in review, be repaired, be refilled, or remain blocked.
 2. Keep READY as review-ready only, not post-ready.
 3. Keep `safe_to_post=false` and `posting_execution_status=BLOCKED` unless a separate explicit human approval artifact exists.
-4. Return only decision JSON. No prose outside JSON.
+4. Review generated/shop-derived images before they become recurring scheduled candidates.
+5. Reject images that look like non-existent apparel/goods, pasted product cutouts, ads, or mismatched visuals.
+6. Return only decision JSON. No prose outside JSON.
 
 ## Expected Response Schema
 
@@ -51,9 +53,298 @@ Return only JSON matching the expected response schema. Do not ask Codex to post
     "archive_or_drop_candidates": [],
     "refill_required": false,
     "next_codex_actions": [],
-    "policy_clarification": []
+    "policy_clarification": [],
+    "image_review_decisions": [
+      {
+        "image_id": "",
+        "image_path": "",
+        "decision": "USE | REJECT | REPAIR | HOLD",
+        "reason": "",
+        "fit_for_candidate_ids": [],
+        "reject_if": [],
+        "repair_request": ""
+      }
+    ],
+    "candidate_image_pairing": [
+      {
+        "candidate_id": "",
+        "image_path": "",
+        "decision": "PAIR_OK_FOR_REVIEW | IMAGE_REPLACEMENT_REQUIRED | TEXT_REWRITE_REQUIRED | HOLD",
+        "reason": ""
+      }
+    ]
   }
 }
+```
+
+## Image Review Packet
+
+``` json
+[
+  {
+    "image_id": "wearable_stock_001_cap_afterhours",
+    "image_path": "villain_post_images/wearable_stock/wearable_stock_001_cap_afterhours.png",
+    "image_type": "wearable_poster",
+    "prompt_family": "shop_wearable_cap_afterhours",
+    "source_products": [
+      "32_cap.png"
+    ],
+    "fit_notes": "Actual shop cap composited onto a quiet human silhouette. No invented cap shape.",
+    "recommended_text_angle": "小物が空気を先に運ぶ / 服より軽いのに残る",
+    "currently_in_pilot_plan": false,
+    "chatgpt_review_focus": [
+      "実在しない商品に見えないか",
+      "広告臭くないか",
+      "人物/生活痕として自然か",
+      "投稿文と噛み合うか",
+      "コミュニティ素材として拾いやすいか"
+    ]
+  },
+  {
+    "image_id": "wearable_stock_002_bucket_street",
+    "image_path": "villain_post_images/wearable_stock/wearable_stock_002_bucket_street.png",
+    "image_type": "wearable_poster",
+    "prompt_family": "shop_wearable_bucket_street",
+    "source_products": [
+      "31_bucket_hat.png"
+    ],
+    "fit_notes": "Actual shop bucket hat composited onto a street silhouette.",
+    "recommended_text_angle": "置いてある時より、人が着た後の方が強い",
+    "currently_in_pilot_plan": false,
+    "chatgpt_review_focus": [
+      "実在しない商品に見えないか",
+      "広告臭くないか",
+      "人物/生活痕として自然か",
+      "投稿文と噛み合うか",
+      "コミュニティ素材として拾いやすいか"
+    ]
+  },
+  {
+    "image_id": "wearable_stock_003_bag_workdesk",
+    "image_path": "villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png",
+    "image_type": "lifestyle_residue",
+    "prompt_family": "shop_goods_bag_workdesk",
+    "source_products": [
+      "29_haul_bag.jpg"
+    ],
+    "fit_notes": "Actual haul bag product image placed in a workdesk residue scene.",
+    "recommended_text_angle": "持ち物が先にその人の空気を作る",
+    "currently_in_pilot_plan": false,
+    "chatgpt_review_focus": [
+      "実在しない商品に見えないか",
+      "広告臭くないか",
+      "人物/生活痕として自然か",
+      "投稿文と噛み合うか",
+      "コミュニティ素材として拾いやすいか"
+    ]
+  },
+  {
+    "image_id": "wearable_stock_004_cap_mirror_crop",
+    "image_path": "villain_post_images/wearable_stock/wearable_stock_004_cap_mirror_crop.png",
+    "image_type": "wearable_lifestyle",
+    "prompt_family": "shop_wearable_cap_mirror_crop",
+    "source_products": [
+      "32_cap.png"
+    ],
+    "fit_notes": "Actual shop cap composited into a mirror-crop silhouette. Face hidden, no invented product.",
+    "recommended_text_angle": "小物の方が先に空気を運ぶ",
+    "currently_in_pilot_plan": false,
+    "chatgpt_review_focus": [
+      "実在しない商品に見えないか",
+      "広告臭くないか",
+      "人物/生活痕として自然か",
+      "投稿文と噛み合うか",
+      "コミュニティ素材として拾いやすいか"
+    ]
+  },
+  {
+    "image_id": "wearable_stock_005_bucket_backview_after",
+    "image_path": "villain_post_images/wearable_stock/wearable_stock_005_bucket_backview_after.png",
+    "image_type": "wearable_lifestyle",
+    "prompt_family": "shop_wearable_bucket_backview_after",
+    "source_products": [
+      "31_bucket_hat.png"
+    ],
+    "fit_notes": "Actual shop bucket hat used in a back-view after-scene. No temporal/event claim.",
+    "recommended_text_angle": "人が着た後にだけ残る空気",
+    "currently_in_pilot_plan": false,
+    "chatgpt_review_focus": [
+      "実在しない商品に見えないか",
+      "広告臭くないか",
+      "人物/生活痕として自然か",
+      "投稿文と噛み合うか",
+      "コミュニティ素材として拾いやすいか"
+    ]
+  },
+  {
+    "image_id": "wearable_stock_006_thermos_desk_residue",
+    "image_path": "villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png",
+    "image_type": "lifestyle_residue",
+    "prompt_family": "shop_goods_thermos_desk_residue",
+    "source_products": [
+      "33_thermos_with_villain.png"
+    ],
+    "fit_notes": "Actual thermos product image placed into a desk residue scene.",
+    "recommended_text_angle": "グッズは使われた瞬間に文化っぽくなる",
+    "currently_in_pilot_plan": false,
+    "chatgpt_review_focus": [
+      "実在しない商品に見えないか",
+      "広告臭くないか",
+      "人物/生活痕として自然か",
+      "投稿文と噛み合うか",
+      "コミュニティ素材として拾いやすいか"
+    ]
+  },
+  {
+    "image_id": "wearable_stock_007_cap_mirror_person",
+    "image_path": "villain_post_images/wearable_stock/wearable_stock_007_cap_mirror_person.png",
+    "image_type": "wearable_lifestyle_photo",
+    "prompt_family": "shop_wearable_cap_mirror_person",
+    "source_products": [
+      "32_cap.png"
+    ],
+    "fit_notes": "Generated lifestyle photo of an anonymous person wearing a black cap shaped like the official shop cap. Face hidden, natural mirror context.",
+    "recommended_text_angle": "小物の方が先に空気を運ぶ",
+    "currently_in_pilot_plan": false,
+    "chatgpt_review_focus": [
+      "実在しない商品に見えないか",
+      "広告臭くないか",
+      "人物/生活痕として自然か",
+      "投稿文と噛み合うか",
+      "コミュニティ素材として拾いやすいか"
+    ]
+  },
+  {
+    "image_id": "wearable_stock_008_bucket_mirror_person",
+    "image_path": "villain_post_images/wearable_stock/wearable_stock_008_bucket_mirror_person.png",
+    "image_type": "wearable_lifestyle_photo",
+    "prompt_family": "shop_wearable_bucket_mirror_person",
+    "source_products": [
+      "31_bucket_hat.png"
+    ],
+    "fit_notes": "Anonymous person naturally wearing black $villain bucket hat in entryway mirror.",
+    "recommended_text_angle": "生活痕の中で$villainが自然に残る",
+    "currently_in_pilot_plan": false,
+    "chatgpt_review_focus": [
+      "実在しない商品に見えないか",
+      "広告臭くないか",
+      "人物/生活痕として自然か",
+      "投稿文と噛み合うか",
+      "コミュニティ素材として拾いやすいか"
+    ]
+  },
+  {
+    "image_id": "wearable_stock_009_cap_rain_street",
+    "image_path": "villain_post_images/wearable_stock/wearable_stock_009_cap_rain_street.png",
+    "image_type": "wearable_lifestyle_photo",
+    "prompt_family": "shop_wearable_cap_rain_street",
+    "source_products": [
+      "32_cap.png"
+    ],
+    "fit_notes": "Anonymous person naturally wearing black $villain cap on wet night street.",
+    "recommended_text_angle": "生活痕の中で$villainが自然に残る",
+    "currently_in_pilot_plan": false,
+    "chatgpt_review_focus": [
+      "実在しない商品に見えないか",
+      "広告臭くないか",
+      "人物/生活痕として自然か",
+      "投稿文と噛み合うか",
+      "コミュニティ素材として拾いやすいか"
+    ]
+  },
+  {
+    "image_id": "wearable_stock_010_thermos_workdesk",
+    "image_path": "villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png",
+    "image_type": "lifestyle_residue_photo",
+    "prompt_family": "shop_goods_thermos_workdesk",
+    "source_products": [
+      "33_thermos_with_villain.png"
+    ],
+    "fit_notes": "Black $villain thermos in a lived-in workdesk scene.",
+    "recommended_text_angle": "生活痕の中で$villainが自然に残る",
+    "currently_in_pilot_plan": true,
+    "chatgpt_review_focus": [
+      "実在しない商品に見えないか",
+      "広告臭くないか",
+      "人物/生活痕として自然か",
+      "投稿文と噛み合うか",
+      "コミュニティ素材として拾いやすいか"
+    ]
+  },
+  {
+    "image_id": "wearable_stock_011_bag_entryway",
+    "image_path": "villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png",
+    "image_type": "lifestyle_residue_photo",
+    "prompt_family": "shop_goods_bag_entryway",
+    "source_products": [
+      "29_haul_bag.jpg"
+    ],
+    "fit_notes": "Black $villain haul bag used in entryway after daily use.",
+    "recommended_text_angle": "生活痕の中で$villainが自然に残る",
+    "currently_in_pilot_plan": true,
+    "chatgpt_review_focus": [
+      "実在しない商品に見えないか",
+      "広告臭くないか",
+      "人物/生活痕として自然か",
+      "投稿文と噛み合うか",
+      "コミュニティ素材として拾いやすいか"
+    ]
+  },
+  {
+    "image_id": "wearable_stock_012_hoodie_mirror_person",
+    "image_path": "villain_post_images/wearable_stock/wearable_stock_012_hoodie_mirror_person.png",
+    "image_type": "wearable_lifestyle_photo",
+    "prompt_family": "shop_wearable_hoodie_mirror_person",
+    "source_products": [
+      "29_elite_zip_hoodie.jpg"
+    ],
+    "fit_notes": "Anonymous person naturally wearing black $villain hoodie in mirror.",
+    "recommended_text_angle": "生活痕の中で$villainが自然に残る",
+    "currently_in_pilot_plan": false,
+    "chatgpt_review_focus": [
+      "実在しない商品に見えないか",
+      "広告臭くないか",
+      "人物/生活痕として自然か",
+      "投稿文と噛み合うか",
+      "コミュニティ素材として拾いやすいか"
+    ]
+  }
+]
+```
+
+## Candidate Image Pairing Packet
+
+``` json
+[
+  {
+    "candidate_id": "vln-stream-20260519-stock-002",
+    "execution_id": "vln-exec-daytime-vln-stream-20260519-stock-002",
+    "slot": "daytime",
+    "passcode": "DKLS8",
+    "text": "持ち物って、\n置かれた場所で\nだいたい正体が出る。\n\nきれいな写真より、\n帰ってきた後の方が本物っぽい。\n\n#着て稼ぐ #villain $PPP @0xmavillain DKLS8",
+    "image_path": "villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png",
+    "image_type": "lifestyle_residue_photo",
+    "quality_status": "READY",
+    "blockers": [],
+    "warnings": [],
+    "required_tokens_verified": true,
+    "risk": "low"
+  },
+  {
+    "candidate_id": "vln-stream-20260519-stock-001",
+    "execution_id": "vln-exec-night-vln-stream-20260519-stock-001",
+    "slot": "night",
+    "passcode": "C14QB",
+    "text": "机に置いた瞬間、\nグッズじゃなくて、\n生活の一部になる。\n\n広告より、\n使われた跡の方が強い。\n\n#着て稼ぐ #villain $PPP @0xmavillain C14QB",
+    "image_path": "villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png",
+    "image_type": "lifestyle_residue_photo",
+    "quality_status": "READY",
+    "blockers": [],
+    "warnings": [],
+    "required_tokens_verified": true,
+    "risk": "low"
+  }
+]
 ```
 
 ## data/agent_handoff_state.json
@@ -61,7 +352,7 @@ Return only JSON matching the expected response schema. Do not ask Codex to post
 ``` json
 {
   "db_name": "Agent Handoff State",
-  "generated_at_jst": "2026-05-17T23:49:27+09:00",
+  "generated_at_jst": "2026-05-19T21:55:39+09:00",
   "handoff_files": {
     "chatgpt_inbox": "data/chatgpt_to_codex_handoff.json",
     "codex_outbox": "data/codex_to_chatgpt_handoff.json",
@@ -74,30 +365,21 @@ Return only JSON matching the expected response schema. Do not ask Codex to post
     "trajectory": "data/agent_handoff_trajectory.json"
   },
   "last_run": {
-    "blocked_candidate_count": 6,
-    "blocked_reason_frequency": {
-      "deleted_text_near_match": 3,
-      "deleted_topic_context_cooldown": 6,
-      "temporal_context_unverified": 3,
-      "topic_image_pairing_mismatch": 3
-    },
+    "blocked_candidate_count": 0,
+    "blocked_reason_frequency": {},
     "executable_ready_count": 0,
     "posting_execution_status": "BLOCKED",
-    "quality_status": "BLOCKED",
-    "queue_health_status": "BLOCKED",
-    "ready_candidate_count": 3,
+    "quality_status": "READY",
+    "queue_health_status": "CLEAR",
+    "ready_candidate_count": 2,
     "review_board_status": "READY",
-    "review_items": 9,
+    "review_items": 2,
     "review_required_candidate_count": 0,
     "review_state": "CHATGPT_DECISION_CONSUMED",
     "safe_to_post": false,
     "safe_to_review": true,
     "status": "READY_FOR_CHATGPT_REVIEW",
     "unresolved_issues": [
-      "context_evidence source fileの標準形式を決める必要がある",
-      "候補が全部BLOCKEDのときのrefill処理は未実装",
-      "画像metadataが薄い候補のtopic-image判定をどう補強するか",
-      "READYだがhuman_approved_for_posting=falseの候補をreview inboxとして別表示できるか",
       "Deleted learning cooldown is active for recent failed posts."
     ]
   },
@@ -132,99 +414,29 @@ Return only JSON matching the expected response schema. Do not ask Codex to post
 ``` json
 {
   "chatgpt_decision_consumed": {
-    "approved_for_review": [
-      {
-        "candidate_id": "vln-gen-20260517-shop-001",
-        "reason": "Keep in human review board as READY candidate, but not approved for posting."
-      }
-    ],
-    "archive_or_drop_candidates": [
-      {
-        "candidate_match": "candidates blocked by deleted_text_near_match plus deleted_topic_context_cooldown",
-        "reason": "Likely repeats deleted/failed pattern; prefer archive/drop over repair unless manually rescued."
-      }
-    ],
-    "context_evidence_required": [
-      {
-        "candidate_match": "any candidate using yesterday/今日/集会/recent-event framing",
-        "reason": "Recent event context requires real evidence. '昨日の集会' style context is prohibited without verification."
-      },
-      {
-        "candidate_id": "vln-gen-20260516-001",
-        "reason": "temporal context unverified."
-      }
-    ],
-    "decision": "REVIEW_READY_NOT_POST_READY",
-    "image_replacement_required": [
-      {
-        "image": "20260514集会.png",
-        "reason": "Do not use for READY posting candidates. Prior failure reason was content/context mismatch."
-      },
-      {
-        "candidate_match": "topic_image_pairing_mismatch candidates",
-        "reason": "Replace image before returning to review."
-      }
-    ],
-    "must_remain_blocked": [
-      {
-        "candidate_id": "vln-gen-20260516-001",
-        "reason": "deleted-near match and temporal context unverified."
-      },
-      {
-        "candidate_id": "vln-gen-20260516-003",
-        "reason": "topic-image mismatch and deleted topic cooldown."
-      }
-    ],
+    "decision": "CONSTANT_REVIEW_ENABLED",
+    "frequency": "HOURLY",
+    "github_issue_created": false,
+    "issue_creation_allowed": false,
     "next_codex_actions": [
-      "Write this decision to data/chatgpt_to_codex_handoff.json.",
-      "Keep queue_health_status=BLOCKED, review_board_status=READY, posting_execution_status=BLOCKED.",
-      "Keep safe_to_review=true and safe_to_post=false.",
-      "Do not execute posting, upload_media, create_tweet, or tracking_code generation.",
-      "Keep vln-gen-20260517-shop-001 in review board only.",
-      "Mark any READY candidate using 20260514集会.png as not approved for posting.",
-      "Maintain block on vln-gen-20260516-001 and vln-gen-20260516-003.",
-      "Add refill candidates that avoid deleted topic cooldown, deleted near-match text, temporal claims, and 20260514集会.png.",
-      "Update reports/agent_handoff_status.md and reports/villain_quality_review_summary.md with separated statuses."
-    ],
-    "not_approved_for_posting": [
-      {
-        "candidate_id": "vln-gen-20260517-shop-001",
-        "reason": "Human review only. safe_to_post must remain false until explicit human approval."
-      },
-      {
-        "candidate_match": "any READY candidate using 20260514集会.png",
-        "reason": "Image is associated with recent content/context mismatch failure and must not be posted without replacement or evidence."
-      }
+      "Keep hourly ChatGPT review bridge prompt updated.",
+      "Keep safe_to_post=false and posting_execution_status=BLOCKED.",
+      "Do not create GitHub issues.",
+      "Do not execute posting from handoff review.",
+      "Continue maintenance candidate refill and image review packet generation."
     ],
     "policy_clarification": [
-      "READY means eligible for human review, not eligible for posting.",
-      "safe_to_post=false remains the default and must not be changed without explicit human approval.",
-      "Human approval is required before any posting path can run.",
-      "The active passcode must come only from data/villain_passcodes.json.",
-      "Recent-event or temporal claims require context evidence.",
-      "Deleted learning cooldown must override aesthetic fit when there is conflict."
+      "Constant review means review-only, not posting approval.",
+      "Image review and candidate pairing decisions may be consumed by Codex.",
+      "Human-supervised posting remains controlled by scheduler/write adapter gates."
     ],
-    "refill_required": true,
-    "repair_candidates": [
-      {
-        "candidate_match": "BLOCKED candidates blocked only by temporal_context_unverified",
-        "repair_type": "context_evidence_required"
-      },
-      {
-        "candidate_match": "BLOCKED candidates blocked only by topic_image_pairing_mismatch",
-        "repair_type": "image_replacement_required"
-      }
-    ]
+    "posting_allowed": false,
+    "status": "CONSTANT_REVIEW_ENABLED"
   },
   "db_name": "Codex to ChatGPT Handoff",
-  "generated_at_jst": "2026-05-17T23:49:27+09:00",
+  "generated_at_jst": "2026-05-19T21:55:39+09:00",
   "implementation_result": {
-    "blockers": [
-      "deleted_text_near_match",
-      "deleted_topic_context_cooldown",
-      "temporal_context_unverified",
-      "topic_image_pairing_mismatch"
-    ],
+    "blockers": [],
     "changed_files": [
       "docs/agent_handoff_protocol.md",
       "data/chatgpt_to_codex_handoff.json",
@@ -235,32 +447,21 @@ Return only JSON matching the expected response schema. Do not ask Codex to post
       "data/villain_repair_quality_analytics.json",
       "reports/agent_handoff_status.md"
     ],
-    "quality_status": "BLOCKED",
+    "quality_status": "READY",
     "summary": "Agent handoff loop validated through repo-local protocol, policy, quality runner, and reports.",
-    "warnings": [
-      "deleted_nearby_match_found"
-    ]
+    "warnings": []
   },
   "maintenance_summary": {
-    "blocked_candidate_count": 6,
-    "blocked_reason_frequency": {
-      "deleted_text_near_match": 3,
-      "deleted_topic_context_cooldown": 6,
-      "temporal_context_unverified": 3,
-      "topic_image_pairing_mismatch": 3
-    },
+    "blocked_candidate_count": 0,
+    "blocked_reason_frequency": {},
     "chatgpt_next_codex_actions": [
-      "Write this decision to data/chatgpt_to_codex_handoff.json.",
-      "Keep queue_health_status=BLOCKED, review_board_status=READY, posting_execution_status=BLOCKED.",
-      "Keep safe_to_review=true and safe_to_post=false.",
-      "Do not execute posting, upload_media, create_tweet, or tracking_code generation.",
-      "Keep vln-gen-20260517-shop-001 in review board only.",
-      "Mark any READY candidate using 20260514集会.png as not approved for posting.",
-      "Maintain block on vln-gen-20260516-001 and vln-gen-20260516-003.",
-      "Add refill candidates that avoid deleted topic cooldown, deleted near-match text, temporal claims, and 20260514集会.png.",
-      "Update reports/agent_handoff_status.md and reports/villain_quality_review_summary.md with separated statuses."
+      "Keep hourly ChatGPT review bridge prompt updated.",
+      "Keep safe_to_post=false and posting_execution_status=BLOCKED.",
+      "Do not create GitHub issues.",
+      "Do not execute posting from handoff review.",
+      "Continue maintenance candidate refill and image review packet generation."
     ],
-    "chatgpt_refill_required": true,
+    "chatgpt_refill_required": false,
     "deleted_learning_cooldown_remaining": [
       {
         "candidate_id": "vln-gen-20260516-001",
@@ -268,29 +469,25 @@ Return only JSON matching the expected response schema. Do not ask Codex to post
         "execution_id": "vln-exec-daytime-vln-gen-20260516-001",
         "image_used": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/20260514集会.png",
         "reason": "Deleted by human: content/context mismatch. Not yesterday's gathering and post did not fit actual situation.",
-        "remaining_hours": 162.5,
+        "remaining_hours": 116.4,
         "topic_cluster": "community_gathering_signal",
         "tweet_id": "2055938300708626713"
       }
     ],
     "executable_ready_count": 0,
     "posting_execution_status": "BLOCKED",
-    "queue_health_status": "BLOCKED",
-    "ready_candidate_count": 3,
+    "queue_health_status": "CLEAR",
+    "ready_candidate_count": 2,
     "review_board_status": "READY",
     "review_required_candidate_count": 0,
     "safe_to_post": false,
     "safe_to_review": true,
     "stale_cleanup": {
-      "remaining_count": 9,
+      "remaining_count": 2,
       "removed_count": 0,
       "strategy": "dedupe_current_review_items_by_candidate_execution_slot_image"
     },
     "unresolved_issues_summary": [
-      "context_evidence source fileの標準形式を決める必要がある",
-      "候補が全部BLOCKEDのときのrefill処理は未実装",
-      "画像metadataが薄い候補のtopic-image判定をどう補強するか",
-      "READYだがhuman_approved_for_posting=falseの候補をreview inboxとして別表示できるか",
       "Deleted learning cooldown is active for recent failed posts."
     ]
   },
@@ -301,124 +498,20 @@ Return only JSON matching the expected response schema. Do not ask Codex to post
   ],
   "posting_executed": false,
   "purpose": "Codexが実装結果・検証結果・未解決課題・次アクションをChatGPTへ返すためのoutbox。",
-  "repair_actions": [
-    {
-      "blockers": [
-        "deleted_text_near_match",
-        "deleted_topic_context_cooldown",
-        "temporal_context_unverified"
-      ],
-      "candidate_id": "vln-gen-20260516-001",
-      "execution_id": "vln-exec-daytime-vln-gen-20260516-001",
-      "repair_action": {
-        "reason": "Candidate repeats a deleted/failed text and topic pattern.",
-        "required": true,
-        "type": "archive_or_drop"
-      },
-      "slot": "daytime"
-    },
-    {
-      "blockers": [
-        "deleted_topic_context_cooldown",
-        "topic_image_pairing_mismatch"
-      ],
-      "candidate_id": "vln-gen-20260516-003",
-      "execution_id": "vln-exec-daytime-vln-gen-20260516-003",
-      "repair_action": {
-        "reason": "Text topic and image metadata do not support each other.",
-        "required": true,
-        "type": "image_replacement_required"
-      },
-      "slot": "daytime"
-    },
-    {
-      "blockers": [
-        "deleted_text_near_match",
-        "deleted_topic_context_cooldown",
-        "temporal_context_unverified"
-      ],
-      "candidate_id": "vln-gen-20260516-001",
-      "execution_id": "vln-exec-night-vln-gen-20260516-001",
-      "repair_action": {
-        "reason": "Candidate repeats a deleted/failed text and topic pattern.",
-        "required": true,
-        "type": "archive_or_drop"
-      },
-      "slot": "night"
-    },
-    {
-      "blockers": [
-        "deleted_topic_context_cooldown",
-        "topic_image_pairing_mismatch"
-      ],
-      "candidate_id": "vln-gen-20260516-003",
-      "execution_id": "vln-exec-night-vln-gen-20260516-003",
-      "repair_action": {
-        "reason": "Text topic and image metadata do not support each other.",
-        "required": true,
-        "type": "image_replacement_required"
-      },
-      "slot": "night"
-    },
-    {
-      "blockers": [
-        "deleted_text_near_match",
-        "deleted_topic_context_cooldown",
-        "temporal_context_unverified"
-      ],
-      "candidate_id": "vln-gen-20260516-001",
-      "execution_id": "vln-exec-late_night-vln-gen-20260516-001",
-      "repair_action": {
-        "reason": "Candidate repeats a deleted/failed text and topic pattern.",
-        "required": true,
-        "type": "archive_or_drop"
-      },
-      "slot": "late_night"
-    },
-    {
-      "blockers": [
-        "deleted_topic_context_cooldown",
-        "topic_image_pairing_mismatch"
-      ],
-      "candidate_id": "vln-gen-20260516-003",
-      "execution_id": "vln-exec-late_night-vln-gen-20260516-003",
-      "repair_action": {
-        "reason": "Text topic and image metadata do not support each other.",
-        "required": true,
-        "type": "image_replacement_required"
-      },
-      "slot": "late_night"
-    }
-  ],
+  "repair_actions": [],
   "repair_execution": {
-    "context_evidence_request_count": 3,
-    "recurring_repair_failure_clusters": [
-      {
-        "cluster": "ARCHIVED_FROM_REVIEW:archive_or_drop",
-        "count": 3,
-        "recurring": true
-      },
-      {
-        "cluster": "REPAIRED_FOR_REVIEW_ONLY:image_replacement_required",
-        "count": 3,
-        "recurring": true
-      }
-    ],
+    "context_evidence_request_count": 0,
+    "recurring_repair_failure_clusters": [],
     "repair_quality_summary": {
-      "average_repair_confidence": 70.0,
-      "average_repair_quality_score": 85.0,
-      "evaluated_repaired_candidate_count": 3,
-      "repair_regression_risk_frequency": {
-        "medium": 3
-      },
+      "average_repair_confidence": 0,
+      "average_repair_quality_score": 0,
+      "evaluated_repaired_candidate_count": 0,
+      "repair_regression_risk_frequency": {},
       "safe_to_post": false
     },
-    "repair_result_count": 6,
-    "repair_status_frequency": {
-      "ARCHIVED_FROM_REVIEW": 3,
-      "REPAIRED_FOR_REVIEW_ONLY": 3
-    },
-    "repaired_candidate_count": 3,
+    "repair_result_count": 0,
+    "repair_status_frequency": {},
+    "repaired_candidate_count": 0,
     "safe_to_post": false,
     "status": "COMPLETED_REVIEW_ONLY"
   },
@@ -443,10 +536,6 @@ Return only JSON matching the expected response schema. Do not ask Codex to post
   "status": "READY_FOR_CHATGPT_REVIEW",
   "tweet_creation_executed": false,
   "unresolved_issues": [
-    "context_evidence source fileの標準形式を決める必要がある",
-    "候補が全部BLOCKEDのときのrefill処理は未実装",
-    "画像metadataが薄い候補のtopic-image判定をどう補強するか",
-    "READYだがhuman_approved_for_posting=falseの候補をreview inboxとして別表示できるか",
     "Deleted learning cooldown is active for recent failed posts."
   ],
   "upload_media_executed": false,
@@ -462,23 +551,541 @@ Return only JSON matching the expected response schema. Do not ask Codex to post
 }
 ```
 
+## data/villain_auto_post_pilot.json
+
+``` json
+{
+  "db_name": "Villain Auto Post Pilot Plan",
+  "version": "1.3.0",
+  "status": "LIMITED_LIVE_EXECUTION_READY",
+  "mode": "LIMITED_LIVE_EXECUTION",
+  "generated_at_jst": "2026-05-19T21:55:39+09:00",
+  "source_mode": "candidate_stream",
+  "target_post_count": {
+    "min": 3,
+    "max": 3,
+    "actual": 2
+  },
+  "live_pilot_limits": {
+    "max_posts_per_day": 3,
+    "posts_already_recorded_today": 1,
+    "remaining_posts_today": 2,
+    "cooldown_between_posts_minutes": 120
+  },
+  "limited_live_execution": {
+    "mode_enabled": true,
+    "live_execution_mode": "LIMITED_LIVE_EXECUTION",
+    "execution_scope": "supervised_limited_posting_manifest",
+    "posting_adapter_in_this_script": false,
+    "requires_human_supervision": true,
+    "max_posts_per_day": 3,
+    "cooldown_between_posts_minutes": 120,
+    "manual_safety": {
+      "delete_if_needed": true,
+      "manual_override_allowed": true,
+      "post_after_publish_review": true
+    },
+    "hard_blocks": [
+      "risk_high",
+      "already_posted",
+      "same_image_cooldown",
+      "same_media_path",
+      "same_media_sha256",
+      "near_duplicate_media_phash",
+      "same_prompt_family_cooldown",
+      "temporal_context_unverified",
+      "topic_image_pairing_mismatch",
+      "topic_image_pairing_unverified",
+      "deleted_candidate_blacklist",
+      "deleted_image_cooldown",
+      "deleted_prompt_family_cooldown",
+      "deleted_text_near_match",
+      "deleted_topic_context_cooldown",
+      "repeated_topic_penalty",
+      "required_tokens_not_verified",
+      "passcode_missing",
+      "passcode_not_in_db",
+      "max_posts_per_day_reached"
+    ]
+  },
+  "safety": {
+    "live_posting_allowed": true,
+    "x_api_write_allowed_by_this_script": false,
+    "upload_media_allowed_by_this_script": false,
+    "create_tweet_allowed_by_this_script": false,
+    "x_write_adapter_allowed_in_limited_live_execution": true,
+    "auto_posting_allowed": false,
+    "would_execute_actions": [],
+    "api_key_output_allowed": false,
+    "env_output_allowed": false
+  },
+  "pilot_policy": {
+    "human_supervision_required_after_post": true,
+    "post_after_publish_review": true,
+    "manual_override_allowed": true,
+    "delete_if_needed": true,
+    "note_creation_enabled": false,
+    "note_seed_only": true,
+    "execution_enabled": true,
+    "execution_enablement_requires_separate_design": false,
+    "density_priority": "slightly_higher_than_overcautious_blocking",
+    "policy_alignment": {
+      "human_control": true,
+      "privacy_respect": true,
+      "no_spam_or_deception": true,
+      "no_sensitive_personal_data_output": true,
+      "source": "OpenAI usage policies effective 2025-10-29"
+    },
+    "hard_blocks": [
+      "risk_high",
+      "already_posted",
+      "repeated_topic_penalty",
+      "same_image_cooldown",
+      "same_media_path",
+      "same_media_sha256",
+      "near_duplicate_media_phash",
+      "same_prompt_family_cooldown",
+      "temporal_context_unverified",
+      "topic_image_pairing_mismatch",
+      "topic_image_pairing_unverified",
+      "deleted_candidate_blacklist",
+      "deleted_image_cooldown",
+      "deleted_prompt_family_cooldown",
+      "deleted_text_near_match",
+      "deleted_topic_context_cooldown",
+      "required_tokens_not_verified",
+      "passcode_missing",
+      "passcode_not_in_db",
+      "novelty_too_low",
+      "score_below_80",
+      "max_posts_per_day_reached"
+    ]
+  },
+  "inputs": {
+    "candidate_stream": "data/villain_candidate_stream.json",
+    "daily_selection": "data/villain_daily_selection.json",
+    "novelty_engine": "data/villain_novelty_engine.json",
+    "image_strategy": "data/villain_image_strategy.json",
+    "scoring_rules": "data/villain_post_scoring_rules.json",
+    "generated_candidates": "data/villain_generated_candidates.json",
+    "manual_results": "data/manual_post_results.json",
+    "outcomes": "data/villain_post_outcomes.json",
+    "recent_media_history": "data/recent_media_history.json",
+    "safe_post_executor": "scripts/safe_post_executor.py",
+    "x_write_adapter": "scripts/x_write_adapter.py"
+  },
+  "warnings": [
+    "pilot_plan_below_target_minimum",
+    "limited_live_execution_manifest_only_no_x_write_adapter_called"
+  ],
+  "execution_manifest": [
+    {
+      "execution_id": "vln-exec-daytime-vln-stream-20260519-stock-002",
+      "slot": "daytime",
+      "source_id": "vln-stream-20260519-stock-002",
+      "passcode": "DKLS8",
+      "planned_publish_after_jst": "2026-05-19T23:55+09:00",
+      "ready_for_limited_live_execution": true,
+      "media_reuse_cooldown_ok": true,
+      "manual_review_after_publish": true,
+      "delete_if_needed": true,
+      "x_api_write_called_by_this_script": false,
+      "upload_media_called_by_this_script": false,
+      "create_tweet_called_by_this_script": false
+    },
+    {
+      "execution_id": "vln-exec-night-vln-stream-20260519-stock-001",
+      "slot": "night",
+      "source_id": "vln-stream-20260519-stock-001",
+      "passcode": "C14QB",
+      "planned_publish_after_jst": "2026-05-20T01:55+09:00",
+      "ready_for_limited_live_execution": true,
+      "media_reuse_cooldown_ok": true,
+      "manual_review_after_publish": true,
+      "delete_if_needed": true,
+      "x_api_write_called_by_this_script": false,
+      "upload_media_called_by_this_script": false,
+      "create_tweet_called_by_this_script": false
+    }
+  ],
+  "pilot_plan": [
+    {
+      "slot": "daytime",
+      "source": "candidate_stream",
+      "source_id": "vln-stream-20260519-stock-002",
+      "category": "poster_summary",
+      "passcode": "DKLS8",
+      "text": "持ち物って、\n置かれた場所で\nだいたい正体が出る。\n\nきれいな写真より、\n帰ってきた後の方が本物っぽい。\n\n#着て稼ぐ #villain $PPP @0xmavillain DKLS8",
+      "text_preview": "持ち物って、 / 置かれた場所で / だいたい正体が出る。 / きれいな写真より、 / 帰ってきた後の方が本物っぽい。 / #着て稼ぐ #villain $PPP @0xmavillain DKLS8",
+      "token_verification": {
+        "required_layer": "Required Token Layer v1",
+        "mandatory_footer_order": "#着て稼ぐ #villain $PPP @0xmavillain",
+        "missing_before": [],
+        "duplicates_before": [],
+        "changed": false,
+        "before_counts": {
+          "#着て稼ぐ": 1,
+          "#villain": 1,
+          "$PPP": 1,
+          "@0xmavillain": 1
+        },
+        "after_counts": {
+          "#着て稼ぐ": 1,
+          "#villain": 1,
+          "$PPP": 1,
+          "@0xmavillain": 1
+        },
+        "final_order": "#着て稼ぐ #villain $PPP @0xmavillain",
+        "passcode": "DKLS8",
+        "passcode_exists_in_db": true,
+        "valid_after": true
+      },
+      "image": {
+        "required": true,
+        "ready": true,
+        "file_path": "villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png",
+        "image_type": "lifestyle_residue_photo",
+        "match_score": 94,
+        "rights_notes": "公式ショップ実物グッズを参照した生活痕/着用画像。商品画像そのままではない。",
+        "absolute_path": "/Users/raindog/Documents/New project/villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png"
+      },
+      "score": 92,
+      "risk": "low",
+      "novelty_score": 76,
+      "raw_novelty_score": 80,
+      "remixability_score": 74,
+      "remixability": {
+        "source": "candidate_score",
+        "signals": [],
+        "components": {}
+      },
+      "media_deduplication": {
+        "signature": {
+          "path": "/Users/raindog/Documents/New project/villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png",
+          "sha256": "4de3bef0230faf0c5c6a5888df83ad45c6ce5afe921dceca4da165df5e4c2ad0",
+          "perceptual_hash": "c3c7819168602021",
+          "prompt_family": "lifestyle_residue_photo_wearable_stock_011_bag_entryway",
+          "composition": "",
+          "layout": "",
+          "image_type": "lifestyle_residue_photo"
+        },
+        "blockers": [],
+        "matches": [],
+        "cooldown_days": 7
+      },
+      "context_mismatch_gate": {
+        "blockers": [],
+        "context_check": {
+          "terms": [],
+          "temporal_terms": [],
+          "event_terms": [],
+          "context_evidence_verified": false,
+          "requires_evidence": false
+        },
+        "pairing_check": {
+          "topic_groups": [],
+          "image_metadata": "villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png /users/raindog/documents/new project/villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png lifestyle_residue_photo",
+          "matched_image_terms": {}
+        }
+      },
+      "deleted_learning_gate": {
+        "blockers": [],
+        "matches": []
+      },
+      "saturation_flags": [
+        "repeated_structure"
+      ],
+      "pilot_score": 290,
+      "eligible": true,
+      "blockers": [],
+      "warnings": [],
+      "reason": "Bag entryway residue. No temporal/event claim.",
+      "expected_type": "residual_growth",
+      "fallback_action": "hold_for_night_if_context_is_too_heavy",
+      "quality_review": {
+        "candidate_id": "vln-stream-20260519-stock-002",
+        "execution_id": "",
+        "slot": "daytime",
+        "passcode": "DKLS8",
+        "image": "/Users/raindog/Documents/New project/villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png",
+        "text": "持ち物って、\n置かれた場所で\nだいたい正体が出る。\n\nきれいな写真より、\n帰ってきた後の方が本物っぽい。\n\n#着て稼ぐ #villain $PPP @0xmavillain DKLS8",
+        "text_preview": "持ち物って、 / 置かれた場所で / だいたい正体が出る。 / きれいな写真より、 / 帰ってきた後の方が本物っぽい。 / #着て稼ぐ #villain $PPP @0xmavillain DKLS8",
+        "final_quality_status": "READY",
+        "review_state": "CANDIDATE_READY_FOR_HUMAN_REVIEW",
+        "human_approved_for_posting": false,
+        "repair_action": {
+          "type": "none",
+          "required": false,
+          "reason": "No repair needed for human review."
+        },
+        "blockers": [],
+        "warnings": [],
+        "context_terms": [],
+        "context_evidence": {
+          "verified": false,
+          "requires_evidence": false,
+          "core_question": "この投稿は何を見て言っているのか？"
+        },
+        "topic_image_fit": {
+          "status": "OK",
+          "checks": {
+            "topic_groups": [],
+            "image_metadata": "villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png /users/raindog/documents/new project/villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png lifestyle_residue_photo",
+            "matched_image_terms": {}
+          }
+        },
+        "ad_like_score": 0,
+        "native_tone_score": 77,
+        "persona_fit": 78,
+        "deleted_nearby_match": [],
+        "human_check_checklist": [
+          "この投稿は何を見て言っているのか？",
+          "本文の現実文脈は今日の状況と一致しているか？",
+          "画像は本文topicを本当に支えているか？",
+          "広告ではなくタイムライン上の観測として混ざるか？",
+          "鬼徹アカウントの余白と人格に合っているか？"
+        ]
+      },
+      "planned_publish_after_jst": "2026-05-19T23:55+09:00",
+      "post_after_publish_review": true,
+      "manual_override_allowed": true,
+      "delete_if_needed": true,
+      "required_tokens_verified": true,
+      "execution_gate": {
+        "max_posts_per_day_ok": true,
+        "cooldown_between_posts_minutes": 120,
+        "risk_not_high": true,
+        "already_posted_false": true,
+        "same_image_cooldown_ok": true,
+        "media_reuse_cooldown_ok": true,
+        "context_evidence_ok": true,
+        "topic_image_pairing_ok": true,
+        "deleted_learning_ok": true,
+        "repeated_topic_penalty_ok": true,
+        "required_tokens_verified": true
+      },
+      "post_publish_learning_plan": {
+        "analysis_after_hours": 24,
+        "metrics": [
+          "impressions",
+          "likes",
+          "reposts",
+          "replies",
+          "profile_clicks"
+        ],
+        "learning_focus": [
+          "residual_growth",
+          "profile_clicks",
+          "repost_reuse",
+          "remixability"
+        ]
+      },
+      "note_seed": {
+        "why_posted": "Bag entryway residue. No temporal/event claim.",
+        "expected_reaction": "residual_growth",
+        "human_observation_pending": true,
+        "lesson_for_later": "Record actual X reaction after posting; do not draft note yet."
+      }
+    },
+    {
+      "slot": "night",
+      "source": "candidate_stream",
+      "source_id": "vln-stream-20260519-stock-001",
+      "category": "culture_observer",
+      "passcode": "C14QB",
+      "text": "机に置いた瞬間、\nグッズじゃなくて、\n生活の一部になる。\n\n広告より、\n使われた跡の方が強い。\n\n#着て稼ぐ #villain $PPP @0xmavillain C14QB",
+      "text_preview": "机に置いた瞬間、 / グッズじゃなくて、 / 生活の一部になる。 / 広告より、 / 使われた跡の方が強い。 / #着て稼ぐ #villain $PPP @0xmavillain C14QB",
+      "token_verification": {
+        "required_layer": "Required Token Layer v1",
+        "mandatory_footer_order": "#着て稼ぐ #villain $PPP @0xmavillain",
+        "missing_before": [],
+        "duplicates_before": [],
+        "changed": false,
+        "before_counts": {
+          "#着て稼ぐ": 1,
+          "#villain": 1,
+          "$PPP": 1,
+          "@0xmavillain": 1
+        },
+        "after_counts": {
+          "#着て稼ぐ": 1,
+          "#villain": 1,
+          "$PPP": 1,
+          "@0xmavillain": 1
+        },
+        "final_order": "#着て稼ぐ #villain $PPP @0xmavillain",
+        "passcode": "C14QB",
+        "passcode_exists_in_db": true,
+        "valid_after": true
+      },
+      "image": {
+        "required": true,
+        "ready": true,
+        "file_path": "villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png",
+        "image_type": "lifestyle_residue_photo",
+        "match_score": 94,
+        "rights_notes": "公式ショップ実物グッズを参照した生活痕/着用画像。商品画像そのままではない。",
+        "absolute_path": "/Users/raindog/Documents/New project/villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png"
+      },
+      "score": 92,
+      "risk": "low",
+      "novelty_score": 80,
+      "raw_novelty_score": 80,
+      "remixability_score": 74,
+      "remixability": {
+        "source": "candidate_score",
+        "signals": [],
+        "components": {}
+      },
+      "media_deduplication": {
+        "signature": {
+          "path": "/Users/raindog/Documents/New project/villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png",
+          "sha256": "536ed31d6942711bf8ef87c8d6c2c9ee189732bb5df6615fd4d8ffdd77aa5fc2",
+          "perceptual_hash": "1f19113034302030",
+          "prompt_family": "lifestyle_residue_photo_wearable_stock_010_thermos_workdesk",
+          "composition": "",
+          "layout": "",
+          "image_type": "lifestyle_residue_photo"
+        },
+        "blockers": [],
+        "matches": [],
+        "cooldown_days": 7
+      },
+      "context_mismatch_gate": {
+        "blockers": [],
+        "context_check": {
+          "terms": [],
+          "temporal_terms": [],
+          "event_terms": [],
+          "context_evidence_verified": false,
+          "requires_evidence": false
+        },
+        "pairing_check": {
+          "topic_groups": [],
+          "image_metadata": "villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png /users/raindog/documents/new project/villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png lifestyle_residue_photo",
+          "matched_image_terms": {}
+        }
+      },
+      "deleted_learning_gate": {
+        "blockers": [],
+        "matches": []
+      },
+      "saturation_flags": [],
+      "pilot_score": 294,
+      "eligible": true,
+      "blockers": [],
+      "warnings": [],
+      "reason": "Thermos desk residue. No temporal/event claim.",
+      "expected_type": "residual_growth_or_profile_pull",
+      "fallback_action": "fallback_to_poster_summary_image_ready",
+      "quality_review": {
+        "candidate_id": "vln-stream-20260519-stock-001",
+        "execution_id": "",
+        "slot": "night",
+        "passcode": "C14QB",
+        "image": "/Users/raindog/Documents/New project/villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png",
+        "text": "机に置いた瞬間、\nグッズじゃなくて、\n生活の一部になる。\n\n広告より、\n使われた跡の方が強い。\n\n#着て稼ぐ #villain $PPP @0xmavillain C14QB",
+        "text_preview": "机に置いた瞬間、 / グッズじゃなくて、 / 生活の一部になる。 / 広告より、 / 使われた跡の方が強い。 / #着て稼ぐ #villain $PPP @0xmavillain C14QB",
+        "final_quality_status": "READY",
+        "review_state": "CANDIDATE_READY_FOR_HUMAN_REVIEW",
+        "human_approved_for_posting": false,
+        "repair_action": {
+          "type": "none",
+          "required": false,
+          "reason": "No repair needed for human review."
+        },
+        "blockers": [],
+        "warnings": [],
+        "context_terms": [],
+        "context_evidence": {
+          "verified": false,
+          "requires_evidence": false,
+          "core_question": "この投稿は何を見て言っているのか？"
+        },
+        "topic_image_fit": {
+          "status": "OK",
+          "checks": {
+            "topic_groups": [],
+            "image_metadata": "villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png /users/raindog/documents/new project/villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png lifestyle_residue_photo",
+            "matched_image_terms": {}
+          }
+        },
+        "ad_like_score": 0,
+        "native_tone_score": 72,
+        "persona_fit": 78,
+        "deleted_nearby_match": [],
+        "human_check_checklist": [
+          "この投稿は何を見て言っているのか？",
+          "本文の現実文脈は今日の状況と一致しているか？",
+          "画像は本文topicを本当に支えているか？",
+          "広告ではなくタイムライン上の観測として混ざるか？",
+          "鬼徹アカウントの余白と人格に合っているか？"
+        ]
+      },
+      "planned_publish_after_jst": "2026-05-20T01:55+09:00",
+      "post_after_publish_review": true,
+      "manual_override_allowed": true,
+      "delete_if_needed": true,
+      "required_tokens_verified": true,
+      "execution_gate": {
+        "max_posts_per_day_ok": true,
+        "cooldown_between_posts_minutes": 120,
+        "risk_not_high": true,
+        "already_posted_false": true,
+        "same_image_cooldown_ok": true,
+        "media_reuse_cooldown_ok": true,
+        "context_evidence_ok": true,
+        "topic_image_pairing_ok": true,
+        "deleted_learning_ok": true,
+        "repeated_topic_penalty_ok": true,
+        "required_tokens_verified": true
+      },
+      "post_publish_learning_plan": {
+        "analysis_after_hours": 24,
+        "metrics": [
+          "impressions",
+          "likes",
+          "reposts",
+          "replies",
+          "profile_clicks"
+        ],
+        "learning_focus": [
+          "residual_growth",
+          "profile_clicks",
+          "repost_reuse",
+          "remixability"
+        ]
+      },
+      "note_seed": {
+        "why_posted": "Thermos desk residue. No temporal/event claim.",
+        "expected_reaction": "residual_growth_or_profile_pull",
+        "human_observation_pending": true,
+        "lesson_for_later": "Record actual X reaction after posting; do not draft note yet."
+      }
+    }
+  ],
+  "rejected_or_blocked_count": 0,
+  "rejected_or_blocked_preview": []
+}
+```
+
 ## data/villain_quality_review_queue.json
 
 ``` json
 {
   "db_name": "Villain Quality Review Queue",
   "executable_ready_count": 0,
-  "generated_at_jst": "2026-05-17T23:49:27+09:00",
+  "generated_at_jst": "2026-05-19T21:55:39+09:00",
   "policy_source": "data/villain_post_quality_os.json",
   "posting_executed": false,
   "posting_execution_status": "BLOCKED",
-  "queue_health_status": "BLOCKED",
+  "queue_health_status": "CLEAR",
   "review_board_status": "READY",
   "review_items": [
     {
       "ad_like_score": 0,
       "blockers": [],
-      "candidate_id": "vln-gen-20260517-shop-001",
+      "candidate_id": "vln-stream-20260519-stock-002",
       "context_evidence": {
         "core_question": "この投稿は何を見て言っているのか？",
         "requires_evidence": false,
@@ -486,7 +1093,7 @@ Return only JSON matching the expected response schema. Do not ask Codex to post
       },
       "context_terms": [],
       "deleted_nearby_match": [],
-      "execution_id": "vln-exec-daytime-vln-gen-20260517-shop-001",
+      "execution_id": "vln-exec-daytime-vln-stream-20260519-stock-002",
       "final_quality_status": "READY",
       "human_approved_for_posting": false,
       "human_check_checklist": [
@@ -496,10 +1103,10 @@ Return only JSON matching the expected response schema. Do not ask Codex to post
         "広告ではなくタイムライン上の観測として混ざるか？",
         "鬼徹アカウントの余白と人格に合っているか？"
       ],
-      "image": "/Users/raindog/Documents/New project/villain_post_images/99f8c686-07e1-48d0-ad0d-4ce5f14939e2.png",
-      "native_tone_score": 82,
-      "passcode": "H9J6L",
-      "persona_fit": 83,
+      "image": "/Users/raindog/Documents/New project/villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png",
+      "native_tone_score": 77,
+      "passcode": "DKLS8",
+      "persona_fit": 78,
       "repair_action": {
         "reason": "No repair needed for human review.",
         "required": false,
@@ -507,242 +1114,22 @@ Return only JSON matching the expected response schema. Do not ask Codex to post
       },
       "review_state": "CANDIDATE_READY_FOR_HUMAN_REVIEW",
       "slot": "daytime",
-      "text": "服だけで見ると、\n少し足りない。\n\n人が着て、\n空気が移って、\nやっと$villainっぽくなる。\n\n#着て稼ぐ #villain $PPP @0xmavillain H9J6L",
-      "text_preview": "服だけで見ると、 / 少し足りない。 / 人が着て、 / 空気が移って、 / やっと$villainっぽくなる。 / #着て稼ぐ #villain $PPP @0xmavillain H9J6L",
+      "text": "持ち物って、\n置かれた場所で\nだいたい正体が出る。\n\nきれいな写真より、\n帰ってきた後の方が本物っぽい。\n\n#着て稼ぐ #villain $PPP @0xmavillain DKLS8",
+      "text_preview": "持ち物って、 / 置かれた場所で / だいたい正体が出る。 / きれいな写真より、 / 帰ってきた後の方が本物っぽい。 / #着て稼ぐ #villain $PPP @0xmavillain DKLS8",
       "topic_image_fit": {
         "checks": {
-          "image_metadata": "villain_post_images/99f8c686-07e1-48d0-ad0d-4ce5f14939e2.png /users/raindog/documents/new project/villain_post_images/99f8c686-07e1-48d0-ad0d-4ce5f14939e2.png poster_summary shop apparel/goods referenceから作った着用者画像。商品紹介ではなく、人が着て空気が移る感じ。",
+          "image_metadata": "villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png /users/raindog/documents/new project/villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png lifestyle_residue_photo",
           "matched_image_terms": {},
           "topic_groups": []
         },
         "status": "OK"
       },
       "warnings": []
-    },
-    {
-      "ad_like_score": 0,
-      "blockers": [
-        "deleted_text_near_match",
-        "deleted_topic_context_cooldown",
-        "temporal_context_unverified"
-      ],
-      "candidate_id": "vln-gen-20260516-001",
-      "context_evidence": {
-        "core_question": "この投稿は何を見て言っているのか？",
-        "requires_evidence": true,
-        "verified": false
-      },
-      "context_terms": [
-        "昨日",
-        "集会"
-      ],
-      "deleted_nearby_match": [
-        {
-          "candidate_id": "vln-gen-20260516-001",
-          "delete_reason": "Deleted by human: content/context mismatch. Not yesterday's gathering and post did not fit actual situation.",
-          "execution_id": "vln-exec-daytime-vln-gen-20260516-001",
-          "image_used": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/20260514集会.png",
-          "prompt_family": "community_info_実デ_タ最強投稿の型に最も近い_集会_会話_現場感_画像ありの条件が揃っている_集会",
-          "reasons": [
-            "deleted_candidate_blacklist",
-            "deleted_text_near_match",
-            "deleted_topic_context_cooldown"
-          ],
-          "topic_cluster": "community_gathering_signal",
-          "tweet_id": "2055938300708626713"
-        }
-      ],
-      "execution_id": "vln-exec-daytime-vln-gen-20260516-001",
-      "final_quality_status": "BLOCKED",
-      "human_approved_for_posting": false,
-      "human_check_checklist": [
-        "この投稿は何を見て言っているのか？",
-        "本文の現実文脈は今日の状況と一致しているか？",
-        "画像は本文topicを本当に支えているか？",
-        "広告ではなくタイムライン上の観測として混ざるか？",
-        "鬼徹アカウントの余白と人格に合っているか？"
-      ],
-      "image": "/Users/raindog/Documents/New project/villain_post_images/20260514集会.png",
-      "native_tone_score": 82,
-      "passcode": "F3X7M",
-      "persona_fit": 88,
-      "repair_action": {
-        "reason": "Candidate repeats a deleted/failed text and topic pattern.",
-        "required": true,
-        "type": "archive_or_drop"
-      },
-      "review_state": "CANDIDATE_BLOCKED",
-      "slot": "daytime",
-      "text": "昨日の集会、\nまだ少し残ってる。\n\n説明より、\n人が集まってる事実の方が強い。\n\n$villainは、\nそこがちょっと変。\n\n#着て稼ぐ #villain $PPP @0xmavillain F3X7M",
-      "text_preview": "昨日の集会、 / まだ少し残ってる。 / 説明より、 / 人が集まってる事実の方が強い。 / $villainは、 / そこがちょっと変。 / #着て稼ぐ #villain $PPP @0xmavillain F3X7M",
-      "topic_image_fit": {
-        "checks": {
-          "image_metadata": "villain_post_images/20260514集会.png /users/raindog/documents/new project/villain_post_images/20260514集会.png community_info 実データ最強投稿の型に最も近い。集会、会話、現場感、画像ありの条件が揃っている。",
-          "matched_image_terms": {
-            "gathering_event": [
-              "集会",
-              "現場",
-              "community"
-            ]
-          },
-          "topic_groups": [
-            "gathering_event",
-            "temporal_claim"
-          ]
-        },
-        "status": "OK"
-      },
-      "warnings": [
-        "deleted_nearby_match_found"
-      ]
-    },
-    {
-      "ad_like_score": 0,
-      "blockers": [
-        "deleted_topic_context_cooldown",
-        "topic_image_pairing_mismatch"
-      ],
-      "candidate_id": "vln-gen-20260516-003",
-      "context_evidence": {
-        "core_question": "この投稿は何を見て言っているのか？",
-        "requires_evidence": false,
-        "verified": false
-      },
-      "context_terms": [],
-      "deleted_nearby_match": [
-        {
-          "candidate_id": "vln-gen-20260516-001",
-          "delete_reason": "Deleted by human: content/context mismatch. Not yesterday's gathering and post did not fit actual situation.",
-          "execution_id": "vln-exec-daytime-vln-gen-20260516-001",
-          "image_used": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/20260514集会.png",
-          "prompt_family": "community_info_実デ_タ最強投稿の型に最も近い_集会_会話_現場感_画像ありの条件が揃っている_集会",
-          "reasons": [
-            "deleted_topic_context_cooldown"
-          ],
-          "topic_cluster": "community_gathering_signal",
-          "tweet_id": "2055938300708626713"
-        }
-      ],
-      "execution_id": "vln-exec-daytime-vln-gen-20260516-003",
-      "final_quality_status": "BLOCKED",
-      "human_approved_for_posting": false,
-      "human_check_checklist": [
-        "この投稿は何を見て言っているのか？",
-        "本文の現実文脈は今日の状況と一致しているか？",
-        "画像は本文topicを本当に支えているか？",
-        "広告ではなくタイムライン上の観測として混ざるか？",
-        "鬼徹アカウントの余白と人格に合っているか？"
-      ],
-      "image": "/Users/raindog/Documents/New project/villain_post_images/生成画像1.png",
-      "native_tone_score": 92,
-      "passcode": "J1M5V",
-      "persona_fit": 93,
-      "repair_action": {
-        "reason": "Text topic and image metadata do not support each other.",
-        "required": true,
-        "type": "image_replacement_required"
-      },
-      "review_state": "CANDIDATE_BLOCKED",
-      "slot": "daytime",
-      "text": "話題になる服って、\nだいたい服だけじゃない。\n\n誰が着て、\nどこで集まってるかまで含めて、\n少し残る。\n\n#着て稼ぐ #villain $PPP @0xmavillain J1M5V",
-      "text_preview": "話題になる服って、 / だいたい服だけじゃない。 / 誰が着て、 / どこで集まってるかまで含めて、 / 少し残る。 / #着て稼ぐ #villain $PPP @0xmavillain J1M5V",
-      "topic_image_fit": {
-        "checks": {
-          "image_metadata": "villain_post_images/生成画像1.png /users/raindog/documents/new project/villain_post_images/生成画像1.png culture_observer 服単体ではなく、日常に入り込んだ違和感を置ける。culture_observerの補強に向く。",
-          "matched_image_terms": {
-            "gathering_event": []
-          },
-          "topic_groups": [
-            "gathering_event"
-          ]
-        },
-        "status": "MISMATCH"
-      },
-      "warnings": [
-        "deleted_nearby_match_found"
-      ]
-    },
-    {
-      "ad_like_score": 0,
-      "blockers": [
-        "deleted_text_near_match",
-        "deleted_topic_context_cooldown",
-        "temporal_context_unverified"
-      ],
-      "candidate_id": "vln-gen-20260516-001",
-      "context_evidence": {
-        "core_question": "この投稿は何を見て言っているのか？",
-        "requires_evidence": true,
-        "verified": false
-      },
-      "context_terms": [
-        "昨日",
-        "集会"
-      ],
-      "deleted_nearby_match": [
-        {
-          "candidate_id": "vln-gen-20260516-001",
-          "delete_reason": "Deleted by human: content/context mismatch. Not yesterday's gathering and post did not fit actual situation.",
-          "execution_id": "vln-exec-daytime-vln-gen-20260516-001",
-          "image_used": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/20260514集会.png",
-          "prompt_family": "community_info_実デ_タ最強投稿の型に最も近い_集会_会話_現場感_画像ありの条件が揃っている_集会",
-          "reasons": [
-            "deleted_candidate_blacklist",
-            "deleted_text_near_match",
-            "deleted_topic_context_cooldown"
-          ],
-          "topic_cluster": "community_gathering_signal",
-          "tweet_id": "2055938300708626713"
-        }
-      ],
-      "execution_id": "vln-exec-night-vln-gen-20260516-001",
-      "final_quality_status": "BLOCKED",
-      "human_approved_for_posting": false,
-      "human_check_checklist": [
-        "この投稿は何を見て言っているのか？",
-        "本文の現実文脈は今日の状況と一致しているか？",
-        "画像は本文topicを本当に支えているか？",
-        "広告ではなくタイムライン上の観測として混ざるか？",
-        "鬼徹アカウントの余白と人格に合っているか？"
-      ],
-      "image": "/Users/raindog/Documents/New project/villain_post_images/20260514集会.png",
-      "native_tone_score": 82,
-      "passcode": "F3X7M",
-      "persona_fit": 88,
-      "repair_action": {
-        "reason": "Candidate repeats a deleted/failed text and topic pattern.",
-        "required": true,
-        "type": "archive_or_drop"
-      },
-      "review_state": "CANDIDATE_BLOCKED",
-      "slot": "night",
-      "text": "昨日の集会、\nまだ少し残ってる。\n\n説明より、\n人が集まってる事実の方が強い。\n\n$villainは、\nそこがちょっと変。\n\n#着て稼ぐ #villain $PPP @0xmavillain F3X7M",
-      "text_preview": "昨日の集会、 / まだ少し残ってる。 / 説明より、 / 人が集まってる事実の方が強い。 / $villainは、 / そこがちょっと変。 / #着て稼ぐ #villain $PPP @0xmavillain F3X7M",
-      "topic_image_fit": {
-        "checks": {
-          "image_metadata": "villain_post_images/20260514集会.png /users/raindog/documents/new project/villain_post_images/20260514集会.png community_info 実データ最強投稿の型に最も近い。集会、会話、現場感、画像ありの条件が揃っている。",
-          "matched_image_terms": {
-            "gathering_event": [
-              "集会",
-              "現場",
-              "community"
-            ]
-          },
-          "topic_groups": [
-            "gathering_event",
-            "temporal_claim"
-          ]
-        },
-        "status": "OK"
-      },
-      "warnings": [
-        "deleted_nearby_match_found"
-      ]
     },
     {
       "ad_like_score": 0,
       "blockers": [],
-      "candidate_id": "vln-gen-20260516-002",
+      "candidate_id": "vln-stream-20260519-stock-001",
       "context_evidence": {
         "core_question": "この投稿は何を見て言っているのか？",
         "requires_evidence": false,
@@ -750,7 +1137,7 @@ Return only JSON matching the expected response schema. Do not ask Codex to post
       },
       "context_terms": [],
       "deleted_nearby_match": [],
-      "execution_id": "vln-exec-night-vln-gen-20260516-002",
+      "execution_id": "vln-exec-night-vln-stream-20260519-stock-001",
       "final_quality_status": "READY",
       "human_approved_for_posting": false,
       "human_check_checklist": [
@@ -760,10 +1147,10 @@ Return only JSON matching the expected response schema. Do not ask Codex to post
         "広告ではなくタイムライン上の観測として混ざるか？",
         "鬼徹アカウントの余白と人格に合っているか？"
       ],
-      "image": "/Users/raindog/Documents/New project/villain_post_images/20260514集会.png",
-      "native_tone_score": 82,
-      "passcode": "H9J6L",
-      "persona_fit": 83,
+      "image": "/Users/raindog/Documents/New project/villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png",
+      "native_tone_score": 72,
+      "passcode": "C14QB",
+      "persona_fit": 78,
       "repair_action": {
         "reason": "No repair needed for human review.",
         "required": false,
@@ -771,270 +1158,17 @@ Return only JSON matching the expected response schema. Do not ask Codex to post
       },
       "review_state": "CANDIDATE_READY_FOR_HUMAN_REVIEW",
       "slot": "night",
-      "text": "気づくと、\nまた$villainの話になってる。\n\n服の話だけなら、\nたぶんここまで残らない。\n\n#着て稼ぐ #villain $PPP @0xmavillain H9J6L",
-      "text_preview": "気づくと、 / また$villainの話になってる。 / 服の話だけなら、 / たぶんここまで残らない。 / #着て稼ぐ #villain $PPP @0xmavillain H9J6L",
+      "text": "机に置いた瞬間、\nグッズじゃなくて、\n生活の一部になる。\n\n広告より、\n使われた跡の方が強い。\n\n#着て稼ぐ #villain $PPP @0xmavillain C14QB",
+      "text_preview": "机に置いた瞬間、 / グッズじゃなくて、 / 生活の一部になる。 / 広告より、 / 使われた跡の方が強い。 / #着て稼ぐ #villain $PPP @0xmavillain C14QB",
       "topic_image_fit": {
         "checks": {
-          "image_metadata": "villain_post_images/20260514集会.png /users/raindog/documents/new project/villain_post_images/20260514集会.png community 集会・スペース・コミュニティの動きを短く残す投稿。",
+          "image_metadata": "villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png /users/raindog/documents/new project/villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png lifestyle_residue_photo",
           "matched_image_terms": {},
           "topic_groups": []
         },
         "status": "OK"
       },
       "warnings": []
-    },
-    {
-      "ad_like_score": 0,
-      "blockers": [
-        "deleted_topic_context_cooldown",
-        "topic_image_pairing_mismatch"
-      ],
-      "candidate_id": "vln-gen-20260516-003",
-      "context_evidence": {
-        "core_question": "この投稿は何を見て言っているのか？",
-        "requires_evidence": false,
-        "verified": false
-      },
-      "context_terms": [],
-      "deleted_nearby_match": [
-        {
-          "candidate_id": "vln-gen-20260516-001",
-          "delete_reason": "Deleted by human: content/context mismatch. Not yesterday's gathering and post did not fit actual situation.",
-          "execution_id": "vln-exec-daytime-vln-gen-20260516-001",
-          "image_used": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/20260514集会.png",
-          "prompt_family": "community_info_実デ_タ最強投稿の型に最も近い_集会_会話_現場感_画像ありの条件が揃っている_集会",
-          "reasons": [
-            "deleted_topic_context_cooldown"
-          ],
-          "topic_cluster": "community_gathering_signal",
-          "tweet_id": "2055938300708626713"
-        }
-      ],
-      "execution_id": "vln-exec-night-vln-gen-20260516-003",
-      "final_quality_status": "BLOCKED",
-      "human_approved_for_posting": false,
-      "human_check_checklist": [
-        "この投稿は何を見て言っているのか？",
-        "本文の現実文脈は今日の状況と一致しているか？",
-        "画像は本文topicを本当に支えているか？",
-        "広告ではなくタイムライン上の観測として混ざるか？",
-        "鬼徹アカウントの余白と人格に合っているか？"
-      ],
-      "image": "/Users/raindog/Documents/New project/villain_post_images/生成画像1.png",
-      "native_tone_score": 92,
-      "passcode": "J1M5V",
-      "persona_fit": 93,
-      "repair_action": {
-        "reason": "Text topic and image metadata do not support each other.",
-        "required": true,
-        "type": "image_replacement_required"
-      },
-      "review_state": "CANDIDATE_BLOCKED",
-      "slot": "night",
-      "text": "話題になる服って、\nだいたい服だけじゃない。\n\n誰が着て、\nどこで集まってるかまで含めて、\n少し残る。\n\n#着て稼ぐ #villain $PPP @0xmavillain J1M5V",
-      "text_preview": "話題になる服って、 / だいたい服だけじゃない。 / 誰が着て、 / どこで集まってるかまで含めて、 / 少し残る。 / #着て稼ぐ #villain $PPP @0xmavillain J1M5V",
-      "topic_image_fit": {
-        "checks": {
-          "image_metadata": "villain_post_images/生成画像1.png /users/raindog/documents/new project/villain_post_images/生成画像1.png culture_observer 服単体ではなく、日常に入り込んだ違和感を置ける。culture_observerの補強に向く。",
-          "matched_image_terms": {
-            "gathering_event": []
-          },
-          "topic_groups": [
-            "gathering_event"
-          ]
-        },
-        "status": "MISMATCH"
-      },
-      "warnings": [
-        "deleted_nearby_match_found"
-      ]
-    },
-    {
-      "ad_like_score": 0,
-      "blockers": [
-        "deleted_text_near_match",
-        "deleted_topic_context_cooldown",
-        "temporal_context_unverified"
-      ],
-      "candidate_id": "vln-gen-20260516-001",
-      "context_evidence": {
-        "core_question": "この投稿は何を見て言っているのか？",
-        "requires_evidence": true,
-        "verified": false
-      },
-      "context_terms": [
-        "昨日",
-        "集会"
-      ],
-      "deleted_nearby_match": [
-        {
-          "candidate_id": "vln-gen-20260516-001",
-          "delete_reason": "Deleted by human: content/context mismatch. Not yesterday's gathering and post did not fit actual situation.",
-          "execution_id": "vln-exec-daytime-vln-gen-20260516-001",
-          "image_used": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/20260514集会.png",
-          "prompt_family": "community_info_実デ_タ最強投稿の型に最も近い_集会_会話_現場感_画像ありの条件が揃っている_集会",
-          "reasons": [
-            "deleted_candidate_blacklist",
-            "deleted_text_near_match",
-            "deleted_topic_context_cooldown"
-          ],
-          "topic_cluster": "community_gathering_signal",
-          "tweet_id": "2055938300708626713"
-        }
-      ],
-      "execution_id": "vln-exec-late_night-vln-gen-20260516-001",
-      "final_quality_status": "BLOCKED",
-      "human_approved_for_posting": false,
-      "human_check_checklist": [
-        "この投稿は何を見て言っているのか？",
-        "本文の現実文脈は今日の状況と一致しているか？",
-        "画像は本文topicを本当に支えているか？",
-        "広告ではなくタイムライン上の観測として混ざるか？",
-        "鬼徹アカウントの余白と人格に合っているか？"
-      ],
-      "image": "/Users/raindog/Documents/New project/villain_post_images/20260514集会.png",
-      "native_tone_score": 82,
-      "passcode": "F3X7M",
-      "persona_fit": 88,
-      "repair_action": {
-        "reason": "Candidate repeats a deleted/failed text and topic pattern.",
-        "required": true,
-        "type": "archive_or_drop"
-      },
-      "review_state": "CANDIDATE_BLOCKED",
-      "slot": "late_night",
-      "text": "昨日の集会、\nまだ少し残ってる。\n\n説明より、\n人が集まってる事実の方が強い。\n\n$villainは、\nそこがちょっと変。\n\n#着て稼ぐ #villain $PPP @0xmavillain F3X7M",
-      "text_preview": "昨日の集会、 / まだ少し残ってる。 / 説明より、 / 人が集まってる事実の方が強い。 / $villainは、 / そこがちょっと変。 / #着て稼ぐ #villain $PPP @0xmavillain F3X7M",
-      "topic_image_fit": {
-        "checks": {
-          "image_metadata": "villain_post_images/20260514集会.png /users/raindog/documents/new project/villain_post_images/20260514集会.png community_info 実データ最強投稿の型に最も近い。集会、会話、現場感、画像ありの条件が揃っている。",
-          "matched_image_terms": {
-            "gathering_event": [
-              "集会",
-              "現場",
-              "community"
-            ]
-          },
-          "topic_groups": [
-            "gathering_event",
-            "temporal_claim"
-          ]
-        },
-        "status": "OK"
-      },
-      "warnings": [
-        "deleted_nearby_match_found"
-      ]
-    },
-    {
-      "ad_like_score": 0,
-      "blockers": [],
-      "candidate_id": "vln-gen-20260516-002",
-      "context_evidence": {
-        "core_question": "この投稿は何を見て言っているのか？",
-        "requires_evidence": false,
-        "verified": false
-      },
-      "context_terms": [],
-      "deleted_nearby_match": [],
-      "execution_id": "vln-exec-late_night-vln-gen-20260516-002",
-      "final_quality_status": "READY",
-      "human_approved_for_posting": false,
-      "human_check_checklist": [
-        "この投稿は何を見て言っているのか？",
-        "本文の現実文脈は今日の状況と一致しているか？",
-        "画像は本文topicを本当に支えているか？",
-        "広告ではなくタイムライン上の観測として混ざるか？",
-        "鬼徹アカウントの余白と人格に合っているか？"
-      ],
-      "image": "/Users/raindog/Documents/New project/villain_post_images/20260514集会.png",
-      "native_tone_score": 82,
-      "passcode": "H9J6L",
-      "persona_fit": 83,
-      "repair_action": {
-        "reason": "No repair needed for human review.",
-        "required": false,
-        "type": "none"
-      },
-      "review_state": "CANDIDATE_READY_FOR_HUMAN_REVIEW",
-      "slot": "late_night",
-      "text": "気づくと、\nまた$villainの話になってる。\n\n服の話だけなら、\nたぶんここまで残らない。\n\n#着て稼ぐ #villain $PPP @0xmavillain H9J6L",
-      "text_preview": "気づくと、 / また$villainの話になってる。 / 服の話だけなら、 / たぶんここまで残らない。 / #着て稼ぐ #villain $PPP @0xmavillain H9J6L",
-      "topic_image_fit": {
-        "checks": {
-          "image_metadata": "villain_post_images/20260514集会.png /users/raindog/documents/new project/villain_post_images/20260514集会.png community 集会・スペース・コミュニティの動きを短く残す投稿。",
-          "matched_image_terms": {},
-          "topic_groups": []
-        },
-        "status": "OK"
-      },
-      "warnings": []
-    },
-    {
-      "ad_like_score": 0,
-      "blockers": [
-        "deleted_topic_context_cooldown",
-        "topic_image_pairing_mismatch"
-      ],
-      "candidate_id": "vln-gen-20260516-003",
-      "context_evidence": {
-        "core_question": "この投稿は何を見て言っているのか？",
-        "requires_evidence": false,
-        "verified": false
-      },
-      "context_terms": [],
-      "deleted_nearby_match": [
-        {
-          "candidate_id": "vln-gen-20260516-001",
-          "delete_reason": "Deleted by human: content/context mismatch. Not yesterday's gathering and post did not fit actual situation.",
-          "execution_id": "vln-exec-daytime-vln-gen-20260516-001",
-          "image_used": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/20260514集会.png",
-          "prompt_family": "community_info_実デ_タ最強投稿の型に最も近い_集会_会話_現場感_画像ありの条件が揃っている_集会",
-          "reasons": [
-            "deleted_topic_context_cooldown"
-          ],
-          "topic_cluster": "community_gathering_signal",
-          "tweet_id": "2055938300708626713"
-        }
-      ],
-      "execution_id": "vln-exec-late_night-vln-gen-20260516-003",
-      "final_quality_status": "BLOCKED",
-      "human_approved_for_posting": false,
-      "human_check_checklist": [
-        "この投稿は何を見て言っているのか？",
-        "本文の現実文脈は今日の状況と一致しているか？",
-        "画像は本文topicを本当に支えているか？",
-        "広告ではなくタイムライン上の観測として混ざるか？",
-        "鬼徹アカウントの余白と人格に合っているか？"
-      ],
-      "image": "/Users/raindog/Documents/New project/villain_post_images/生成画像1.png",
-      "native_tone_score": 92,
-      "passcode": "J1M5V",
-      "persona_fit": 93,
-      "repair_action": {
-        "reason": "Text topic and image metadata do not support each other.",
-        "required": true,
-        "type": "image_replacement_required"
-      },
-      "review_state": "CANDIDATE_BLOCKED",
-      "slot": "late_night",
-      "text": "話題になる服って、\nだいたい服だけじゃない。\n\n誰が着て、\nどこで集まってるかまで含めて、\n少し残る。\n\n#着て稼ぐ #villain $PPP @0xmavillain J1M5V",
-      "text_preview": "話題になる服って、 / だいたい服だけじゃない。 / 誰が着て、 / どこで集まってるかまで含めて、 / 少し残る。 / #着て稼ぐ #villain $PPP @0xmavillain J1M5V",
-      "topic_image_fit": {
-        "checks": {
-          "image_metadata": "villain_post_images/生成画像1.png /users/raindog/documents/new project/villain_post_images/生成画像1.png culture_observer 服単体ではなく、日常に入り込んだ違和感を置ける。culture_observerの補強に向く。",
-          "matched_image_terms": {
-            "gathering_event": []
-          },
-          "topic_groups": [
-            "gathering_event"
-          ]
-        },
-        "status": "MISMATCH"
-      },
-      "warnings": [
-        "deleted_nearby_match_found"
-      ]
     }
   ],
   "review_state": "READY_FOR_HUMAN_REVIEW",
@@ -1042,14 +1176,179 @@ Return only JSON matching the expected response schema. Do not ask Codex to post
   "safe_to_review": true,
   "schema_version": "handoff.review_queue.v1",
   "stale_cleanup": {
-    "remaining_count": 9,
+    "remaining_count": 2,
     "removed_count": 0,
     "strategy": "dedupe_current_review_items_by_candidate_execution_slot_image"
   },
-  "status": "BLOCKED",
+  "status": "READY",
   "tweet_creation_executed": false,
   "upload_media_executed": false,
   "version": "1.0.0"
+}
+```
+
+## data/villain_shop_wearable_stock.json
+
+``` json
+{
+  "version": "1.1",
+  "updated_at_jst": "2026-05-19T07:28:00+09:00",
+  "source": "official_shop_product_images + generated lifestyle stock",
+  "source_url": "https://shop.0xmavillain.com/",
+  "policy": {
+    "use_raw_shop_image_as_post": false,
+    "generated_from_actual_products": true,
+    "tracking_code_generation": "FORBIDDEN",
+    "posting_executed": "NO",
+    "upload_media_executed": "NO",
+    "create_tweet_executed": "NO"
+  },
+  "items": [
+    {
+      "id": "wearable_stock_001_cap_afterhours",
+      "path": "villain_post_images/wearable_stock/wearable_stock_001_cap_afterhours.png",
+      "absolute_path": "/Users/raindog/Documents/New project/villain_post_images/wearable_stock/wearable_stock_001_cap_afterhours.png",
+      "source_products": [
+        "32_cap.png"
+      ],
+      "image_type": "wearable_poster",
+      "prompt_family": "shop_wearable_cap_afterhours",
+      "fit_notes": "Actual shop cap composited onto a quiet human silhouette. No invented cap shape.",
+      "recommended_text_angle": "小物が空気を先に運ぶ / 服より軽いのに残る"
+    },
+    {
+      "id": "wearable_stock_002_bucket_street",
+      "path": "villain_post_images/wearable_stock/wearable_stock_002_bucket_street.png",
+      "absolute_path": "/Users/raindog/Documents/New project/villain_post_images/wearable_stock/wearable_stock_002_bucket_street.png",
+      "source_products": [
+        "31_bucket_hat.png"
+      ],
+      "image_type": "wearable_poster",
+      "prompt_family": "shop_wearable_bucket_street",
+      "fit_notes": "Actual shop bucket hat composited onto a street silhouette.",
+      "recommended_text_angle": "置いてある時より、人が着た後の方が強い"
+    },
+    {
+      "id": "wearable_stock_003_bag_workdesk",
+      "path": "villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png",
+      "absolute_path": "/Users/raindog/Documents/New project/villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png",
+      "source_products": [
+        "29_haul_bag.jpg"
+      ],
+      "image_type": "lifestyle_residue",
+      "prompt_family": "shop_goods_bag_workdesk",
+      "fit_notes": "Actual haul bag product image placed in a workdesk residue scene.",
+      "recommended_text_angle": "持ち物が先にその人の空気を作る"
+    },
+    {
+      "id": "wearable_stock_004_cap_mirror_crop",
+      "path": "villain_post_images/wearable_stock/wearable_stock_004_cap_mirror_crop.png",
+      "absolute_path": "/Users/raindog/Documents/New project/villain_post_images/wearable_stock/wearable_stock_004_cap_mirror_crop.png",
+      "source_products": [
+        "32_cap.png"
+      ],
+      "image_type": "wearable_lifestyle",
+      "prompt_family": "shop_wearable_cap_mirror_crop",
+      "fit_notes": "Actual shop cap composited into a mirror-crop silhouette. Face hidden, no invented product.",
+      "recommended_text_angle": "小物の方が先に空気を運ぶ"
+    },
+    {
+      "id": "wearable_stock_005_bucket_backview_after",
+      "path": "villain_post_images/wearable_stock/wearable_stock_005_bucket_backview_after.png",
+      "absolute_path": "/Users/raindog/Documents/New project/villain_post_images/wearable_stock/wearable_stock_005_bucket_backview_after.png",
+      "source_products": [
+        "31_bucket_hat.png"
+      ],
+      "image_type": "wearable_lifestyle",
+      "prompt_family": "shop_wearable_bucket_backview_after",
+      "fit_notes": "Actual shop bucket hat used in a back-view after-scene. No temporal/event claim.",
+      "recommended_text_angle": "人が着た後にだけ残る空気"
+    },
+    {
+      "id": "wearable_stock_006_thermos_desk_residue",
+      "path": "villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png",
+      "absolute_path": "/Users/raindog/Documents/New project/villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png",
+      "source_products": [
+        "33_thermos_with_villain.png"
+      ],
+      "image_type": "lifestyle_residue",
+      "prompt_family": "shop_goods_thermos_desk_residue",
+      "fit_notes": "Actual thermos product image placed into a desk residue scene.",
+      "recommended_text_angle": "グッズは使われた瞬間に文化っぽくなる"
+    },
+    {
+      "id": "wearable_stock_007_cap_mirror_person",
+      "path": "villain_post_images/wearable_stock/wearable_stock_007_cap_mirror_person.png",
+      "absolute_path": "/Users/raindog/Documents/New project/villain_post_images/wearable_stock/wearable_stock_007_cap_mirror_person.png",
+      "source_products": [
+        "32_cap.png"
+      ],
+      "image_type": "wearable_lifestyle_photo",
+      "prompt_family": "shop_wearable_cap_mirror_person",
+      "fit_notes": "Generated lifestyle photo of an anonymous person wearing a black cap shaped like the official shop cap. Face hidden, natural mirror context.",
+      "recommended_text_angle": "小物の方が先に空気を運ぶ"
+    },
+    {
+      "id": "wearable_stock_008_bucket_mirror_person",
+      "path": "villain_post_images/wearable_stock/wearable_stock_008_bucket_mirror_person.png",
+      "absolute_path": "/Users/raindog/Documents/New project/villain_post_images/wearable_stock/wearable_stock_008_bucket_mirror_person.png",
+      "source_products": [
+        "31_bucket_hat.png"
+      ],
+      "image_type": "wearable_lifestyle_photo",
+      "prompt_family": "shop_wearable_bucket_mirror_person",
+      "fit_notes": "Anonymous person naturally wearing black $villain bucket hat in entryway mirror.",
+      "recommended_text_angle": "生活痕の中で$villainが自然に残る"
+    },
+    {
+      "id": "wearable_stock_009_cap_rain_street",
+      "path": "villain_post_images/wearable_stock/wearable_stock_009_cap_rain_street.png",
+      "absolute_path": "/Users/raindog/Documents/New project/villain_post_images/wearable_stock/wearable_stock_009_cap_rain_street.png",
+      "source_products": [
+        "32_cap.png"
+      ],
+      "image_type": "wearable_lifestyle_photo",
+      "prompt_family": "shop_wearable_cap_rain_street",
+      "fit_notes": "Anonymous person naturally wearing black $villain cap on wet night street.",
+      "recommended_text_angle": "生活痕の中で$villainが自然に残る"
+    },
+    {
+      "id": "wearable_stock_010_thermos_workdesk",
+      "path": "villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png",
+      "absolute_path": "/Users/raindog/Documents/New project/villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png",
+      "source_products": [
+        "33_thermos_with_villain.png"
+      ],
+      "image_type": "lifestyle_residue_photo",
+      "prompt_family": "shop_goods_thermos_workdesk",
+      "fit_notes": "Black $villain thermos in a lived-in workdesk scene.",
+      "recommended_text_angle": "生活痕の中で$villainが自然に残る"
+    },
+    {
+      "id": "wearable_stock_011_bag_entryway",
+      "path": "villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png",
+      "absolute_path": "/Users/raindog/Documents/New project/villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png",
+      "source_products": [
+        "29_haul_bag.jpg"
+      ],
+      "image_type": "lifestyle_residue_photo",
+      "prompt_family": "shop_goods_bag_entryway",
+      "fit_notes": "Black $villain haul bag used in entryway after daily use.",
+      "recommended_text_angle": "生活痕の中で$villainが自然に残る"
+    },
+    {
+      "id": "wearable_stock_012_hoodie_mirror_person",
+      "path": "villain_post_images/wearable_stock/wearable_stock_012_hoodie_mirror_person.png",
+      "absolute_path": "/Users/raindog/Documents/New project/villain_post_images/wearable_stock/wearable_stock_012_hoodie_mirror_person.png",
+      "source_products": [
+        "29_elite_zip_hoodie.jpg"
+      ],
+      "image_type": "wearable_lifestyle_photo",
+      "prompt_family": "shop_wearable_hoodie_mirror_person",
+      "fit_notes": "Anonymous person naturally wearing black $villain hoodie in mirror.",
+      "recommended_text_angle": "生活痕の中で$villainが自然に残る"
+    }
+  ]
 }
 ```
 
@@ -1058,7 +1357,7 @@ Return only JSON matching the expected response schema. Do not ask Codex to post
 ``` markdown
 # Agent Handoff Status
 
-- Generated at JST: `2026-05-17T23:49:27+09:00`
+- Generated at JST: `2026-05-19T21:55:39+09:00`
 - schema_version: `handoff.codex_to_chatgpt.v1`
 - status: `READY_FOR_CHATGPT_REVIEW`
 - review_state: `CHATGPT_DECISION_CONSUMED`
@@ -1068,41 +1367,41 @@ Return only JSON matching the expected response schema. Do not ask Codex to post
 
 ## Quality Review
 
-- quality_status: `BLOCKED`
-- queue_health_status: `BLOCKED`
+- quality_status: `READY`
+- queue_health_status: `CLEAR`
 - review_board_status: `READY`
 - posting_execution_status: `BLOCKED`
 - executable_ready_count: `0`
 - safe_to_review: `true`
 - safe_to_post: `false`
-- review_items: `9`
-- blockers: `deleted_text_near_match, deleted_topic_context_cooldown, temporal_context_unverified, topic_image_pairing_mismatch`
-- warnings: `deleted_nearby_match_found`
-- blocked_reason_frequency: `{'deleted_text_near_match': 3, 'deleted_topic_context_cooldown': 6, 'temporal_context_unverified': 3, 'topic_image_pairing_mismatch': 3}`
+- review_items: `2`
+- blockers: `none`
+- warnings: `none`
+- blocked_reason_frequency: `{}`
 - review_required_candidate_count: `0`
-- READY_candidate_count: `3`
-- BLOCKED_candidate_count: `6`
+- READY_candidate_count: `2`
+- BLOCKED_candidate_count: `0`
 - stale_cleanup_removed: `0`
 
 ## ChatGPT Decision
 
-- decision: `REVIEW_READY_NOT_POST_READY`
-- approved_for_review: `1`
-- not_approved_for_posting: `2`
-- must_remain_blocked: `2`
-- refill_required: `true`
-- repair_actions: `6`
+- decision: `CONSTANT_REVIEW_ENABLED`
+- approved_for_review: `0`
+- not_approved_for_posting: `0`
+- must_remain_blocked: `0`
+- refill_required: `false`
+- repair_actions: `0`
 - repair_execution_status: `COMPLETED_REVIEW_ONLY`
-- repaired_candidate_count: `3`
-- context_evidence_request_count: `3`
-- average_repair_quality_score: `85.0`
-- average_repair_confidence: `70.0`
-- repair_regression_risk_frequency: `{'medium': 3}`
-- recurring_repair_failure_clusters: `2`
+- repaired_candidate_count: `0`
+- context_evidence_request_count: `0`
+- average_repair_quality_score: `0`
+- average_repair_confidence: `0`
+- repair_regression_risk_frequency: `{}`
+- recurring_repair_failure_clusters: `0`
 
 ## Deleted Learning Cooldown
 
-- `2055938300708626713` candidate `vln-gen-20260516-001`: `162.5`h remaining until `2026-05-24T18:22:16+09:00`
+- `2055938300708626713` candidate `vln-gen-20260516-001`: `116.4`h remaining until `2026-05-24T18:22:16+09:00`
 
 ## Validation
 
@@ -1113,10 +1412,6 @@ Return only JSON matching the expected response schema. Do not ask Codex to post
 
 ## Unresolved Issues
 
-- context_evidence source fileの標準形式を決める必要がある
-- 候補が全部BLOCKEDのときのrefill処理は未実装
-- 画像metadataが薄い候補のtopic-image判定をどう補強するか
-- READYだがhuman_approved_for_posting=falseの候補をreview inboxとして別表示できるか
 - Deleted learning cooldown is active for recent failed posts.
 
 ## Next Actions
@@ -1129,6 +1424,18 @@ Return only JSON matching the expected response schema. Do not ask Codex to post
 
 - ChatGPT can read this contract and the JSON handoff files through the GitHub connector after commit/push.
 - Codex should only publish handoff/review/report files for this loop; posting artifacts stay gated.
+
+## ChatGPT Bridge
+
+- bridge prompt: `reports/chatgpt_bridge_prompt.md`
+- last ingestion at JST: `2026-05-19T21:58:33+09:00`
+- last_chatgpt_response_status: `ACCEPTED`
+- ingestion_errors: `none`
+- safe_to_post: `false`
+- posting_execution_status: `BLOCKED`
+- posting executed: `NO`
+- upload executed: `NO`
+- tweet creation executed: `NO`
 ```
 
 ## reports/villain_quality_review_summary.md
@@ -1136,9 +1443,9 @@ Return only JSON matching the expected response schema. Do not ask Codex to post
 ``` markdown
 # Villain Quality Review Summary
 
-- Generated at JST: `2026-05-17T23:49:27+09:00`
-- final_status: `BLOCKED`
-- queue_health_status: `BLOCKED`
+- Generated at JST: `2026-05-19T21:55:39+09:00`
+- final_status: `READY`
+- queue_health_status: `CLEAR`
 - review_board_status: `READY`
 - posting_execution_status: `BLOCKED`
 - executable_ready_count: `0`
@@ -1150,12 +1457,12 @@ Return only JSON matching the expected response schema. Do not ask Codex to post
 
 ## Items
 
-### `vln-gen-20260517-shop-001`
+### `vln-stream-20260519-stock-002`
 
-- execution_id: `vln-exec-daytime-vln-gen-20260517-shop-001`
+- execution_id: `vln-exec-daytime-vln-stream-20260519-stock-002`
 - slot: `daytime`
-- passcode: `H9J6L`
-- image: `/Users/raindog/Documents/New project/villain_post_images/99f8c686-07e1-48d0-ad0d-4ce5f14939e2.png`
+- passcode: `DKLS8`
+- image: `/Users/raindog/Documents/New project/villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png`
 - final_quality_status: `READY`
 - review_state: `CANDIDATE_READY_FOR_HUMAN_REVIEW`
 - human_approved_for_posting: `false`
@@ -1166,19 +1473,19 @@ Return only JSON matching the expected response schema. Do not ask Codex to post
 - context evidence verified: `false`
 - topic-image fit: `OK`
 - ad-like score: `0`
-- native tone score: `82`
-- persona fit: `83`
+- native tone score: `77`
+- persona fit: `78`
 - deleted-nearby match: `0`
 
 ```text
-服だけで見ると、
-少し足りない。
+持ち物って、
+置かれた場所で
+だいたい正体が出る。
 
-人が着て、
-空気が移って、
-やっと$villainっぽくなる。
+きれいな写真より、
+帰ってきた後の方が本物っぽい。
 
-#着て稼ぐ #villain $PPP @0xmavillain H9J6L
+#着て稼ぐ #villain $PPP @0xmavillain DKLS8
 ```
 
 Human check:
@@ -1188,130 +1495,12 @@ Human check:
 - 広告ではなくタイムライン上の観測として混ざるか？
 - 鬼徹アカウントの余白と人格に合っているか？
 
-### `vln-gen-20260516-001`
+### `vln-stream-20260519-stock-001`
 
-- execution_id: `vln-exec-daytime-vln-gen-20260516-001`
-- slot: `daytime`
-- passcode: `F3X7M`
-- image: `/Users/raindog/Documents/New project/villain_post_images/20260514集会.png`
-- final_quality_status: `BLOCKED`
-- review_state: `CANDIDATE_BLOCKED`
-- human_approved_for_posting: `false`
-- repair_action: `archive_or_drop`
-- blockers: `deleted_text_near_match, deleted_topic_context_cooldown, temporal_context_unverified`
-- warnings: `deleted_nearby_match_found`
-- context terms: `昨日, 集会`
-- context evidence verified: `false`
-- topic-image fit: `OK`
-- ad-like score: `0`
-- native tone score: `82`
-- persona fit: `88`
-- deleted-nearby match: `1`
-
-```text
-昨日の集会、
-まだ少し残ってる。
-
-説明より、
-人が集まってる事実の方が強い。
-
-$villainは、
-そこがちょっと変。
-
-#着て稼ぐ #villain $PPP @0xmavillain F3X7M
-```
-
-Human check:
-- この投稿は何を見て言っているのか？
-- 本文の現実文脈は今日の状況と一致しているか？
-- 画像は本文topicを本当に支えているか？
-- 広告ではなくタイムライン上の観測として混ざるか？
-- 鬼徹アカウントの余白と人格に合っているか？
-
-### `vln-gen-20260516-003`
-
-- execution_id: `vln-exec-daytime-vln-gen-20260516-003`
-- slot: `daytime`
-- passcode: `J1M5V`
-- image: `/Users/raindog/Documents/New project/villain_post_images/生成画像1.png`
-- final_quality_status: `BLOCKED`
-- review_state: `CANDIDATE_BLOCKED`
-- human_approved_for_posting: `false`
-- repair_action: `image_replacement_required`
-- blockers: `deleted_topic_context_cooldown, topic_image_pairing_mismatch`
-- warnings: `deleted_nearby_match_found`
-- context terms: `none`
-- context evidence verified: `false`
-- topic-image fit: `MISMATCH`
-- ad-like score: `0`
-- native tone score: `92`
-- persona fit: `93`
-- deleted-nearby match: `1`
-
-```text
-話題になる服って、
-だいたい服だけじゃない。
-
-誰が着て、
-どこで集まってるかまで含めて、
-少し残る。
-
-#着て稼ぐ #villain $PPP @0xmavillain J1M5V
-```
-
-Human check:
-- この投稿は何を見て言っているのか？
-- 本文の現実文脈は今日の状況と一致しているか？
-- 画像は本文topicを本当に支えているか？
-- 広告ではなくタイムライン上の観測として混ざるか？
-- 鬼徹アカウントの余白と人格に合っているか？
-
-### `vln-gen-20260516-001`
-
-- execution_id: `vln-exec-night-vln-gen-20260516-001`
+- execution_id: `vln-exec-night-vln-stream-20260519-stock-001`
 - slot: `night`
-- passcode: `F3X7M`
-- image: `/Users/raindog/Documents/New project/villain_post_images/20260514集会.png`
-- final_quality_status: `BLOCKED`
-- review_state: `CANDIDATE_BLOCKED`
-- human_approved_for_posting: `false`
-- repair_action: `archive_or_drop`
-- blockers: `deleted_text_near_match, deleted_topic_context_cooldown, temporal_context_unverified`
-- warnings: `deleted_nearby_match_found`
-- context terms: `昨日, 集会`
-- context evidence verified: `false`
-- topic-image fit: `OK`
-- ad-like score: `0`
-- native tone score: `82`
-- persona fit: `88`
-- deleted-nearby match: `1`
-
-```text
-昨日の集会、
-まだ少し残ってる。
-
-説明より、
-人が集まってる事実の方が強い。
-
-$villainは、
-そこがちょっと変。
-
-#着て稼ぐ #villain $PPP @0xmavillain F3X7M
-```
-
-Human check:
-- この投稿は何を見て言っているのか？
-- 本文の現実文脈は今日の状況と一致しているか？
-- 画像は本文topicを本当に支えているか？
-- 広告ではなくタイムライン上の観測として混ざるか？
-- 鬼徹アカウントの余白と人格に合っているか？
-
-### `vln-gen-20260516-002`
-
-- execution_id: `vln-exec-night-vln-gen-20260516-002`
-- slot: `night`
-- passcode: `H9J6L`
-- image: `/Users/raindog/Documents/New project/villain_post_images/20260514集会.png`
+- passcode: `C14QB`
+- image: `/Users/raindog/Documents/New project/villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png`
 - final_quality_status: `READY`
 - review_state: `CANDIDATE_READY_FOR_HUMAN_REVIEW`
 - human_approved_for_posting: `false`
@@ -1322,171 +1511,19 @@ Human check:
 - context evidence verified: `false`
 - topic-image fit: `OK`
 - ad-like score: `0`
-- native tone score: `82`
-- persona fit: `83`
+- native tone score: `72`
+- persona fit: `78`
 - deleted-nearby match: `0`
 
 ```text
-気づくと、
-また$villainの話になってる。
+机に置いた瞬間、
+グッズじゃなくて、
+生活の一部になる。
 
-服の話だけなら、
-たぶんここまで残らない。
+広告より、
+使われた跡の方が強い。
 
-#着て稼ぐ #villain $PPP @0xmavillain H9J6L
-```
-
-Human check:
-- この投稿は何を見て言っているのか？
-- 本文の現実文脈は今日の状況と一致しているか？
-- 画像は本文topicを本当に支えているか？
-- 広告ではなくタイムライン上の観測として混ざるか？
-- 鬼徹アカウントの余白と人格に合っているか？
-
-### `vln-gen-20260516-003`
-
-- execution_id: `vln-exec-night-vln-gen-20260516-003`
-- slot: `night`
-- passcode: `J1M5V`
-- image: `/Users/raindog/Documents/New project/villain_post_images/生成画像1.png`
-- final_quality_status: `BLOCKED`
-- review_state: `CANDIDATE_BLOCKED`
-- human_approved_for_posting: `false`
-- repair_action: `image_replacement_required`
-- blockers: `deleted_topic_context_cooldown, topic_image_pairing_mismatch`
-- warnings: `deleted_nearby_match_found`
-- context terms: `none`
-- context evidence verified: `false`
-- topic-image fit: `MISMATCH`
-- ad-like score: `0`
-- native tone score: `92`
-- persona fit: `93`
-- deleted-nearby match: `1`
-
-```text
-話題になる服って、
-だいたい服だけじゃない。
-
-誰が着て、
-どこで集まってるかまで含めて、
-少し残る。
-
-#着て稼ぐ #villain $PPP @0xmavillain J1M5V
-```
-
-Human check:
-- この投稿は何を見て言っているのか？
-- 本文の現実文脈は今日の状況と一致しているか？
-- 画像は本文topicを本当に支えているか？
-- 広告ではなくタイムライン上の観測として混ざるか？
-- 鬼徹アカウントの余白と人格に合っているか？
-
-### `vln-gen-20260516-001`
-
-- execution_id: `vln-exec-late_night-vln-gen-20260516-001`
-- slot: `late_night`
-- passcode: `F3X7M`
-- image: `/Users/raindog/Documents/New project/villain_post_images/20260514集会.png`
-- final_quality_status: `BLOCKED`
-- review_state: `CANDIDATE_BLOCKED`
-- human_approved_for_posting: `false`
-- repair_action: `archive_or_drop`
-- blockers: `deleted_text_near_match, deleted_topic_context_cooldown, temporal_context_unverified`
-- warnings: `deleted_nearby_match_found`
-- context terms: `昨日, 集会`
-- context evidence verified: `false`
-- topic-image fit: `OK`
-- ad-like score: `0`
-- native tone score: `82`
-- persona fit: `88`
-- deleted-nearby match: `1`
-
-```text
-昨日の集会、
-まだ少し残ってる。
-
-説明より、
-人が集まってる事実の方が強い。
-
-$villainは、
-そこがちょっと変。
-
-#着て稼ぐ #villain $PPP @0xmavillain F3X7M
-```
-
-Human check:
-- この投稿は何を見て言っているのか？
-- 本文の現実文脈は今日の状況と一致しているか？
-- 画像は本文topicを本当に支えているか？
-- 広告ではなくタイムライン上の観測として混ざるか？
-- 鬼徹アカウントの余白と人格に合っているか？
-
-### `vln-gen-20260516-002`
-
-- execution_id: `vln-exec-late_night-vln-gen-20260516-002`
-- slot: `late_night`
-- passcode: `H9J6L`
-- image: `/Users/raindog/Documents/New project/villain_post_images/20260514集会.png`
-- final_quality_status: `READY`
-- review_state: `CANDIDATE_READY_FOR_HUMAN_REVIEW`
-- human_approved_for_posting: `false`
-- repair_action: `none`
-- blockers: `none`
-- warnings: `none`
-- context terms: `none`
-- context evidence verified: `false`
-- topic-image fit: `OK`
-- ad-like score: `0`
-- native tone score: `82`
-- persona fit: `83`
-- deleted-nearby match: `0`
-
-```text
-気づくと、
-また$villainの話になってる。
-
-服の話だけなら、
-たぶんここまで残らない。
-
-#着て稼ぐ #villain $PPP @0xmavillain H9J6L
-```
-
-Human check:
-- この投稿は何を見て言っているのか？
-- 本文の現実文脈は今日の状況と一致しているか？
-- 画像は本文topicを本当に支えているか？
-- 広告ではなくタイムライン上の観測として混ざるか？
-- 鬼徹アカウントの余白と人格に合っているか？
-
-### `vln-gen-20260516-003`
-
-- execution_id: `vln-exec-late_night-vln-gen-20260516-003`
-- slot: `late_night`
-- passcode: `J1M5V`
-- image: `/Users/raindog/Documents/New project/villain_post_images/生成画像1.png`
-- final_quality_status: `BLOCKED`
-- review_state: `CANDIDATE_BLOCKED`
-- human_approved_for_posting: `false`
-- repair_action: `image_replacement_required`
-- blockers: `deleted_topic_context_cooldown, topic_image_pairing_mismatch`
-- warnings: `deleted_nearby_match_found`
-- context terms: `none`
-- context evidence verified: `false`
-- topic-image fit: `MISMATCH`
-- ad-like score: `0`
-- native tone score: `92`
-- persona fit: `93`
-- deleted-nearby match: `1`
-
-```text
-話題になる服って、
-だいたい服だけじゃない。
-
-誰が着て、
-どこで集まってるかまで含めて、
-少し残る。
-
-#着て稼ぐ #villain $PPP @0xmavillain J1M5V
+#着て稼ぐ #villain $PPP @0xmavillain C14QB
 ```
 
 Human check:

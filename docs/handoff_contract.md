@@ -156,6 +156,49 @@ Bridge invariants:
 - `safe_to_post=true` is rejected unless a separate explicit human approval artifact exists
 - the human reviews the final decision summary, not the raw file gathering
 
+### Image Review Bridge
+
+Codex must include an image review packet in `reports/chatgpt_bridge_prompt.md` whenever generated/shop-derived images are available.
+
+Image review packet fields:
+
+- `image_id`
+- `image_path`
+- `image_type`
+- `prompt_family`
+- `source_products`
+- `fit_notes`
+- `recommended_text_angle`
+- `currently_in_pilot_plan`
+- `chatgpt_review_focus`
+
+ChatGPT decision fields for image review:
+
+- `image_review_decisions`
+- `candidate_image_pairing`
+
+Allowed image decisions:
+
+- `USE`: suitable for review-board candidates.
+- `REJECT`: do not use; likely nonexistent product, ad-like, mismatched, or otherwise unsafe for natural posting.
+- `REPAIR`: usable direction, but needs regeneration or image replacement.
+- `HOLD`: keep as stock but do not attach to scheduled candidates yet.
+
+Allowed candidate-image pairing decisions:
+
+- `PAIR_OK_FOR_REVIEW`
+- `IMAGE_REPLACEMENT_REQUIRED`
+- `TEXT_REWRITE_REQUIRED`
+- `HOLD`
+
+Image bridge invariants:
+
+- `USE` means review-ready only; it does not approve posting.
+- `REJECT` must remove the image from automatic candidate pairing or mark it as blocked.
+- generated images must not invent apparel or goods that do not exist in the official shop references.
+- Codex may generate and stock images, but ChatGPT should judge naturalness, product fidelity, ad-likeness, and text-image fit.
+- posting/upload/tweet creation remain disabled in bridge workflows.
+
 ## Handoff-Only Commit/Push Mode
 
 `scripts/handoff_commit_push.py` provides a whitelist-only Git publication path for supervisory state.

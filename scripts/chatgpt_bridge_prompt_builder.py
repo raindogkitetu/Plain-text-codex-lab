@@ -19,6 +19,8 @@ ROOT = Path(__file__).resolve().parents[1]
 CODEX_OUTBOX = ROOT / "data" / "codex_to_chatgpt_handoff.json"
 HANDOFF_STATE = ROOT / "data" / "agent_handoff_state.json"
 QUALITY_QUEUE = ROOT / "data" / "villain_quality_review_queue.json"
+AUTO_POST_PILOT = ROOT / "data" / "villain_auto_post_pilot.json"
+WEARABLE_STOCK = ROOT / "data" / "villain_shop_wearable_stock.json"
 HANDOFF_REPORT = ROOT / "reports" / "agent_handoff_status.md"
 QUALITY_REPORT = ROOT / "reports" / "villain_quality_review_summary.md"
 BRIDGE_PROMPT = ROOT / "reports" / "chatgpt_bridge_prompt.md"
@@ -30,6 +32,8 @@ INPUT_FILES = [
     CODEX_OUTBOX,
     HANDOFF_STATE,
     QUALITY_QUEUE,
+    AUTO_POST_PILOT,
+    WEARABLE_STOCK,
     HANDOFF_REPORT,
     QUALITY_REPORT,
 ]
@@ -50,6 +54,25 @@ EXPECTED_RESPONSE_SCHEMA = {
         "refill_required": False,
         "next_codex_actions": [],
         "policy_clarification": [],
+        "image_review_decisions": [
+            {
+                "image_id": "",
+                "image_path": "",
+                "decision": "USE | REJECT | REPAIR | HOLD",
+                "reason": "",
+                "fit_for_candidate_ids": [],
+                "reject_if": [],
+                "repair_request": "",
+            }
+        ],
+        "candidate_image_pairing": [
+            {
+                "candidate_id": "",
+                "image_path": "",
+                "decision": "PAIR_OK_FOR_REVIEW | IMAGE_REPLACEMENT_REQUIRED | TEXT_REWRITE_REQUIRED | HOLD",
+                "reason": "",
+            }
+        ],
     },
 }
 
@@ -95,6 +118,64 @@ def bridge_hash(bundle: dict[str, str]) -> str:
     return digest.hexdigest()
 
 
+def stock_image_review_packet() -> list[dict[str, Any]]:
+    stock = read_json(WEARABLE_STOCK, {})
+    pilot = read_json(AUTO_POST_PILOT, {})
+    planned_images = {
+        item.get("image", {}).get("file_path", "")
+        for item in pilot.get("pilot_plan", [])
+        if item.get("image", {}).get("file_path")
+    }
+    packet: list[dict[str, Any]] = []
+    for item in stock.get("items", []):
+        path = item.get("path", "")
+        if not path:
+            continue
+        packet.append(
+            {
+                "image_id": item.get("id", ""),
+                "image_path": path,
+                "image_type": item.get("image_type", ""),
+                "prompt_family": item.get("prompt_family", ""),
+                "source_products": item.get("source_products", []),
+                "fit_notes": item.get("fit_notes", ""),
+                "recommended_text_angle": item.get("recommended_text_angle", ""),
+                "currently_in_pilot_plan": path in planned_images,
+                "chatgpt_review_focus": [
+                    "実在しない商品に見えないか",
+                    "広告臭くないか",
+                    "人物/生活痕として自然か",
+                    "投稿文と噛み合うか",
+                    "コミュニティ素材として拾いやすいか",
+                ],
+            }
+        )
+    return packet
+
+
+def candidate_pairing_packet() -> list[dict[str, Any]]:
+    pilot = read_json(AUTO_POST_PILOT, {})
+    packet: list[dict[str, Any]] = []
+    for item in pilot.get("pilot_plan", []):
+        packet.append(
+            {
+                "candidate_id": item.get("source_id", ""),
+                "execution_id": f"vln-exec-{item.get('slot')}-{item.get('source_id')}",
+                "slot": item.get("slot", ""),
+                "passcode": item.get("passcode", ""),
+                "text": item.get("text", ""),
+                "image_path": item.get("image", {}).get("file_path", ""),
+                "image_type": item.get("image", {}).get("image_type", ""),
+                "quality_status": item.get("quality_review", {}).get("final_quality_status", ""),
+                "blockers": item.get("blockers", []),
+                "warnings": item.get("warnings", []),
+                "required_tokens_verified": item.get("required_tokens_verified", False),
+                "risk": item.get("risk", ""),
+            }
+        )
+    return packet
+
+
 def build_prompt(generated_at: str, bundle: dict[str, str], prompt_hash: str) -> str:
     outbox = read_json(CODEX_OUTBOX, {})
     state = read_json(HANDOFF_STATE, {})
@@ -133,9 +214,13 @@ def build_prompt(generated_at: str, bundle: dict[str, str], prompt_hash: str) ->
         "1. Decide whether current candidates should stay in review, be repaired, be refilled, or remain blocked.",
         "2. Keep READY as review-ready only, not post-ready.",
         "3. Keep `safe_to_post=false` and `posting_execution_status=BLOCKED` unless a separate explicit human approval artifact exists.",
-        "4. Return only decision JSON. No prose outside JSON.",
+        "4. Review generated/shop-derived images before they become recurring scheduled candidates.",
+        "5. Reject images that look like non-existent apparel/goods, pasted product cutouts, ads, or mismatched visuals.",
+        "6. Return only decision JSON. No prose outside JSON.",
         "",
         fenced("Expected Response Schema", json.dumps(EXPECTED_RESPONSE_SCHEMA, ensure_ascii=False, indent=2), "json"),
+        fenced("Image Review Packet", json.dumps(stock_image_review_packet(), ensure_ascii=False, indent=2), "json"),
+        fenced("Candidate Image Pairing Packet", json.dumps(candidate_pairing_packet(), ensure_ascii=False, indent=2), "json"),
     ]
     for name in sorted(bundle):
         language = "json" if name.endswith(".json") else "markdown"
@@ -150,13 +235,17 @@ def main() -> None:
     prompt = build_prompt(generated_at, bundle, prompt_hash)
     BRIDGE_PROMPT.parent.mkdir(parents=True, exist_ok=True)
     BRIDGE_PROMPT.write_text(prompt, encoding="utf-8")
+    previous_exchange = read_json(BRIDGE_EXCHANGE, {})
     exchange = {
         "bridge_prompt_hash": prompt_hash,
         "db_name": "ChatGPT Bridge Exchange",
         "expected_response_schema": EXPECTED_RESPONSE_SCHEMA,
         "generated_at_jst": generated_at,
+        "image_review_packet_count": len(stock_image_review_packet()),
         "input_files": sorted(bundle),
-        "last_chatgpt_response_status": "PENDING",
+        "last_chatgpt_response_errors": previous_exchange.get("last_chatgpt_response_errors"),
+        "last_chatgpt_response_ingested_at_jst": previous_exchange.get("last_chatgpt_response_ingested_at_jst"),
+        "last_chatgpt_response_status": previous_exchange.get("last_chatgpt_response_status", "PENDING"),
         "posting_executed": False,
         "safe_to_post": False,
         "schema_version": SCHEMA_VERSION,

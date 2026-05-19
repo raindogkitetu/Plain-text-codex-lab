@@ -1,6 +1,6 @@
 # Agent Handoff Status
 
-- Generated at JST: `2026-05-17T23:49:27+09:00`
+- Generated at JST: `2026-05-19T21:55:39+09:00`
 - schema_version: `handoff.codex_to_chatgpt.v1`
 - status: `READY_FOR_CHATGPT_REVIEW`
 - review_state: `CHATGPT_DECISION_CONSUMED`
@@ -10,41 +10,41 @@
 
 ## Quality Review
 
-- quality_status: `BLOCKED`
-- queue_health_status: `BLOCKED`
+- quality_status: `READY`
+- queue_health_status: `CLEAR`
 - review_board_status: `READY`
 - posting_execution_status: `BLOCKED`
 - executable_ready_count: `0`
 - safe_to_review: `true`
 - safe_to_post: `false`
-- review_items: `9`
-- blockers: `deleted_text_near_match, deleted_topic_context_cooldown, temporal_context_unverified, topic_image_pairing_mismatch`
-- warnings: `deleted_nearby_match_found`
-- blocked_reason_frequency: `{'deleted_text_near_match': 3, 'deleted_topic_context_cooldown': 6, 'temporal_context_unverified': 3, 'topic_image_pairing_mismatch': 3}`
+- review_items: `2`
+- blockers: `none`
+- warnings: `none`
+- blocked_reason_frequency: `{}`
 - review_required_candidate_count: `0`
-- READY_candidate_count: `3`
-- BLOCKED_candidate_count: `6`
+- READY_candidate_count: `2`
+- BLOCKED_candidate_count: `0`
 - stale_cleanup_removed: `0`
 
 ## ChatGPT Decision
 
-- decision: `REVIEW_READY_NOT_POST_READY`
-- approved_for_review: `1`
-- not_approved_for_posting: `2`
-- must_remain_blocked: `2`
-- refill_required: `true`
-- repair_actions: `6`
+- decision: `CONSTANT_REVIEW_ENABLED`
+- approved_for_review: `0`
+- not_approved_for_posting: `0`
+- must_remain_blocked: `0`
+- refill_required: `false`
+- repair_actions: `0`
 - repair_execution_status: `COMPLETED_REVIEW_ONLY`
-- repaired_candidate_count: `3`
-- context_evidence_request_count: `3`
-- average_repair_quality_score: `85.0`
-- average_repair_confidence: `70.0`
-- repair_regression_risk_frequency: `{'medium': 3}`
-- recurring_repair_failure_clusters: `2`
+- repaired_candidate_count: `0`
+- context_evidence_request_count: `0`
+- average_repair_quality_score: `0`
+- average_repair_confidence: `0`
+- repair_regression_risk_frequency: `{}`
+- recurring_repair_failure_clusters: `0`
 
 ## Deleted Learning Cooldown
 
-- `2055938300708626713` candidate `vln-gen-20260516-001`: `162.5`h remaining until `2026-05-24T18:22:16+09:00`
+- `2055938300708626713` candidate `vln-gen-20260516-001`: `116.4`h remaining until `2026-05-24T18:22:16+09:00`
 
 ## Validation
 
@@ -55,10 +55,6 @@
 
 ## Unresolved Issues
 
-- context_evidence source fileの標準形式を決める必要がある
-- 候補が全部BLOCKEDのときのrefill処理は未実装
-- 画像metadataが薄い候補のtopic-image判定をどう補強するか
-- READYだがhuman_approved_for_posting=falseの候補をreview inboxとして別表示できるか
 - Deleted learning cooldown is active for recent failed posts.
 
 ## Next Actions
@@ -75,7 +71,7 @@
 ## ChatGPT Bridge
 
 - bridge prompt: `reports/chatgpt_bridge_prompt.md`
-- last ingestion at JST: `2026-05-17T23:52:43+09:00`
+- last ingestion at JST: `2026-05-19T21:58:33+09:00`
 - last_chatgpt_response_status: `ACCEPTED`
 - ingestion_errors: `none`
 - safe_to_post: `false`
