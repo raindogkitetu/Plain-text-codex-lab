@@ -1,0 +1,65 @@
+name: Villain ChatGPT Review Bridge
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "7 * * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: villain-chatgpt-review-bridge
+  cancel-in-progress: false
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    env:
+      OPENAI_MODEL: ${{ vars.OPENAI_MODEL || 'gpt-5.4-mini' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Build bridge prompt
+        run: python3 scripts/chatgpt_bridge_prompt_builder.py
+
+      - name: Run ChatGPT review bot
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python3 scripts/github_chatgpt_review_bot.py
+
+      - name: Ingest ChatGPT decision
+        run: python3 scripts/chatgpt_decision_ingestor.py
+
+      - name: Validate review-only invariants
+        run: |
+          python3 -m py_compile \
+            scripts/chatgpt_bridge_prompt_builder.py \
+            scripts/github_chatgpt_review_bot.py \
+            scripts/chatgpt_decision_ingestor.py
+          jq empty data/*.json status.json
+          jq -e '.safe_to_post == false' data/chatgpt_to_codex_handoff.json
+          jq -e '.posting_execution_status == "BLOCKED"' data/chatgpt_to_codex_handoff.json
+          ! grep -R "create_tweet(" scripts/github_chatgpt_review_bot.py
+          ! grep -R "upload_media(" scripts/github_chatgpt_review_bot.py
+
+      - name: Commit review state
+        run: |
+          git config user.name "villain-review-bot"
+          git config user.email "villain-review-bot@users.noreply.github.com"
+          git add -f \
+            data/chatgpt_to_codex_handoff.json \
+            data/chatgpt_bridge_exchange.json \
+            data/agent_handoff_trajectory.json \
+            reports/agent_handoff_status.md \
+            reports/chatgpt_bridge_prompt.md \
+            reports/chatgpt_github_review_bot.md
+          if git diff --cached --quiet; then
+            echo "No review state changes to commit."
+          else
+            git commit -m "chore: update chatgpt review bridge state [skip ci]"
+            git push
+          fi
