@@ -71,7 +71,7 @@
 ## ChatGPT Bridge
 
 - bridge prompt: `reports/chatgpt_bridge_prompt.md`
-- last ingestion at JST: `2026-05-22T04:05:50+09:00`
+- last ingestion at JST: `2026-05-22T05:56:07+09:00`
 - last_chatgpt_response_status: `ACCEPTED`
 - ingestion_errors: `none`
 - safe_to_post: `false`
