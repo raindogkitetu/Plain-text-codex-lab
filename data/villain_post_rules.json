@@ -1,139 +1,373 @@
 {
-  "db_name": "Villain投稿ルールDB",
-  "version": "1.1.1",
-  "created_at": "2026-05-09",
-  "purpose": "Whitepaper思想を今日の話題へ翻訳し、Villain形式の投稿案を生成するための運用ルールを定義する。",
-  "source_policy": {
-    "posting_execution_allowed": false,
-    "draft_generation_allowed": true,
-    "assumption_based_success_allowed": false,
-    "required_sources": [
-      "Villain Whitepaper",
-      "Villain公式サイト",
-      "Villain公式X",
-      "Ooguri/ooguri888 important community context",
-      "既存Villain投稿例",
-      "data/villain_test_plan.json",
-      "data/villain_knowledge.json",
-      "data/claude_stop_test_plan.json"
+  "boss_product_visual_policy": {
+    "avoid": [
+      "exaggerated cyberpunk",
+      "exaggerated streetwear aesthetics",
+      "invented apparel designs",
+      "fake product text",
+      "nonexistent logos"
     ],
-    "source_status": {
-      "whitepaper": {
-        "status": "verified_public_source",
-        "url": "https://0xmavillain.com/whitepaper/",
-        "checked_at": "2026-05-09",
-        "notes": "公式サイト上のWhitepaperを参照。"
-      },
-      "official_site": {
-        "status": "verified_public_source",
-        "url": "https://0xmavillain.com/",
-        "checked_at": "2026-05-09",
-        "notes": "公式サイトの主要導線を参照。"
-      },
-      "official_x": {
-        "status": "official_url_registered_content_requires_manual_check",
-        "url": "https://x.com/0xmavillain",
-        "checked_at": "2026-05-09",
-        "notes": "公式X URL。取得制限がある場合、投稿本文や最新情報を推測しない。投稿案生成時は公式X URL確認を優先する。"
-      },
-      "official_socials": {
-        "status": "official_urls_registered_content_requires_manual_check",
-        "urls": [
-          "https://www.instagram.com/0xmavillain",
-          "https://www.tiktok.com/@0xmavillain_?_t=ZS-8zZo8rXwavN&_r=1",
-          "https://lin.ee/iMdqKKE"
-        ],
-        "checked_at": "2026-05-09",
-        "notes": "Instagram、TikTok、LINE official。取得制限や外部アプリ遷移がある場合、内容を推測しない。"
-      },
-      "wear2earn_shop": {
-        "status": "official_url_registered_requires_manual_check",
-        "url": "https://shop.0xmavillain.com/secret_ec/secret_ec_auths/login",
-        "checked_at": "2026-05-09",
-        "notes": "購入導線。ログイン、購入、カート、決済操作は禁止。"
-      },
-      "nft_collections": {
-        "status": "urls_registered",
-        "main_nft": "coming soon",
-        "urls": [
-          "https://opensea.io/collection/genesis-pass-8",
-          "https://opensea.io/collection/ambassador-pass",
-          "https://opensea.io/ja/collection/the-pool-7"
-        ],
-        "checked_at": "2026-05-09",
-        "notes": "NFT本体はユーザー指定でcoming soon。OpenSea collectionは投稿前に再確認し、購入・offer・wallet接続はしない。"
-      },
-      "existing_post_examples": {
-        "status": "official_user_examples_registered_content_requires_manual_check",
-        "urls": [
-          "https://x.com/raindog_kitetu/status/2052984432139837524",
-          "https://x.com/raindog_kitetu/status/2052863630291673245"
-        ],
-        "checked_at": "2026-05-09",
-        "notes": "既存運用例。取得できない場合、本文や構成を推測しない。"
-      },
-      "ooguri888": {
-        "status": "important_reference_content_requires_manual_check",
-        "url": "https://x.com/ooguri888",
-        "mirror_url": "https://www.twstalker.com/ooguri888",
-        "checked_at": "2026-05-09",
-        "notes": "Villainコミュニティのボスとして重要視する。本人投稿、Villain関連RT、集会/イベント/店舗/RELiC文脈を参照するが、未確認の本人発言引用や肩書き断定は禁止。"
-      },
-      "ppp_screenshot_reference": {
-        "status": "user_provided_evidence_requires_official_or_onchain_confirmation_for_claims",
-        "local_path": "/Users/raindog/Desktop/スクリーンショット 0008-05-09 23.43.25.png",
-        "checked_at": "2026-05-09",
-        "notes": "$PPP DEX/Chart/note、contract address、Villains Community poster contextを確認。投稿案ではスクショ由来と明示し、断定には公式またはオンチェーン参照を付ける。"
-      },
-      "local_test_plans": {
-        "status": "verified_local_files",
-        "files": [
-          "data/villain_test_plan.json",
-          "data/claude_stop_test_plan.json",
-          "data/villain_knowledge.json"
-        ]
-      }
-    }
+    "large_alien_face_tee": {
+      "allowed_contexts": [
+        "residue",
+        "lifestyle",
+        "daily_use",
+        "quiet_ownership",
+        "after_use_atmosphere"
+      ],
+      "frequent_reuse_allowed": true,
+      "notes": "Large alien-face tee is intentionally approved as a recurring hero item. Do not penalize frequent reuse when grounded in real shop references.",
+      "status": "approved_recurring_hero_item"
+    },
+    "preferred_mood": [
+      "someone was here",
+      "daily residue",
+      "quiet ownership",
+      "after-use atmosphere"
+    ],
+    "real_product_mix": {
+      "encouraged": true,
+      "products": [
+        "large alien-face tee",
+        "caps",
+        "bucket hats",
+        "thermos",
+        "haul bags",
+        "hoodies",
+        "sweat setups",
+        "tees",
+        "keyholders"
+      ],
+      "rule": "Mix real products in grounded daily-life compositions; avoid inventing product designs or text."
+    },
+    "style_anchor": "grounded Japanese minimal styling from actual shop references",
+    "updated_at_jst": "2026-05-22T22:56:19+09:00"
   },
   "core_conversion_model": {
-    "name": "Whitepaper思想から今日の話題への翻訳",
     "flow": [
       {
-        "step": 1,
+        "description": "Whitepaperまたは公式発表から、事実、思想、数字、導線、禁止リスクを抜き出す。",
         "name": "source_extract",
-        "description": "Whitepaperまたは公式発表から、事実、思想、数字、導線、禁止リスクを抜き出す。"
+        "step": 1
       },
       {
-        "step": 2,
+        "description": "今日の話題を、Wear2Earn、community、apparel、NFT、VLN、PPP、event、game、pool、passcodeのいずれかに接続する。",
         "name": "today_mapping",
-        "description": "今日の話題を、Wear2Earn、community、apparel、NFT、VLN、PPP、event、game、pool、passcodeのいずれかに接続する。"
+        "step": 2
       },
       {
-        "step": 3,
+        "description": "短く、呼びかけ、参加感、少し強い温度で整える。ただし事実を盛らない。",
         "name": "villain_voice",
-        "description": "短く、呼びかけ、参加感、少し強い温度で整える。ただし事実を盛らない。"
+        "step": 3
       },
       {
-        "step": 4,
+        "description": "投稿案には画像またはポスター案を必ず付ける。画像なしの投稿案は未完成。",
         "name": "poster_required",
-        "description": "投稿案には画像またはポスター案を必ず付ける。画像なしの投稿案は未完成。"
+        "step": 4
       },
       {
-        "step": 5,
+        "description": "最後に固定フッターとPasscodeを付ける。",
         "name": "fixed_footer",
-        "description": "最後に固定フッターとPasscodeを付ける。"
+        "step": 5
       },
       {
-        "step": 6,
+        "description": "証跡、禁止事項、文字数、Passcode、画像、Villainらしさをチェックする。",
         "name": "quality_gate",
-        "description": "証跡、禁止事項、文字数、Passcode、画像、Villainらしさをチェックする。"
+        "step": 6
       }
+    ],
+    "name": "Whitepaper思想から今日の話題への翻訳"
+  },
+  "created_at": "2026-05-09",
+  "db_name": "Villain投稿ルールDB",
+  "generation_modes": [
+    {
+      "description": "今日の話題を1投稿に翻訳する。",
+      "mode": "daily_topic",
+      "required_inputs": [
+        "today_topic",
+        "source_refs",
+        "poster_concept",
+        "passcode"
+      ]
+    },
+    {
+      "description": "Whitepaper思想を短く解説し、今日の参加導線へ落とす。",
+      "mode": "whitepaper_education",
+      "required_inputs": [
+        "whitepaper_section",
+        "verified_claims",
+        "today_relevance",
+        "poster_concept",
+        "passcode"
+      ]
+    },
+    {
+      "description": "公式に確認済みのイベント、販売、アプリ、Pool、Lotteryなどを短く告知する。",
+      "mode": "campaign_push",
+      "required_inputs": [
+        "official_announcement_url",
+        "campaign_name",
+        "date_or_link",
+        "poster_concept",
+        "passcode"
+      ]
+    }
+  ],
+  "implicit_rules_from_post_examples": {
+    "evidence_note": "公式Xとユーザー指定の既存運用例URLを一次参照にする。取得制限がある場合、投稿本文や暗黙ルールを推測せず、確認済みのWhitepaper/公式サイト/ユーザー提供スクショだけで暫定ルール化する。",
+    "observed_patterns": [
+      {
+        "detail": "#着て稼ぐ だけ、リンクだけ、短い告知だけでもブランド文脈があると成立する。",
+        "rule": "極端に短い投稿も成立する"
+      },
+      {
+        "detail": "コミュニティを個人ではなく集団として召集する。",
+        "rule": "呼びかけは Dear villains / fam / Please gather 系"
+      },
+      {
+        "detail": "日本語ハッシュタグ、英語の短い命令、Web3用語を混在させる。",
+        "rule": "英語と日本語を混ぜる"
+      },
+      {
+        "detail": "矢印、チェック、括弧、短いラベルでポスター的に読ませる。ただし過剰装飾は避ける。",
+        "rule": "記号で温度を作る"
+      },
+      {
+        "detail": "細かい説明を本文に詰めず、リンク、画像、短い合図で誘導する。",
+        "rule": "情報量より参加感を優先する"
+      },
+      {
+        "detail": "長文解説より、今日何を見るか、どこへ行くかを前面に出す。",
+        "rule": "公式投稿はイベント、リリース、Pool、Lottery、TapVillain、Wear2Earnなどを短く出す"
+      },
+      {
+        "detail": "WhitepaperにもNot Investment Adviceとリスク開示があるため、投稿案では価格煽りを禁止する。",
+        "rule": "価格や投資成果の断定は避ける"
+      },
+      {
+        "detail": "ユーザー提供スクショでは、DEX/Chart/note、contract address、Villains Community図解がまとまっている。投稿案では本文を短くし、詳細はポスターと証跡に逃がす。",
+        "rule": "$PPPやCommunity図解はポスター前提で扱う"
+      },
+      {
+        "detail": "ポスターから、海外ユーザーへのリーチ、CEX/DEX手数料バイバック、RELiC/NFTステーキング、DN404、$VLN、Utility Token、限定アパレル、Wear2Earnが循環として読める。ただし数量、条件、買い戻し、配布は公式確認前に断定しない。",
+        "rule": "コミュニティ循環は図解を参照する"
+      }
+    ],
+    "registered_examples": [
+      "https://x.com/raindog_kitetu/status/2052984432139837524",
+      "https://x.com/raindog_kitetu/status/2052863630291673245"
     ]
+  },
+  "post_readiness_policy": {
+    "completion_blockers": [
+      {
+        "condition": "fact_check_status != verified",
+        "notes": "事実確認未完了の場合のみ、完成扱い不可にする。",
+        "result": "完成扱い不可"
+      },
+      {
+        "condition": "any prohibited_content_check status = fail",
+        "notes": "推測断定、証跡なし断定、価格煽り、自動投稿などは投稿不可。",
+        "result": "投稿不可"
+      },
+      {
+        "condition": "any prohibited_content_check status = unchecked",
+        "notes": "禁止事項チェックが未確認の場合は投稿可能にしない。",
+        "result": "投稿可能判定不可"
+      }
+    ],
+    "default_status_after_generation": "draft_candidate",
+    "draft_can_be_marked_postable": true,
+    "not_final_status": "not_final_fact_check_incomplete",
+    "postable_if": [
+      "fact_check_status = verified",
+      "元ネタURL確認 = true",
+      "画像/ポスター添付 = true",
+      "パスコード確認 = true",
+      "all prohibited_content_check statuses = pass",
+      "posting_execution_allowed = false"
+    ],
+    "postable_status": "postable",
+    "posting_execution_allowed": false,
+    "pre_post_checklist_display": [
+      {
+        "label": "元ネタURL確認",
+        "meaning": "投稿本文の事実主張に対応する公式URL、投稿URL、DB証跡、またはユーザー提供証跡がある。",
+        "required_for_postable": true
+      },
+      {
+        "label": "画像/ポスター添付",
+        "meaning": "投稿に使う画像、ポスター、または具体的な添付予定素材がある。",
+        "required_for_postable": true
+      },
+      {
+        "label": "パスコード確認",
+        "meaning": "data/villain_passcodes.json の有効なPasscodeを使用し、固定締めに入っている。",
+        "required_for_postable": true
+      }
+    ],
+    "prohibited_check_status_values": [
+      "pass",
+      "fail",
+      "unchecked"
+    ],
+    "rule": "投稿案生成時は、元ネタURL確認、画像/ポスター添付、パスコード確認を『確認待ち』ではなくチェックリストとして表示する。事実確認が完了し、必須チェックに問題がなければ投稿可能と判定してよい。ただし実投稿はしない。"
+  },
+  "post_structure": {
+    "fixed_footer": {
+      "exact_shape": "#着て稼ぐ #villain @0xmavillain {PASSCODE}",
+      "notes": "最後の行に置く。{PASSCODE}はdata/villain_passcodes.jsonから選ぶ。",
+      "required": true
+    },
+    "hook": {
+      "forbidden": [
+        "必ず儲かる",
+        "今買わないと損",
+        "爆上げ確定",
+        "公式未確認の断定"
+      ],
+      "patterns": [
+        "今日、Web3を着る理由がある。",
+        "ただの服で終わらせない。",
+        "Web3の入口は、ウォレットだけじゃない。",
+        "着ることが、参加になる。",
+        "Dear villains, 集まる時間です。",
+        "次の入口はここ。"
+      ],
+      "purpose": "最初の1行で視線を止める。",
+      "required": true
+    },
+    "media_requirement": {
+      "accepted_types": [
+        "product_photo",
+        "wearing_photo",
+        "poster",
+        "event_poster",
+        "campaign_visual"
+      ],
+      "draft_must_include": [
+        "image_required: true",
+        "image_concept",
+        "visual_subject",
+        "safe_text_overlay",
+        "poster_reference_urls_or_files",
+        "poster_reading_status"
+      ],
+      "forbidden_visuals": [
+        "価格上昇を示すチャート煽り",
+        "未確認コラボを連想させるロゴ合成",
+        "公式でないNFTやTokenを公式風に見せる画像",
+        "ウォレット接続や購入確定を急がせるUI風画像"
+      ],
+      "poster_reference_policy": [
+        "ユーザー提供ポスターは、コミュニティの仕組みを説明する視覚証跡として参照できる。",
+        "ポスター内の小さい文字や経済設計は読み取りミスの可能性があるため、投稿本文で断定する前に公式URLまたはユーザー確認を付ける。",
+        "本文は短くし、循環の詳細はポスターに載せる構成を優先する。"
+      ],
+      "required": true
+    },
+    "required_order": [
+      "hook",
+      "short_body",
+      "today_translation",
+      "soft_action",
+      "fixed_footer_with_passcode"
+    ],
+    "short_body": {
+      "line_count_target": {
+        "max": 8,
+        "min": 3
+      },
+      "line_length_target_ja": "1行10から28文字程度を目安にする。",
+      "rules": [
+        "1行に1主張だけ置く。",
+        "説明しすぎず、余白を残す。",
+        "名詞だけの強い行を混ぜる。",
+        "数字や日時は証跡がある場合だけ使う。",
+        "英語の短い合図を混ぜてもよい。例: Join, Check, Next, fam"
+      ],
+      "style": "短文と改行を基本にする。"
+    },
+    "soft_action": {
+      "allowed": [
+        "Check",
+        "Join",
+        "Wear it",
+        "Post it",
+        "Set reminder",
+        "Use PASSCODE",
+        "今日の入口にする"
+      ],
+      "forbidden": [
+        "買え",
+        "急げ",
+        "稼げるから買う",
+        "価格が上がる前に",
+        "投資判断を促す表現"
+      ],
+      "required": true
+    },
+    "today_translation": {
+      "description": "今日の話題をWhitepaper思想に接続する行。",
+      "required": true,
+      "translation_pairs": [
+        {
+          "today_topic": "アパレル投稿",
+          "villain_translation": "服を着ることを、Web3参加の入口として表現する。",
+          "whitepaper_idea": "Web3をファッションで体験可能にする"
+        },
+        {
+          "today_topic": "SNS投稿、写真、着用報告",
+          "villain_translation": "投稿する人を宣伝者ではなく、ムーブメントの一員として扱う。",
+          "whitepaper_idea": "SNSを通じてコミュニティがWeb3の魅力を広げる"
+        },
+        {
+          "today_topic": "Passcode",
+          "villain_translation": "コードを単なる割引ではなく、参加の合図として置く。",
+          "whitepaper_idea": "Villain Passは購入者をコミュニティメンバーとして識別する"
+        },
+        {
+          "today_topic": "NFT、VLN",
+          "villain_translation": "所有、参加、ブランド化の文脈で語る。価格では語らない。",
+          "whitepaper_idea": "NFT、$VLN、商用利用、ガバナンスが接続される"
+        },
+        {
+          "today_topic": "$PPP、Wear2Earn",
+          "villain_translation": "着る、投稿する、参加するという行動の循環で語る。",
+          "whitepaper_idea": "Wear2Earn ecosystemの報酬トークン"
+        },
+        {
+          "today_topic": "イベント、集合、Space",
+          "villain_translation": "Dear villains、集まる、聞く、参加する、次へ行く、という短い召集文にする。",
+          "whitepaper_idea": "community-driven project"
+        }
+      ]
+    }
   },
   "priority_context_rules": [
     {
-      "name": "production_rotation_policy",
+      "availability_classes": [
+        "evergreen",
+        "seasonal",
+        "temporary"
+      ],
+      "daily_mix_examples": [
+        [
+          "APPAREL",
+          "NEWCOMER"
+        ],
+        [
+          "APPAREL",
+          "WHITEPAPER_TRANSLATION"
+        ],
+        [
+          "APPAREL",
+          "THE_POOL"
+        ]
+      ],
       "description": "量産時にAI臭さと同じ型の連投感を避けるためのローテーションルール。",
+      "name": "production_rotation_policy",
       "post_types": [
         "THE_POOL",
         "APPAREL",
@@ -144,15 +378,6 @@
         "DEAR_VILLAINS",
         "NEWCOMER",
         "DEEP_DIVE_NOTE"
-      ],
-      "availability_classes": [
-        "evergreen",
-        "seasonal",
-        "temporary"
-      ],
-      "seasonal_or_temporary_types": [
-        "VILLAINLOTTERY",
-        "DEAR_VILLAINS"
       ],
       "rules": [
         "同じ投稿タイプを2本連続で出さない。",
@@ -173,20 +398,6 @@
         "DEEP_DIVE_NOTE型はnote導線を匂わせるが、露骨に誘導しない。",
         "今後の季節イベントは seasonal / temporary / evergreen のavailability classで分類する。"
       ],
-      "daily_mix_examples": [
-        [
-          "APPAREL",
-          "NEWCOMER"
-        ],
-        [
-          "APPAREL",
-          "WHITEPAPER_TRANSLATION"
-        ],
-        [
-          "APPAREL",
-          "THE_POOL"
-        ]
-      ],
       "seasonal_insert_examples": [
         [
           "NEWCOMER",
@@ -198,11 +409,15 @@
           "DEAR_VILLAINS",
           "THE_POOL"
         ]
+      ],
+      "seasonal_or_temporary_types": [
+        "VILLAINLOTTERY",
+        "DEAR_VILLAINS"
       ]
     },
     {
-      "name": "raindog_feedback_20260510",
       "description": "初回実戦テスト後のフィードバック。鬼徹運用へさらに寄せるための最新生成バイアス。",
+      "name": "raindog_feedback_20260510",
       "rules": [
         "説明しすぎない。",
         "余白を大事にする。",
@@ -214,49 +429,49 @@
       ],
       "theme_adjustments": [
         {
-          "theme": "THE_POOL",
+          "avoid": [
+            "流動性提供の機能説明が長い",
+            "ランキングやNFT報酬の説明を前面に出す",
+            "解説記事のような口調"
+          ],
           "do": [
             "DeFi説明を削る",
             "誰かが入る、待つ、戻る、集まる、という動きを入れる",
             "数字は必要最小限にする"
           ],
-          "avoid": [
-            "流動性提供の機能説明が長い",
-            "ランキングやNFT報酬の説明を前面に出す",
-            "解説記事のような口調"
-          ]
+          "theme": "THE_POOL"
         },
         {
-          "theme": "APPAREL",
+          "avoid": [
+            "コミュニティが動く、など抽象的な説明",
+            "買うことを前面に出す",
+            "Web3用語でまとめる"
+          ],
           "do": [
             "着る、撮る、誰かと繋がる",
             "コミュニティより先に人を置く",
             "服を入口として扱う"
           ],
-          "avoid": [
-            "コミュニティが動く、など抽象的な説明",
-            "買うことを前面に出す",
-            "Web3用語でまとめる"
-          ]
+          "theme": "APPAREL"
         },
         {
-          "theme": "GATHERING",
+          "avoid": [
+            "熱狂と書く",
+            "ボス感を過剰に出す",
+            "説明で締める"
+          ],
           "do": [
             "人の気配を残す",
             "集会、服、店、宇宙人の空気を薄く入れる",
             "AI臭い整理を避ける"
           ],
-          "avoid": [
-            "熱狂と書く",
-            "ボス感を過剰に出す",
-            "説明で締める"
-          ]
+          "theme": "GATHERING"
         }
       ]
     },
     {
-      "name": "trial_operation_1_feedback",
       "description": "試験運用1回目の追加フィードバック。曖昧さ、余白、なんか感を許容し、Villainらしさを分かりやすさより優先する。",
+      "name": "trial_operation_1_feedback",
       "rules": [
         "曖昧さを恐れない。",
         "説明しきらない。",
@@ -269,48 +484,48 @@
       ],
       "theme_adjustments": [
         {
-          "theme": "THE_POOL",
+          "avoid": [
+            "集会っぽい、と説明する",
+            "仕組みをまとめる",
+            "分かりやすく言い切る"
+          ],
           "do": [
             "集会と明言しない",
             "人が戻る感じを残す",
             "気配で止める"
           ],
-          "avoid": [
-            "集会っぽい、と説明する",
-            "仕組みをまとめる",
-            "分かりやすく言い切る"
-          ]
+          "theme": "THE_POOL"
         },
         {
-          "theme": "APPAREL",
+          "avoid": [
+            "説明を足しすぎる",
+            "Web3文脈を前に出しすぎる"
+          ],
           "do": [
             "基準投稿 baseline-raindog-apparel-20260510 を参照する",
             "入口は服でいい、の温度を保つ",
             "行動から人へ戻す"
           ],
-          "avoid": [
-            "説明を足しすぎる",
-            "Web3文脈を前に出しすぎる"
-          ]
+          "theme": "APPAREL"
         },
         {
-          "theme": "VILLAINLOTTERY",
+          "avoid": [
+            "今年の運、だけで広く始める",
+            "当選や希少性を煽る",
+            "購入圧を出す"
+          ],
           "do": [
             "リング、$PPP、villainlotteryなどの文脈を早めに置く",
             "運の話をVillain内側の空気へ寄せる",
             "釣りではなく変な入口として見せる"
           ],
-          "avoid": [
-            "今年の運、だけで広く始める",
-            "当選や希少性を煽る",
-            "購入圧を出す"
-          ]
+          "theme": "VILLAINLOTTERY"
         }
       ]
     },
     {
-      "name": "community_vibe_reference_policy",
       "description": "公式発表だけでなく、重要人物やコミュニティ投稿を温度感、空気感、言語感覚の参照対象にする。",
+      "name": "community_vibe_reference_policy",
       "reference_targets": [
         "フック",
         "言葉選び",
@@ -329,8 +544,8 @@
       ]
     },
     {
-      "name": "ooguri_signal_priority",
       "description": "Ooguri/ooguri888 が発信またはRTしたVillain関連トピックは、投稿候補の優先度を上げる。",
+      "name": "ooguri_signal_priority",
       "priority_topics": [
         "Dear villains / 集会 / Set reminder",
         "Buyback $VLN",
@@ -348,13 +563,13 @@
       ]
     },
     {
-      "name": "daily_two_posts_operation_20260510",
-      "description": "3日テスト後の運用変更。品質が十分になったため、毎日3本から毎日2本へ減らし、本命1本と保険1本で運用する。",
-      "daily_count": 2,
       "candidate_roles": [
         "main",
         "backup"
       ],
+      "daily_count": 2,
+      "description": "3日テスト後の運用変更。品質が十分になったため、毎日3本から毎日2本へ減らし、本命1本と保険1本で運用する。",
+      "name": "daily_two_posts_operation_20260510",
       "priority_order": [
         "APPAREL",
         "STORE",
@@ -374,25 +589,22 @@
         "THE POOLは説明寄りになりそうな日は使わない。使う場合も機能説明ではなく、見た瞬間の引っかかりで止める。"
       ],
       "selection_bias": {
+        "avoid": [
+          "毎日THE POOLを入れる",
+          "2本とも説明系にする",
+          "本命と保険の温度を同じにする",
+          "意味を回収しきる"
+        ],
         "prefer": [
           "服",
           "店",
           "Whitepaperを読んだ時の違和感",
           "ABOUT文言の引っかかり",
           "THE POOLの静かな動き"
-        ],
-        "avoid": [
-          "毎日THE POOLを入れる",
-          "2本とも説明系にする",
-          "本命と保険の温度を同じにする",
-          "意味を回収しきる"
         ]
       }
     },
     {
-      "name": "skip_day_policy",
-      "description": "毎日投稿より鬼徹っぽさ維持を優先し、無理に書くくらいなら投稿なしを許可する。",
-      "skip_allowed": true,
       "conditions": [
         "今日の引っかかりが弱い",
         "2本とも説明寄り",
@@ -400,7 +612,10 @@
         "無理に書いている感がある",
         "Villain側に新しい空気がない"
       ],
+      "description": "毎日投稿より鬼徹っぽさ維持を優先し、無理に書くくらいなら投稿なしを許可する。",
+      "name": "skip_day_policy",
       "policy": "毎日投稿より鬼徹っぽさ維持を優先する。",
+      "skip_allowed": true,
       "when_skipped": [
         "投稿案は完成扱いにしない",
         "Passcode usage_logは記録しない",
@@ -409,289 +624,59 @@
       ]
     }
   ],
-  "post_structure": {
-    "required_order": [
-      "hook",
-      "short_body",
-      "today_translation",
-      "soft_action",
-      "fixed_footer_with_passcode"
-    ],
-    "hook": {
-      "required": true,
-      "purpose": "最初の1行で視線を止める。",
-      "patterns": [
-        "今日、Web3を着る理由がある。",
-        "ただの服で終わらせない。",
-        "Web3の入口は、ウォレットだけじゃない。",
-        "着ることが、参加になる。",
-        "Dear villains, 集まる時間です。",
-        "次の入口はここ。"
-      ],
-      "forbidden": [
-        "必ず儲かる",
-        "今買わないと損",
-        "爆上げ確定",
-        "公式未確認の断定"
-      ]
-    },
-    "short_body": {
-      "style": "短文と改行を基本にする。",
-      "line_count_target": {
-        "min": 3,
-        "max": 8
-      },
-      "line_length_target_ja": "1行10から28文字程度を目安にする。",
-      "rules": [
-        "1行に1主張だけ置く。",
-        "説明しすぎず、余白を残す。",
-        "名詞だけの強い行を混ぜる。",
-        "数字や日時は証跡がある場合だけ使う。",
-        "英語の短い合図を混ぜてもよい。例: Join, Check, Next, fam"
-      ]
-    },
-    "today_translation": {
-      "required": true,
-      "description": "今日の話題をWhitepaper思想に接続する行。",
-      "translation_pairs": [
-        {
-          "today_topic": "アパレル投稿",
-          "whitepaper_idea": "Web3をファッションで体験可能にする",
-          "villain_translation": "服を着ることを、Web3参加の入口として表現する。"
-        },
-        {
-          "today_topic": "SNS投稿、写真、着用報告",
-          "whitepaper_idea": "SNSを通じてコミュニティがWeb3の魅力を広げる",
-          "villain_translation": "投稿する人を宣伝者ではなく、ムーブメントの一員として扱う。"
-        },
-        {
-          "today_topic": "Passcode",
-          "whitepaper_idea": "Villain Passは購入者をコミュニティメンバーとして識別する",
-          "villain_translation": "コードを単なる割引ではなく、参加の合図として置く。"
-        },
-        {
-          "today_topic": "NFT、VLN",
-          "whitepaper_idea": "NFT、$VLN、商用利用、ガバナンスが接続される",
-          "villain_translation": "所有、参加、ブランド化の文脈で語る。価格では語らない。"
-        },
-        {
-          "today_topic": "$PPP、Wear2Earn",
-          "whitepaper_idea": "Wear2Earn ecosystemの報酬トークン",
-          "villain_translation": "着る、投稿する、参加するという行動の循環で語る。"
-        },
-        {
-          "today_topic": "イベント、集合、Space",
-          "whitepaper_idea": "community-driven project",
-          "villain_translation": "Dear villains、集まる、聞く、参加する、次へ行く、という短い召集文にする。"
-        }
-      ]
-    },
-    "soft_action": {
-      "required": true,
-      "allowed": [
-        "Check",
-        "Join",
-        "Wear it",
-        "Post it",
-        "Set reminder",
-        "Use PASSCODE",
-        "今日の入口にする"
-      ],
-      "forbidden": [
-        "買え",
-        "急げ",
-        "稼げるから買う",
-        "価格が上がる前に",
-        "投資判断を促す表現"
-      ]
-    },
-    "fixed_footer": {
-      "required": true,
-      "exact_shape": "#着て稼ぐ #villain @0xmavillain {PASSCODE}",
-      "notes": "最後の行に置く。{PASSCODE}はdata/villain_passcodes.jsonから選ぶ。"
-    },
-    "media_requirement": {
-      "required": true,
-      "accepted_types": [
-        "product_photo",
-        "wearing_photo",
-        "poster",
-        "event_poster",
-        "campaign_visual"
-      ],
-      "draft_must_include": [
-        "image_required: true",
-        "image_concept",
-        "visual_subject",
-        "safe_text_overlay",
-        "poster_reference_urls_or_files",
-        "poster_reading_status"
-      ],
-      "poster_reference_policy": [
-        "ユーザー提供ポスターは、コミュニティの仕組みを説明する視覚証跡として参照できる。",
-        "ポスター内の小さい文字や経済設計は読み取りミスの可能性があるため、投稿本文で断定する前に公式URLまたはユーザー確認を付ける。",
-        "本文は短くし、循環の詳細はポスターに載せる構成を優先する。"
-      ],
-      "forbidden_visuals": [
-        "価格上昇を示すチャート煽り",
-        "未確認コラボを連想させるロゴ合成",
-        "公式でないNFTやTokenを公式風に見せる画像",
-        "ウォレット接続や購入確定を急がせるUI風画像"
-      ]
-    }
-  },
-  "implicit_rules_from_post_examples": {
-    "evidence_note": "公式Xとユーザー指定の既存運用例URLを一次参照にする。取得制限がある場合、投稿本文や暗黙ルールを推測せず、確認済みのWhitepaper/公式サイト/ユーザー提供スクショだけで暫定ルール化する。",
-    "registered_examples": [
-      "https://x.com/raindog_kitetu/status/2052984432139837524",
-      "https://x.com/raindog_kitetu/status/2052863630291673245"
-    ],
-    "observed_patterns": [
-      {
-        "rule": "極端に短い投稿も成立する",
-        "detail": "#着て稼ぐ だけ、リンクだけ、短い告知だけでもブランド文脈があると成立する。"
-      },
-      {
-        "rule": "呼びかけは Dear villains / fam / Please gather 系",
-        "detail": "コミュニティを個人ではなく集団として召集する。"
-      },
-      {
-        "rule": "英語と日本語を混ぜる",
-        "detail": "日本語ハッシュタグ、英語の短い命令、Web3用語を混在させる。"
-      },
-      {
-        "rule": "記号で温度を作る",
-        "detail": "矢印、チェック、括弧、短いラベルでポスター的に読ませる。ただし過剰装飾は避ける。"
-      },
-      {
-        "rule": "情報量より参加感を優先する",
-        "detail": "細かい説明を本文に詰めず、リンク、画像、短い合図で誘導する。"
-      },
-      {
-        "rule": "公式投稿はイベント、リリース、Pool、Lottery、TapVillain、Wear2Earnなどを短く出す",
-        "detail": "長文解説より、今日何を見るか、どこへ行くかを前面に出す。"
-      },
-      {
-        "rule": "価格や投資成果の断定は避ける",
-        "detail": "WhitepaperにもNot Investment Adviceとリスク開示があるため、投稿案では価格煽りを禁止する。"
-      },
-      {
-        "rule": "$PPPやCommunity図解はポスター前提で扱う",
-        "detail": "ユーザー提供スクショでは、DEX/Chart/note、contract address、Villains Community図解がまとまっている。投稿案では本文を短くし、詳細はポスターと証跡に逃がす。"
-      },
-      {
-        "rule": "コミュニティ循環は図解を参照する",
-        "detail": "ポスターから、海外ユーザーへのリーチ、CEX/DEX手数料バイバック、RELiC/NFTステーキング、DN404、$VLN、Utility Token、限定アパレル、Wear2Earnが循環として読める。ただし数量、条件、買い戻し、配布は公式確認前に断定しない。"
-      }
-    ]
-  },
   "prohibited_content": [
     {
       "id": "no_assumption_posting",
-      "severity": "critical",
-      "rule": "推測投稿禁止。公式またはローカルDB証跡で確認できない内容は未確認として扱う。"
+      "rule": "推測投稿禁止。公式またはローカルDB証跡で確認できない内容は未確認として扱う。",
+      "severity": "critical"
     },
     {
       "id": "no_unsupported_claims",
-      "severity": "critical",
-      "rule": "証跡なし断定禁止。数字、日時、提携、報酬、配布、販売、売切れは証跡必須。"
+      "rule": "証跡なし断定禁止。数字、日時、提携、報酬、配布、販売、売切れは証跡必須。",
+      "severity": "critical"
     },
     {
       "id": "no_auto_posting",
-      "severity": "critical",
-      "rule": "投稿は実行しない。投稿案生成まで。"
+      "rule": "投稿は実行しない。投稿案生成まで。",
+      "severity": "critical"
     },
     {
       "id": "no_price_hype",
-      "severity": "critical",
-      "rule": "価格煽り禁止。上がる、儲かる、買えば得、投資推奨に見える表現は禁止。"
+      "rule": "価格煽り禁止。上がる、儲かる、買えば得、投資推奨に見える表現は禁止。",
+      "severity": "critical"
     },
     {
       "id": "no_excessive_hype",
-      "severity": "high",
-      "rule": "過度な煽り禁止。強い言葉はブランド温度に留め、根拠のない緊急性を作らない。"
+      "rule": "過度な煽り禁止。強い言葉はブランド温度に留め、根拠のない緊急性を作らない。",
+      "severity": "high"
     },
     {
       "id": "no_wallet_or_purchase_execution",
-      "severity": "critical",
-      "rule": "ウォレット接続、購入、mint、swap、cart操作は行わない。"
+      "rule": "ウォレット接続、購入、mint、swap、cart操作は行わない。",
+      "severity": "critical"
     },
     {
       "id": "no_fake_officiality",
-      "severity": "critical",
-      "rule": "非公式情報、ミラー情報、二次情報を公式発表のように扱わない。"
+      "rule": "非公式情報、ミラー情報、二次情報を公式発表のように扱わない。",
+      "severity": "critical"
     },
     {
       "id": "no_unverified_partnership",
-      "severity": "high",
-      "rule": "提携、コラボ、配布、キャンペーンは公式証跡がなければ書かない。"
+      "rule": "提携、コラボ、配布、キャンペーンは公式証跡がなければ書かない。",
+      "severity": "high"
     },
     {
       "id": "no_web3_influencer_style",
-      "severity": "high",
-      "rule": "Web3インフルエンサー風は禁止。爆益、次に来る、保存推奨、フォロー必須、知らないと損、アルファなどの構文を使わない。"
+      "rule": "Web3インフルエンサー風は禁止。爆益、次に来る、保存推奨、フォロー必須、知らないと損、アルファなどの構文を使わない。",
+      "severity": "high"
     },
     {
       "id": "no_copying_community_voice",
-      "severity": "high",
-      "rule": "重要人物やコミュニティ投稿のコピーは禁止。フック、行間、熱量、言語感覚を抽出し、別表現で自然に翻訳する。"
+      "rule": "重要人物やコミュニティ投稿のコピーは禁止。フック、行間、熱量、言語感覚を抽出し、別表現で自然に翻訳する。",
+      "severity": "high"
     }
   ],
-  "post_readiness_policy": {
-    "posting_execution_allowed": false,
-    "draft_can_be_marked_postable": true,
-    "default_status_after_generation": "draft_candidate",
-    "postable_status": "postable",
-    "not_final_status": "not_final_fact_check_incomplete",
-    "prohibited_check_status_values": [
-      "pass",
-      "fail",
-      "unchecked"
-    ],
-    "rule": "投稿案生成時は、元ネタURL確認、画像/ポスター添付、パスコード確認を『確認待ち』ではなくチェックリストとして表示する。事実確認が完了し、必須チェックに問題がなければ投稿可能と判定してよい。ただし実投稿はしない。",
-    "pre_post_checklist_display": [
-      {
-        "label": "元ネタURL確認",
-        "required_for_postable": true,
-        "meaning": "投稿本文の事実主張に対応する公式URL、投稿URL、DB証跡、またはユーザー提供証跡がある。"
-      },
-      {
-        "label": "画像/ポスター添付",
-        "required_for_postable": true,
-        "meaning": "投稿に使う画像、ポスター、または具体的な添付予定素材がある。"
-      },
-      {
-        "label": "パスコード確認",
-        "required_for_postable": true,
-        "meaning": "data/villain_passcodes.json の有効なPasscodeを使用し、固定締めに入っている。"
-      }
-    ],
-    "postable_if": [
-      "fact_check_status = verified",
-      "元ネタURL確認 = true",
-      "画像/ポスター添付 = true",
-      "パスコード確認 = true",
-      "all prohibited_content_check statuses = pass",
-      "posting_execution_allowed = false"
-    ],
-    "completion_blockers": [
-      {
-        "condition": "fact_check_status != verified",
-        "result": "完成扱い不可",
-        "notes": "事実確認未完了の場合のみ、完成扱い不可にする。"
-      },
-      {
-        "condition": "any prohibited_content_check status = fail",
-        "result": "投稿不可",
-        "notes": "推測断定、証跡なし断定、価格煽り、自動投稿などは投稿不可。"
-      },
-      {
-        "condition": "any prohibited_content_check status = unchecked",
-        "result": "投稿可能判定不可",
-        "notes": "禁止事項チェックが未確認の場合は投稿可能にしない。"
-      }
-    ]
-  },
+  "purpose": "Whitepaper思想を今日の話題へ翻訳し、Villain形式の投稿案を生成するための運用ルールを定義する。",
   "quality_checklist": [
     {
       "id": "hook_required",
@@ -809,38 +794,98 @@
       "required": true
     }
   ],
-  "generation_modes": [
-    {
-      "mode": "daily_topic",
-      "description": "今日の話題を1投稿に翻訳する。",
-      "required_inputs": [
-        "today_topic",
-        "source_refs",
-        "poster_concept",
-        "passcode"
-      ]
-    },
-    {
-      "mode": "whitepaper_education",
-      "description": "Whitepaper思想を短く解説し、今日の参加導線へ落とす。",
-      "required_inputs": [
-        "whitepaper_section",
-        "verified_claims",
-        "today_relevance",
-        "poster_concept",
-        "passcode"
-      ]
-    },
-    {
-      "mode": "campaign_push",
-      "description": "公式に確認済みのイベント、販売、アプリ、Pool、Lotteryなどを短く告知する。",
-      "required_inputs": [
-        "official_announcement_url",
-        "campaign_name",
-        "date_or_link",
-        "poster_concept",
-        "passcode"
-      ]
+  "source_policy": {
+    "assumption_based_success_allowed": false,
+    "draft_generation_allowed": true,
+    "posting_execution_allowed": false,
+    "required_sources": [
+      "Villain Whitepaper",
+      "Villain公式サイト",
+      "Villain公式X",
+      "Ooguri/ooguri888 important community context",
+      "既存Villain投稿例",
+      "data/villain_test_plan.json",
+      "data/villain_knowledge.json",
+      "data/claude_stop_test_plan.json"
+    ],
+    "source_status": {
+      "existing_post_examples": {
+        "checked_at": "2026-05-09",
+        "notes": "既存運用例。取得できない場合、本文や構成を推測しない。",
+        "status": "official_user_examples_registered_content_requires_manual_check",
+        "urls": [
+          "https://x.com/raindog_kitetu/status/2052984432139837524",
+          "https://x.com/raindog_kitetu/status/2052863630291673245"
+        ]
+      },
+      "local_test_plans": {
+        "files": [
+          "data/villain_test_plan.json",
+          "data/claude_stop_test_plan.json",
+          "data/villain_knowledge.json"
+        ],
+        "status": "verified_local_files"
+      },
+      "nft_collections": {
+        "checked_at": "2026-05-09",
+        "main_nft": "coming soon",
+        "notes": "NFT本体はユーザー指定でcoming soon。OpenSea collectionは投稿前に再確認し、購入・offer・wallet接続はしない。",
+        "status": "urls_registered",
+        "urls": [
+          "https://opensea.io/collection/genesis-pass-8",
+          "https://opensea.io/collection/ambassador-pass",
+          "https://opensea.io/ja/collection/the-pool-7"
+        ]
+      },
+      "official_site": {
+        "checked_at": "2026-05-09",
+        "notes": "公式サイトの主要導線を参照。",
+        "status": "verified_public_source",
+        "url": "https://0xmavillain.com/"
+      },
+      "official_socials": {
+        "checked_at": "2026-05-09",
+        "notes": "Instagram、TikTok、LINE official。取得制限や外部アプリ遷移がある場合、内容を推測しない。",
+        "status": "official_urls_registered_content_requires_manual_check",
+        "urls": [
+          "https://www.instagram.com/0xmavillain",
+          "https://www.tiktok.com/@0xmavillain_?_t=ZS-8zZo8rXwavN&_r=1",
+          "https://lin.ee/iMdqKKE"
+        ]
+      },
+      "official_x": {
+        "checked_at": "2026-05-09",
+        "notes": "公式X URL。取得制限がある場合、投稿本文や最新情報を推測しない。投稿案生成時は公式X URL確認を優先する。",
+        "status": "official_url_registered_content_requires_manual_check",
+        "url": "https://x.com/0xmavillain"
+      },
+      "ooguri888": {
+        "checked_at": "2026-05-09",
+        "mirror_url": "https://www.twstalker.com/ooguri888",
+        "notes": "Villainコミュニティのボスとして重要視する。本人投稿、Villain関連RT、集会/イベント/店舗/RELiC文脈を参照するが、未確認の本人発言引用や肩書き断定は禁止。",
+        "status": "important_reference_content_requires_manual_check",
+        "url": "https://x.com/ooguri888"
+      },
+      "ppp_screenshot_reference": {
+        "checked_at": "2026-05-09",
+        "local_path": "/Users/raindog/Desktop/スクリーンショット 0008-05-09 23.43.25.png",
+        "notes": "$PPP DEX/Chart/note、contract address、Villains Community poster contextを確認。投稿案ではスクショ由来と明示し、断定には公式またはオンチェーン参照を付ける。",
+        "status": "user_provided_evidence_requires_official_or_onchain_confirmation_for_claims"
+      },
+      "wear2earn_shop": {
+        "checked_at": "2026-05-09",
+        "notes": "購入導線。ログイン、購入、カート、決済操作は禁止。",
+        "status": "official_url_registered_requires_manual_check",
+        "url": "https://shop.0xmavillain.com/secret_ec/secret_ec_auths/login"
+      },
+      "whitepaper": {
+        "checked_at": "2026-05-09",
+        "notes": "公式サイト上のWhitepaperを参照。",
+        "status": "verified_public_source",
+        "url": "https://0xmavillain.com/whitepaper/"
+      }
     }
-  ]
+  },
+  "updated_at_jst": "2026-05-22T22:56:19+09:00",
+  "version": "1.1.1"
 }

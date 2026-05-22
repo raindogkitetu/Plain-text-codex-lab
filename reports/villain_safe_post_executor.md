@@ -14,7 +14,7 @@
 ## `vln-queue-vln-gen-20260512-001`
 
 - candidate_id: `vln-gen-20260512-001`
-- selected_image: `/Users/raindog/Documents/New project/villain_post_images/villain_observer_001.png`
+- selected_image: `/Users/raindog/Projects/villain-auto-posting/villain_post_images/villain_observer_001.png`
 - safe_post_status: `BLOCK`
 - failed_conditions: `queue_item_not_found, human_confirmed_false, approved_for_live_post_false, write_action_kill_switch_true, dry_run_only_true, passcode_ok_false`
 

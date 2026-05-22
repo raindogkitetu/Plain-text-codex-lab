@@ -1,0 +1,149 @@
+{
+  "db_name": "Villain Candidate Stream DB",
+  "version": "1.0.0-design",
+  "status": "design_only",
+  "purpose": "投稿候補をqueue投入前のstreamとして常時5-15本保持し、人間がapprove/reject/timingだけ判断できる状態にする。",
+  "safety": {
+    "live_posting_allowed": false,
+    "x_api_write_allowed": false,
+    "upload_media_allowed": false,
+    "create_tweet_allowed": false,
+    "auto_posting_allowed": false,
+    "commit_performed": false
+  },
+  "stream_policy": {
+    "target_min_candidates": 5,
+    "target_max_candidates": 15,
+    "daily_post_density_target": {
+      "min": 3,
+      "max": 5
+    },
+    "primary_categories": [
+      "culture_observer",
+      "poster_summary",
+      "community_info"
+    ],
+    "secondary_categories": [
+      "explainer",
+      "apparel_focus",
+      "about_wording",
+      "silent_dominance"
+    ],
+    "stream_does_not_unlock_posting": true,
+    "approved_still_requires_human_posting": true
+  },
+  "candidate_statuses": {
+    "fresh": "生成直後。レビュー前または軽い確認のみの候補。",
+    "approved": "人間が投稿候補として採用可にした状態。投稿実行許可ではない。",
+    "aging": "寿命が近づいている。投稿するなら早め、またはリライトが必要。",
+    "stale": "文脈が古い。再利用には更新が必要。",
+    "archived": "学習用に残すが、通常選択から外す。",
+    "posted": "人間が実投稿済み。URLと実績記録へ接続する。"
+  },
+  "lifespan_rules": {
+    "culture_observer": {
+      "fresh_hours": 12,
+      "aging_hours": 24,
+      "stale_hours": 36,
+      "reason": "今の空気や違和感に寄るため短命。24hを超えたら文脈を再確認する。"
+    },
+    "poster_summary": {
+      "fresh_hours": 24,
+      "aging_hours": 72,
+      "stale_hours": 120,
+      "reason": "画像と短いコピーが主役なので中寿命。日常/文化系なら数日使える。"
+    },
+    "community_info": {
+      "fresh_hours": 12,
+      "aging_hours": 36,
+      "stale_hours": 72,
+      "reason": "集会やイベント文脈は鮮度がある。日付入り画像は特に短命。"
+    },
+    "explainer": {
+      "fresh_hours": 72,
+      "aging_hours": 168,
+      "stale_hours": 336,
+      "reason": "仕組みや設計説明は長寿命。ただし投稿密度の主力にはしない。"
+    },
+    "apparel_focus": {
+      "fresh_hours": 24,
+      "aging_hours": 72,
+      "stale_hours": 120,
+      "reason": "服単体では弱い。culture/poster/community接続がない場合は早めにstale扱い。"
+    }
+  },
+  "shortage_detectors": {
+    "stream_count_low": {
+      "condition": "active_candidates < 5",
+      "action": "朝候補生成で5本以上補充する。"
+    },
+    "category_bias": {
+      "condition": "primary_category_share > 0.6 for one category or any primary category count == 0",
+      "action": "不足カテゴリを優先生成する。"
+    },
+    "image_shortage": {
+      "condition": "image_ready_candidates < 3 or image_ready_ratio < 0.5",
+      "action": "image strategyからS/A画像に合う候補を追加する。"
+    },
+    "approved_shortage": {
+      "condition": "approved_candidates < 3",
+      "action": "昼レビューでfreshから3本以上approvedへ送る。"
+    }
+  },
+  "integration": {
+    "generated_candidates": "data/villain_generated_candidates.json はstream補充元。上書き生成ではなくstreamへappendする設計へ拡張する。",
+    "queue": "queueは投稿直前チェック用。streamは候補在庫。approvedでもqueue投入や投稿実行はしない。",
+    "scoring": "quality_prediction, risk_prediction, residual_growth_potential, profile_click_potentialをstream itemに保持する。",
+    "persona_scorer": "persona_scoreと鬼徹らしさをstream itemに保持し、approve判断を軽くする。",
+    "image_strategy": "image_ready候補を優先。community/poster/culture画像とのmatch_scoreを保持する。",
+    "residual_learning": "24h後の残り方をcategory_lifecycleとscoring補正へ戻す。"
+  },
+  "stream_item_template": {
+    "stream_id": "",
+    "source_candidate_id": "",
+    "created_at_jst": "",
+    "updated_at_jst": "",
+    "status": "fresh",
+    "category": "",
+    "text": "",
+    "image": {
+      "required": true,
+      "ready": false,
+      "file_path": "",
+      "image_type": "",
+      "match_score": null,
+      "rights_notes": ""
+    },
+    "scores": {
+      "quality_prediction": null,
+      "persona_score": null,
+      "risk_prediction": "",
+      "residual_growth_potential": null,
+      "profile_click_potential": null
+    },
+    "lifecycle": {
+      "fresh_until_jst": "",
+      "aging_after_jst": "",
+      "stale_after_jst": "",
+      "lifespan_reason": ""
+    },
+    "review": {
+      "human_decision": "",
+      "decision_at_jst": "",
+      "timing_hint": "",
+      "reject_reason": ""
+    },
+    "post_execution": {
+      "posting_execution_allowed": false,
+      "posted_url": "",
+      "posted_at_jst": "",
+      "method": "manual_only"
+    },
+    "learning": {
+      "actual_residual_type": "",
+      "manual_notes": ""
+    }
+  },
+  "stream": [],
+  "updated_at_jst": "2026-05-15"
+}

@@ -14,7 +14,7 @@
 ## `vln-queue-vln-gen-20260512-001`
 
 - candidate_id: `vln-gen-20260512-001`
-- selected_image: `/Users/raindog/Documents/New project/villain_post_images/villain_observer_001.png`
+- selected_image: `/Users/raindog/Projects/villain-auto-posting/villain_post_images/villain_observer_001.png`
 - quality_score: `100`
 - villain_score: `100`
 - risk: `low`

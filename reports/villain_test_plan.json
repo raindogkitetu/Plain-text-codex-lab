@@ -1,0 +1,362 @@
+{
+  "plan_name": "Villain自動巡回 実テスト設計",
+  "purpose": "Claude停止時にCodexがVillain運用DBを読み、破壊的変更や自動投稿なしで代役巡回を設計・記録できるか確認する。",
+  "mode": "codex_claude_replacement_test",
+  "created_at": "2026-05-09",
+  "scope": {
+    "allowed_actions": [
+      "既存DB構成の読み取り",
+      "公式・公開情報の手動確認手順設計",
+      "巡回ログ項目の定義",
+      "次回改善点の記録"
+    ],
+    "prohibited_actions": [
+      "実際の自動投稿",
+      "勝手な外部API連携",
+      "DB削除",
+      "証跡なしの成功判定",
+      "推測による情報確定"
+    ],
+    "database_safety": {
+      "destructive_changes": false,
+      "existing_records_may_be_appended": true,
+      "existing_records_must_not_be_deleted": true
+    }
+  },
+  "database_inventory": {
+    "root_files": [
+      "README.md",
+      "status.json"
+    ],
+    "data_files": [
+      "data/villain_schedule.json",
+      "data/villain_tasks.json",
+      "data/villain_logs.json",
+      "data/villain_log_template.json",
+      "data/failure_rules.json",
+      "data/codex_daily_mode.json",
+      "data/villain_sources.json",
+      "data/villain_knowledge.json",
+      "data/villain_research_categories.json",
+      "data/villain_memory.json",
+      "data/villain_collection_template.json",
+      "data/villain_workflow.json"
+    ],
+    "observed_state": {
+      "codex_daily_mode": "claude_replacement_test enabled",
+      "workflow_steps": [
+        "official_site_check",
+        "official_x_check",
+        "community_search",
+        "category_scan",
+        "save_memory",
+        "create_daily_report"
+      ],
+      "source_status": "pending",
+      "source_urls": "not configured",
+      "logs": "empty",
+      "knowledge": "empty",
+      "memory": "template_only"
+    }
+  },
+  "preflight_checks": [
+    {
+      "name": "working_tree_check",
+      "check": "作業開始前に git status --short --branch を確認する。",
+      "success_condition": "テスト対象外の変更がない、または変更内容と扱いが明記されている。",
+      "failure_condition": "未確認の変更があり、DB編集との区別ができない。",
+      "log_fields": [
+        "branch",
+        "dirty_files",
+        "decision"
+      ]
+    },
+    {
+      "name": "db_schema_check",
+      "check": "参照JSONが存在し、JSONとして読み込めることを確認する。",
+      "success_condition": "全参照ファイルが存在し、構文エラーがない。",
+      "failure_condition": "参照ファイル欠落、JSON構文エラー、または必須キーの欠落。",
+      "log_fields": [
+        "checked_files",
+        "missing_files",
+        "parse_errors"
+      ]
+    },
+    {
+      "name": "no_posting_guard",
+      "check": "投稿・返信・DM・API更新を行わないことを実行前に確認する。",
+      "success_condition": "確認対象が読み取りと記録設計だけに限定されている。",
+      "failure_condition": "投稿や外部API更新を要求する操作が含まれている。",
+      "log_fields": [
+        "guard_enabled",
+        "blocked_actions"
+      ]
+    }
+  ],
+  "test_targets": [
+    {
+      "category": "official_site",
+      "label": "公式サイト",
+      "source_reference": "villain_official_site",
+      "verify": [
+        "data/villain_sources.json に公式サイトURLが設定されているか。",
+        "トップページ、ニュース、ロードマップ、リンク集など更新確認に必要な導線があるか。",
+        "Whitepaper、NFT、Token、Apparel への公式導線があるか。",
+        "確認日時と参照URLを記録できるか。"
+      ],
+      "success_condition": "公式URL、確認日時、確認したページ、変更有無、証跡URLを記録できる。更新なしの場合も、確認した範囲が明記されている。",
+      "failure_condition": "URL未設定、アクセス不可、公式性を確認できない、確認範囲が不明、または証跡なしで成功扱いしている。",
+      "log_content": [
+        "checked_at",
+        "source_name",
+        "source_url",
+        "pages_checked",
+        "new_information",
+        "summary",
+        "evidence",
+        "confidence",
+        "action_needed",
+        "error"
+      ],
+      "next_improvement": [
+        "公式URLを villain_sources.json に設定する。",
+        "巡回対象ページの固定リストを追加する。",
+        "更新差分を保存するフィールドを追加する。"
+      ]
+    },
+    {
+      "category": "official_x",
+      "label": "公式X",
+      "source_reference": "villain_official_x",
+      "verify": [
+        "data/villain_sources.json に公式X URLが設定されているか。",
+        "プロフィール、固定投稿、直近投稿、公式サイトへのリンクを確認できるか。",
+        "投稿内容を引用しすぎず、要約とURLで記録できるか。",
+        "返信や投稿などの書き込み操作を行っていないか。"
+      ],
+      "success_condition": "公式XのURL、確認日時、直近確認範囲、重要投稿のURL、要約、投稿操作なしの確認が残る。",
+      "failure_condition": "公式アカウント未確定、ログインやAPI前提で確認不能、投稿操作の危険がある、証跡URLがない。",
+      "log_content": [
+        "checked_at",
+        "account_url",
+        "profile_checked",
+        "pinned_post_checked",
+        "recent_posts_range",
+        "important_posts",
+        "new_information",
+        "evidence",
+        "no_posting_confirmed",
+        "error"
+      ],
+      "next_improvement": [
+        "公式X URLを villain_sources.json に設定する。",
+        "重要投稿の判定基準を追加する。",
+        "投稿取得が失敗した場合の代替確認手順を定義する。"
+      ]
+    },
+    {
+      "category": "x_search",
+      "label": "X検索",
+      "source_reference": "villain_x_posts",
+      "verify": [
+        "検索クエリが目的に合っているか。",
+        "公式情報、コミュニティ反応、誤情報候補を区別できるか。",
+        "検索結果を成功扱いする前に、投稿URLや検索条件を記録できるか。",
+        "Xへの投稿・返信・いいね等を行っていないか。"
+      ],
+      "success_condition": "検索クエリ、確認日時、確認範囲、代表的な投稿URL、公式未確認情報の扱い、誤情報リスクが記録されている。",
+      "failure_condition": "検索条件が不明、URLなし、公式確認がない情報を確定扱い、または書き込み操作が発生した。",
+      "log_content": [
+        "checked_at",
+        "query",
+        "filters",
+        "posts_sampled",
+        "official_confirmed",
+        "community_signal",
+        "rumor_or_unverified_items",
+        "evidence",
+        "no_posting_confirmed",
+        "error"
+      ],
+      "next_improvement": [
+        "検索クエリを複数パターン化する。",
+        "公式確認済み/未確認の分類ルールを追加する。",
+        "ノイズ除外語を villain_sources.json または別DBに追加する。"
+      ]
+    },
+    {
+      "category": "whitepaper",
+      "label": "Whitepaper",
+      "source_reference": "villain_research_categories.whitepaper",
+      "verify": [
+        "公式サイトまたは公式XからWhitepaperへの導線があるか。",
+        "文書のURL、版、更新日、主要セクションを確認できるか。",
+        "Token、NFT、Apparel、ロードマップに関する記述を分類できるか。",
+        "Whitepaperが見つからない場合、未確認として記録できるか。"
+      ],
+      "success_condition": "公式導線、文書URL、確認日時、版または更新日、主要要点、未確認事項が記録されている。",
+      "failure_condition": "非公式文書を公式扱い、版やURLが不明、要約の根拠がない、見つからないものを存在扱いする。",
+      "log_content": [
+        "checked_at",
+        "document_url",
+        "source_path",
+        "version_or_updated_at",
+        "sections_checked",
+        "key_findings",
+        "unverified_items",
+        "evidence",
+        "confidence",
+        "error"
+      ],
+      "next_improvement": [
+        "Whitepaper URL用の source entry を追加する。",
+        "版管理と差分確認の記録項目を追加する。",
+        "長文要約を villain_knowledge.json に保存する基準を作る。"
+      ]
+    },
+    {
+      "category": "nft",
+      "label": "NFT",
+      "source_reference": "villain_research_categories.nft",
+      "verify": [
+        "公式情報としてNFTに関する記述やリンクがあるか。",
+        "コレクション名、チェーン、マーケットプレイス、コントラクト情報が公式に確認できるか。",
+        "二次情報と公式情報を分けて記録できるか。",
+        "購入・mint・ウォレット接続などの操作を行っていないか。"
+      ],
+      "success_condition": "公式証跡に基づいてNFT情報の有無、確認済み項目、未確認項目、危険操作なしが記録されている。",
+      "failure_condition": "非公式リンクを公式扱い、ウォレット接続や購入操作、コントラクト未確認の断定、証跡なしの成功判定。",
+      "log_content": [
+        "checked_at",
+        "official_reference_url",
+        "collection_name",
+        "chain",
+        "marketplace_url",
+        "contract_reference",
+        "verified_items",
+        "unverified_items",
+        "no_wallet_action_confirmed",
+        "error"
+      ],
+      "next_improvement": [
+        "NFT専用 source entry を追加する。",
+        "ウォレット接続禁止ガードを運用手順に明記する。",
+        "公式コントラクト確認手順をテンプレ化する。"
+      ]
+    },
+    {
+      "category": "token",
+      "label": "Token",
+      "source_reference": "villain_research_categories.token",
+      "verify": [
+        "公式情報としてTokenに関する記述やリンクがあるか。",
+        "ティッカー、チェーン、コントラクト、供給量、ユーティリティの記述が公式に確認できるか。",
+        "価格、取引推奨、投資判断を行わず、事実確認だけに限定できるか。",
+        "ウォレット接続、購入、スワップなどの操作を行っていないか。"
+      ],
+      "success_condition": "公式証跡に基づく確認済み/未確認項目、金融助言なし、危険操作なしがログに残る。",
+      "failure_condition": "非公式コントラクトの断定、価格や投資助言、ウォレット接続、購入操作、証跡なしの成功判定。",
+      "log_content": [
+        "checked_at",
+        "official_reference_url",
+        "ticker",
+        "chain",
+        "contract_reference",
+        "utility_summary",
+        "verified_items",
+        "unverified_items",
+        "no_financial_advice_confirmed",
+        "no_wallet_action_confirmed",
+        "error"
+      ],
+      "next_improvement": [
+        "Token専用 source entry を追加する。",
+        "金融助言禁止の判定ルールを failure_rules.json に追加検討する。",
+        "公式コントラクト確認手順をテンプレ化する。"
+      ]
+    },
+    {
+      "category": "apparel",
+      "label": "Apparel",
+      "source_reference": "villain_research_categories.apparel",
+      "verify": [
+        "公式情報としてApparelやMerchに関する導線があるか。",
+        "商品名、販売ページ、販売状態、価格表示、配送対象などを確認できるか。",
+        "購入操作やカート投入を行わず、閲覧確認だけで止められるか。",
+        "在庫や価格のような変動情報は確認日時つきで記録できるか。"
+      ],
+      "success_condition": "公式販売導線、確認日時、確認済み商品情報、変動情報の扱い、購入操作なしが記録される。",
+      "failure_condition": "非公式ショップを公式扱い、購入・カート投入、確認日時なしの価格/在庫記録、証跡なしの成功判定。",
+      "log_content": [
+        "checked_at",
+        "official_store_url",
+        "products_checked",
+        "availability",
+        "price_display_observed",
+        "shipping_notes",
+        "new_information",
+        "evidence",
+        "no_purchase_action_confirmed",
+        "error"
+      ],
+      "next_improvement": [
+        "Apparel専用 source entry を追加する。",
+        "価格・在庫情報の記録期限を決める。",
+        "購入操作禁止ガードを運用手順に明記する。"
+      ]
+    }
+  ],
+  "execution_flow": [
+    {
+      "step": 1,
+      "name": "load_db",
+      "description": "参照JSONを読み、source URL、category、workflow、failure rule を確認する。",
+      "output": "database_inventory"
+    },
+    {
+      "step": 2,
+      "name": "run_preflight",
+      "description": "git状態、JSON構文、禁止操作ガードを確認する。",
+      "output": "preflight_result"
+    },
+    {
+      "step": 3,
+      "name": "manual_read_only_patrol",
+      "description": "各テスト対象を読み取り専用で確認する。外部API連携、自動投稿、購入、ウォレット接続はしない。",
+      "output": "target_results"
+    },
+    {
+      "step": 4,
+      "name": "classify_findings",
+      "description": "確認済み、未確認、失敗、次回改善点に分類する。推測は成功扱いしない。",
+      "output": "classified_findings"
+    },
+    {
+      "step": 5,
+      "name": "append_logs_if_requested",
+      "description": "ユーザー承認がある場合のみ villain_logs.json や villain_memory.json に追記する。",
+      "output": "append_only_log_entries"
+    },
+    {
+      "step": 6,
+      "name": "report",
+      "description": "実行内容、未実行事項、失敗条件、改善案をレポートする。",
+      "output": "execution_report"
+    }
+  ],
+  "report_template": {
+    "date": "",
+    "operator": "Codex",
+    "mode": "Claude replacement test",
+    "db_checked": false,
+    "external_checks_performed": false,
+    "posting_performed": false,
+    "api_integration_performed": false,
+    "targets": [],
+    "successes": [],
+    "failures": [],
+    "unverified": [],
+    "next_improvements": [],
+    "notes": ""
+  }
+}

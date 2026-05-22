@@ -1,0 +1,242 @@
+{
+  "db_name": "Villain投稿キューDB",
+  "version": "0.1.0",
+  "created_at": "2026-05-10",
+  "purpose": "Codexが生成したVillain投稿案を、投稿実行前のキューとして保存する。Codexはキュー投入まで。投稿実行はしない。",
+  "queue_policy": {
+    "auto_post_enabled": false,
+    "manual_approval_required": true,
+    "posting_execution_allowed": false,
+    "default_new_item_status": "draft_generated",
+    "approval_owner": "大将",
+    "codex_allowed_actions": [
+      "draft_generatedとして追加",
+      "waiting_for_imageへ進めるための画像案記録",
+      "投稿前チェックのunchecked/pass/fail記録",
+      "skip_day_policy該当時のskipped記録"
+    ],
+    "codex_forbidden_actions": [
+      "approvedへ変更する",
+      "postedへ変更する",
+      "X投稿を実行する",
+      "投稿ボタンを押す",
+      "画像なしで投稿可能判定にする"
+    ]
+  },
+  "allowed_statuses": [
+    "draft_generated",
+    "waiting_for_image",
+    "waiting_for_approval",
+    "approved",
+    "posted",
+    "skipped",
+    "rejected"
+  ],
+  "status_transition_rules": [
+    {
+      "from": "draft_generated",
+      "to": "waiting_for_image",
+      "allowed_when": [
+        "draft_text_exists",
+        "passcode_selected",
+        "source_urls_listed"
+      ]
+    },
+    {
+      "from": "waiting_for_image",
+      "to": "waiting_for_approval",
+      "allowed_when": [
+        "image_attached_pass",
+        "source_url_confirmed_pass",
+        "passcode_confirmed_pass",
+        "prohibited_content_check_pass",
+        "skip_day_policy_false"
+      ]
+    },
+    {
+      "from": "waiting_for_approval",
+      "to": "approved",
+      "allowed_when": [
+        "daisho_approval_approved"
+      ],
+      "actor_required": "大将"
+    },
+    {
+      "from": "approved",
+      "to": "posted",
+      "allowed_when": [
+        "operator_manually_posted",
+        "posted_url_recorded"
+      ],
+      "actor_required": "大将または人間オペレーター"
+    }
+  ],
+  "queue_item_template": {
+    "queue_id": "",
+    "created_at": "",
+    "updated_at": "",
+    "status": "draft_generated",
+    "post_type": "",
+    "candidate_role": "main_or_backup",
+    "is_today_main_candidate": false,
+    "rough_first_reaction": "",
+    "text": "",
+    "fixed_footer": "#着て稼ぐ #villain @0xmavillain {PASSCODE}",
+    "passcode": {
+      "code": "",
+      "confirmed": false,
+      "usage_log_recorded": false
+    },
+    "source_urls": [],
+    "image": {
+      "required": true,
+      "status": "waiting_for_image",
+      "file_path_or_url": "",
+      "poster_concept": "",
+      "source_asset": "",
+      "rights_notes": ""
+    },
+    "checks": {
+      "source_url_confirmed": "unchecked",
+      "image_attached": "unchecked",
+      "passcode_confirmed": "unchecked",
+      "prohibited_content_check": "unchecked",
+      "skip_day_policy": false,
+      "daisho_approval": "unchecked"
+    },
+    "approval": {
+      "manual_approval_required": true,
+      "approved_by": "",
+      "approved_at": "",
+      "approval_comment": ""
+    },
+    "rejection": {
+      "rejected_by": "",
+      "rejected_at": "",
+      "reason": ""
+    },
+    "skip": {
+      "skipped": false,
+      "reason": "",
+      "note_seed_only": ""
+    },
+    "post_execution": {
+      "posting_execution_allowed": false,
+      "posted_url": "",
+      "posted_at": "",
+      "posted_by": "",
+      "method": "manual_only"
+    }
+  },
+  "queue": [
+    {
+      "queue_id": "vln-queue-20260510-001",
+      "created_at": "2026-05-10",
+      "updated_at": "2026-05-10",
+      "status": "waiting_for_image",
+      "post_type": "ABOUT_WORDING",
+      "candidate_role": "main",
+      "is_today_main_candidate": true,
+      "rough_first_reaction": "ABOUTの文章、ちょっと強い。",
+      "text": "ABOUTの文章、ちょっと強い。\n\nLove $villain,\nand wear it daily...\n\n毎日着ろって\n普通にすごいこと言ってる。\n\nでもVillainなら\nまあ言いそう。\n\n#着て稼ぐ #villain @0xmavillain M5Q1C",
+      "fixed_footer": "#着て稼ぐ #villain @0xmavillain {PASSCODE}",
+      "passcode": {
+        "code": "M5Q1C",
+        "confirmed": false,
+        "usage_log_recorded": false
+      },
+      "source_urls": [
+        "https://shop.0xmavillain.com/about",
+        "https://0xmavillain.com/whitepaper/"
+      ],
+      "image": {
+        "required": true,
+        "status": "waiting_for_image",
+        "file_path_or_url": "",
+        "poster_concept": "Shop ABOUT文言とApparelの空気が分かる画像またはポスター",
+        "source_asset": "",
+        "rights_notes": "画像未添付。実投稿前に素材元と使用可否を確認する。"
+      },
+      "checks": {
+        "source_url_confirmed": "pass",
+        "image_attached": "unchecked",
+        "passcode_confirmed": "unchecked",
+        "prohibited_content_check": "pass",
+        "skip_day_policy": false,
+        "daisho_approval": "unchecked"
+      },
+      "approval": {
+        "manual_approval_required": true,
+        "approved_by": "",
+        "approved_at": "",
+        "approval_comment": ""
+      },
+      "rejection": {
+        "rejected_by": "",
+        "rejected_at": "",
+        "reason": ""
+      },
+      "skip": {
+        "skipped": false,
+        "reason": "",
+        "note_seed_only": ""
+      },
+      "post_execution": {
+        "posting_execution_allowed": false,
+        "posted_url": "",
+        "posted_at": "",
+        "posted_by": "",
+        "method": "manual_only"
+      },
+      "scoring": {
+        "version": "1.0.0",
+        "score": 100,
+        "max_score": 100,
+        "risk_level": "high",
+        "risk_factors": [
+          "already_posted",
+          "passcode_unconfirmed"
+        ],
+        "recommendation": "do_not_repost",
+        "reason": "冒頭に引っかかりがある。 / ぽろっとした違和感と言い切りすぎない余白がある。 / Villain文脈が本文とフッターに入っている。 / risk factors: already_posted, passcode_unconfirmed",
+        "components": {
+          "hook_strength": {
+            "score": 15,
+            "reason": "冒頭に引っかかりがある。"
+          },
+          "raindog_voice": {
+            "score": 20,
+            "reason": "ぽろっとした違和感と言い切りすぎない余白がある。"
+          },
+          "villain_context": {
+            "score": 15,
+            "reason": "Villain文脈が本文とフッターに入っている。"
+          },
+          "brevity_and_spacing": {
+            "score": 10,
+            "reason": "短文改行で読みやすい。"
+          },
+          "new_reader_clarity": {
+            "score": 10,
+            "reason": "ABOUT文言があり、新規にも取っかかりがある。"
+          },
+          "save_or_note_potential": {
+            "score": 10,
+            "reason": "ABOUT文言の解釈としてnote化しやすい。"
+          },
+          "visual_fit": {
+            "score": 10,
+            "reason": "画像付き投稿実績/画像導線がある。"
+          },
+          "safety": {
+            "score": 10,
+            "reason": "禁止事項と元ネタ確認は通過。"
+          }
+        },
+        "scored_at": "2026-05-12T12:14:50.033228+00:00"
+      }
+    }
+  ],
+  "scoring_status": "SCORING_ONLY",
+  "scoring_updated_at": "2026-05-12T12:14:50.033352+00:00"
+}

@@ -1,0 +1,60 @@
+{
+  "db_name": "Villain Posting Unlock Rules",
+  "version": "0.1.0",
+  "purpose": "手動投稿へ進める条件を明文化し、条件未達なら必ずBLOCKEDにする。",
+  "unlock_target_status": "READY_FOR_MANUAL_POST",
+  "default_status": "BLOCKED",
+  "all_conditions_required": true,
+  "conditions": [
+    {
+      "id": "manual_approval",
+      "label": "manual approval = true",
+      "required_value": true
+    },
+    {
+      "id": "approved_for_live_post",
+      "label": "approved_for_live_post = true",
+      "required_value": true
+    },
+    {
+      "id": "write_action_kill_switch",
+      "label": "write_action_kill_switch = false",
+      "required_value": false
+    },
+    {
+      "id": "validator_passed_count",
+      "label": "validator passed_count > 0",
+      "required_comparison": "> 0"
+    },
+    {
+      "id": "postable_count",
+      "label": "postable_count > 0",
+      "required_comparison": "> 0"
+    },
+    {
+      "id": "final_status",
+      "label": "FINAL_STATUS != BLOCKED",
+      "required_comparison": "!= BLOCKED"
+    },
+    {
+      "id": "caption_present",
+      "label": "投稿本文が空でない",
+      "required_value": true
+    },
+    {
+      "id": "target_account_confirmed",
+      "label": "投稿先アカウント確認済み",
+      "required_value": true
+    }
+  ],
+  "manual_state": {
+    "target_account_confirmed": false,
+    "target_account_confirmation_note": "投稿先アカウントの人間確認が記録されるまで false のままにする。"
+  },
+  "safety": {
+    "x_api_write_allowed": false,
+    "live_post_code_allowed": false,
+    "env_read_allowed": false,
+    "blocked_if_any_condition_missing": true
+  }
+}

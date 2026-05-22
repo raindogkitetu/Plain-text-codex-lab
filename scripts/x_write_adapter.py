@@ -7,6 +7,7 @@ of these are true:
 - --execute-one is provided
 - data/villain_auto_post_pilot.json is also in LIMITED_LIVE_EXECUTION mode
 - the selected manifest item passes all hard gates
+- image posts have explicit Chappy image approval for that exact image
 
 Credentials may be read from .env only for the final execute path, and are never
 printed, measured, or written to output files.
@@ -151,6 +152,8 @@ def latest_post_at(manual_db: dict[str, Any]) -> datetime | None:
 
 
 def is_success_outcome(record: dict[str, Any]) -> bool:
+    if record.get("effective_post") is False:
+        return False
     return (
         bool(record.get("tweet_id"))
         and bool(record.get("url"))
@@ -159,19 +162,8 @@ def is_success_outcome(record: dict[str, Any]) -> bool:
     )
 
 
-def is_effective_success_outcome(record: dict[str, Any]) -> bool:
-    if not is_success_outcome(record):
-        return False
-    review = record.get("human_review", {})
-    if review.get("keep") is False:
-        return False
-    if record.get("effective_post") is False or record.get("x_deleted_by_human") is True:
-        return False
-    return True
-
-
 def success_outcomes(outcomes_db: dict[str, Any]) -> list[dict[str, Any]]:
-    return [record for record in outcomes_db.get("outcomes", []) if is_effective_success_outcome(record)]
+    return [record for record in outcomes_db.get("outcomes", []) if is_success_outcome(record)]
 
 
 def outcome_successes_today(outcomes_db: dict[str, Any]) -> int:
@@ -248,6 +240,24 @@ def manual_texts_and_images(manual_db: dict[str, Any]) -> tuple[set[str], set[st
     return texts, images
 
 
+def chappy_image_approval_blockers(item: dict[str, Any], image: dict[str, Any]) -> list[str]:
+    """Require Chappy's explicit visual approval before any image upload path."""
+    image_path = image.get("absolute_path") or image.get("file_path", "")
+    if not image_path and image.get("ready") is not True:
+        return []
+
+    approval = image.get("chappy_image_approval") or item.get("chappy_image_approval") or {}
+    approved = (
+        approval.get("source") == "chappy"
+        and approval.get("decision") in {"APPROVE_ONE", "USE_ONE"}
+        and approval.get("approved_image_path") in {image.get("absolute_path"), image.get("file_path"), image_path}
+        and approval.get("posting_permission_granted") is False
+    )
+    if approved:
+        return []
+    return ["chappy_image_approval_missing"]
+
+
 def execution_blockers(
     mode: str,
     pilot: dict[str, Any],
@@ -312,6 +322,7 @@ def execution_blockers(
         blockers.append("already_posted")
     image = item.get("image", {})
     image_path = image.get("absolute_path") or image.get("file_path", "")
+    blockers.extend(chappy_image_approval_blockers(item, image))
     if image_path and image_path in posted_images:
         blockers.append("same_image_cooldown")
     if image.get("ready"):

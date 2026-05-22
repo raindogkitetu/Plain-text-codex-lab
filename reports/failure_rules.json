@@ -1,0 +1,28 @@
+{
+  "rules": [
+    {
+      "name": "task_timeout",
+      "condition": "15min_no_action",
+      "status": "failed",
+      "message": "予定時刻から15分経過"
+    },
+    {
+      "name": "missing_output",
+      "condition": "output_not_found",
+      "status": "failed",
+      "message": "出力ファイルなし"
+    },
+    {
+      "name": "whisper_stopped",
+      "condition": "process_stopped",
+      "status": "warning",
+      "message": "Whisper停止"
+    },
+    {
+      "name": "claude_timeout",
+      "condition": "no_response",
+      "status": "timeout",
+      "message": "Claude応答なし"
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "db_name": "Villain Required Token Layer",
+  "version": "1.0.0",
+  "status": "active_local_validation",
+  "updated_at_jst": "2026-05-16T21:06:15+09:00",
+  "purpose": "投稿文生成後のfinal textで必須導線トークンを検証し、欠落時は固定順で追加する。",
+  "mandatory_tokens": [
+    "#着て稼ぐ",
+    "#villain",
+    "$PPP",
+    "@0xmavillain"
+  ],
+  "mandatory_footer_order": "#着て稼ぐ #villain $PPP @0xmavillain",
+  "policy": {
+    "run_after_text_generation": true,
+    "run_before_auto_post_pilot_output": true,
+    "dedupe_tokens": true,
+    "preserve_existing_passcode_suffix": true,
+    "passcode_source": "data/villain_passcodes.json",
+    "passcode_auto_generation_allowed": false,
+    "passcode_missing_blocks_posting": true,
+    "passcode_not_in_db_blocks_posting": true,
+    "never_remove_for_brevity_or_novelty": true,
+    "posting_execution_allowed": false,
+    "x_api_write_allowed": false,
+    "upload_media_allowed": false,
+    "create_tweet_allowed": false
+  },
+  "integration_points": {
+    "candidate_generation": "scripts/generate_villain_candidates.py normalizes every candidate text before scoring/output.",
+    "daily_selection": "data/villain_daily_selection.json treats required_token_layer as a non-optional final_text gate.",
+    "auto_post_pilot": "scripts/auto_post_pilot.py normalizes plan item text and records token_verification."
+  },
+  "scan_summary": {
+    "files_with_text_findings": 5,
+    "ppp_missing_findings": 8
+  },
+  "ppp_missing_candidates": [
+    {
+      "file": "data/manual_post_results.json",
+      "json_path": "manual_post_results[0].post_text",
+      "preview": "ABOUTの文章、ちょっと強い。 /  / Love $villain, / and wear it daily... /  / 毎日着ろって。 /  / 普通そんなこと言わない。 /  / でもVillainなら、 / まあ言いそう。 /  / #着て稼ぐ #villain @0xmavillain M5Q1C"
+    },
+    {
+      "file": "data/manual_post_results.json",
+      "json_path": "manual_post_results[1].post_text",
+      "preview": "誰かに見せるため、 / だけじゃない服がある。 /  / 自分の側に戻る感じ。 /  / 今日はそれでいい。 /  / #着て稼ぐ #villain @0xmavillain R2J9T"
+    },
+    {
+      "file": "data/manual_post_results.json",
+      "json_path": "manual_post_results[2].post_text",
+      "preview": "強い服って、 / 大声じゃない方がいい。 /  / 黙ってても、 / ちょっと残るやつ。 /  / Villainはそっち。 /  / #着て稼ぐ #villain @0xmavillain R2J9T"
+    },
+    {
+      "file": "data/manual_post_results.json",
+      "json_path": "manual_post_results[3].post_text",
+      "preview": "説明より、 / 着てる人の方が早い。 /  / しかも少しずつ、 / 集まってる。 /  / $villainは、 / そこがちょっと変。 /  / #着て稼ぐ #villain @0xmavillain R2J9T"
+    },
+    {
+      "file": "data/villain_dry_run_payloads.json",
+      "json_path": "payloads[0].caption",
+      "preview": "ABOUTの文章、ちょっと強い。 /  / Love $villain, / and wear it daily... /  / 毎日着ろって。 /  / 普通そんなこと言わない。 /  / でもVillainなら、 / まあ言いそう。 /  / #着て稼ぐ #villain @0xmavillain M5Q1C"
+    },
+    {
+      "file": "data/villain_post_metrics.json",
+      "json_path": "records[0].text",
+      "preview": "ABOUTの文章、ちょっと強い。 /  / Love $villain, / and wear it daily... /  / 毎日着ろって。 /  / 普通そんなこと言わない。 /  / でもVillainなら、 / まあ言いそう。 /  / #着て稼ぐ #villain @0xmavillain M5Q1C"
+    },
+    {
+      "file": "data/villain_post_queue.json",
+      "json_path": "queue[0].text",
+      "preview": "ABOUTの文章、ちょっと強い。 /  / Love $villain, / and wear it daily... /  / 毎日着ろって / 普通にすごいこと言ってる。 /  / でもVillainなら / まあ言いそう。 /  / #着て稼ぐ #villain @0xmavillain M5Q1C"
+    },
+    {
+      "file": "data/villain_post_template.json",
+      "json_path": "filled_example.post_body.final_text",
+      "preview": "Web3の入口は、難しくなくていい。 /  / まず着る。 / 次に投稿する。 / そして、仲間が増える。 /  / Villainはその順番で動く。 /  / #着て稼ぐ #villain @0xmavillain P3L6B"
+    }
+  ]
+}

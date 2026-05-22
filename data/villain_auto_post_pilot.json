@@ -1,0 +1,1903 @@
+{
+  "db_name": "Villain Auto Post Pilot Plan",
+  "version": "1.3.0",
+  "status": "LIMITED_LIVE_EXECUTION_BLOCKED",
+  "mode": "LIMITED_LIVE_EXECUTION",
+  "generated_at_jst": "2026-05-22T23:00:03+09:00",
+  "source_mode": "candidate_stream",
+  "target_post_count": {
+    "min": 3,
+    "max": 3,
+    "actual": 0
+  },
+  "live_pilot_limits": {
+    "max_posts_per_day": 3,
+    "posts_already_recorded_today": 2,
+    "remaining_posts_today": 1,
+    "cooldown_between_posts_minutes": 120
+  },
+  "limited_live_execution": {
+    "mode_enabled": true,
+    "live_execution_mode": "LIMITED_LIVE_EXECUTION",
+    "execution_scope": "supervised_limited_posting_manifest",
+    "posting_adapter_in_this_script": false,
+    "requires_human_supervision": true,
+    "max_posts_per_day": 3,
+    "cooldown_between_posts_minutes": 120,
+    "manual_safety": {
+      "delete_if_needed": true,
+      "manual_override_allowed": true,
+      "post_after_publish_review": true
+    },
+    "hard_blocks": [
+      "risk_high",
+      "already_posted",
+      "same_image_cooldown",
+      "same_media_path",
+      "same_media_sha256",
+      "near_duplicate_media_phash",
+      "same_prompt_family_cooldown",
+      "temporal_context_unverified",
+      "topic_image_pairing_mismatch",
+      "topic_image_pairing_unverified",
+      "deleted_candidate_blacklist",
+      "deleted_image_cooldown",
+      "deleted_prompt_family_cooldown",
+      "deleted_text_near_match",
+      "deleted_topic_context_cooldown",
+      "repeated_topic_penalty",
+      "required_tokens_not_verified",
+      "passcode_missing",
+      "passcode_not_in_db",
+      "max_posts_per_day_reached"
+    ]
+  },
+  "safety": {
+    "live_posting_allowed": true,
+    "x_api_write_allowed_by_this_script": false,
+    "upload_media_allowed_by_this_script": false,
+    "create_tweet_allowed_by_this_script": false,
+    "x_write_adapter_allowed_in_limited_live_execution": true,
+    "auto_posting_allowed": false,
+    "would_execute_actions": [],
+    "api_key_output_allowed": false,
+    "env_output_allowed": false
+  },
+  "pilot_policy": {
+    "human_supervision_required_after_post": true,
+    "post_after_publish_review": true,
+    "manual_override_allowed": true,
+    "delete_if_needed": true,
+    "note_creation_enabled": false,
+    "note_seed_only": true,
+    "execution_enabled": true,
+    "execution_enablement_requires_separate_design": false,
+    "density_priority": "slightly_higher_than_overcautious_blocking",
+    "policy_alignment": {
+      "human_control": true,
+      "privacy_respect": true,
+      "no_spam_or_deception": true,
+      "no_sensitive_personal_data_output": true,
+      "source": "OpenAI usage policies effective 2025-10-29"
+    },
+    "hard_blocks": [
+      "risk_high",
+      "already_posted",
+      "repeated_topic_penalty",
+      "same_image_cooldown",
+      "same_media_path",
+      "same_media_sha256",
+      "near_duplicate_media_phash",
+      "same_prompt_family_cooldown",
+      "temporal_context_unverified",
+      "topic_image_pairing_mismatch",
+      "topic_image_pairing_unverified",
+      "deleted_candidate_blacklist",
+      "deleted_image_cooldown",
+      "deleted_prompt_family_cooldown",
+      "deleted_text_near_match",
+      "deleted_topic_context_cooldown",
+      "required_tokens_not_verified",
+      "passcode_missing",
+      "passcode_not_in_db",
+      "novelty_too_low",
+      "score_below_80",
+      "max_posts_per_day_reached"
+    ]
+  },
+  "inputs": {
+    "candidate_stream": "data/villain_candidate_stream.json",
+    "daily_selection": "data/villain_daily_selection.json",
+    "novelty_engine": "data/villain_novelty_engine.json",
+    "image_strategy": "data/villain_image_strategy.json",
+    "scoring_rules": "data/villain_post_scoring_rules.json",
+    "generated_candidates": "data/villain_generated_candidates.json",
+    "manual_results": "data/manual_post_results.json",
+    "outcomes": "data/villain_post_outcomes.json",
+    "recent_media_history": "data/recent_media_history.json",
+    "safe_post_executor": "scripts/safe_post_executor.py",
+    "x_write_adapter": "scripts/x_write_adapter.py"
+  },
+  "warnings": [
+    "pilot_plan_below_target_minimum",
+    "no_image_ready_items",
+    "limited_live_execution_manifest_only_no_x_write_adapter_called"
+  ],
+  "execution_manifest": [],
+  "pilot_plan": [],
+  "rejected_or_blocked_count": 15,
+  "rejected_or_blocked_preview": [
+    {
+      "slot": "daytime",
+      "source": "candidate_stream",
+      "source_id": "vln-stream-20260519-stock-001",
+      "category": "culture_observer",
+      "passcode": "C14QB",
+      "text": "机に置いた瞬間、\nグッズじゃなくて、\n生活の一部になる。\n\n広告より、\n使われた跡の方が強い。\n\n#着て稼ぐ #villain $PPP @0xmavillain C14QB",
+      "text_preview": "机に置いた瞬間、 / グッズじゃなくて、 / 生活の一部になる。 / 広告より、 / 使われた跡の方が強い。 / #着て稼ぐ #villain $PPP @0xmavillain C14QB",
+      "token_verification": {
+        "required_layer": "Required Token Layer v1",
+        "mandatory_footer_order": "#着て稼ぐ #villain $PPP @0xmavillain",
+        "missing_before": [],
+        "duplicates_before": [],
+        "changed": false,
+        "before_counts": {
+          "#着て稼ぐ": 1,
+          "#villain": 1,
+          "$PPP": 1,
+          "@0xmavillain": 1
+        },
+        "after_counts": {
+          "#着て稼ぐ": 1,
+          "#villain": 1,
+          "$PPP": 1,
+          "@0xmavillain": 1
+        },
+        "final_order": "#着て稼ぐ #villain $PPP @0xmavillain",
+        "passcode": "C14QB",
+        "passcode_exists_in_db": true,
+        "valid_after": true
+      },
+      "image": {
+        "required": true,
+        "ready": true,
+        "file_path": "villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png",
+        "image_type": "lifestyle_residue_photo",
+        "match_score": 94,
+        "rights_notes": "公式ショップ実物グッズを参照した生活痕/着用画像。商品画像そのままではない。",
+        "absolute_path": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png"
+      },
+      "score": 92,
+      "risk": "low",
+      "novelty_score": 80,
+      "raw_novelty_score": 80,
+      "remixability_score": 74,
+      "remixability": {
+        "source": "candidate_score",
+        "signals": [],
+        "components": {}
+      },
+      "media_deduplication": {
+        "signature": {
+          "path": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png",
+          "sha256": "536ed31d6942711bf8ef87c8d6c2c9ee189732bb5df6615fd4d8ffdd77aa5fc2",
+          "perceptual_hash": "1f19113034302030",
+          "prompt_family": "lifestyle_residue_photo_wearable_stock_010_thermos_workdesk",
+          "composition": "",
+          "layout": "",
+          "image_type": "lifestyle_residue_photo"
+        },
+        "blockers": [
+          "near_duplicate_media_phash",
+          "same_media_path",
+          "same_media_sha256",
+          "same_prompt_family_cooldown"
+        ],
+        "matches": [
+          {
+            "tweet_id": "2056897607105192401",
+            "url": "https://x.com/raindog_kitetu/status/2056897607105192401",
+            "posted_at_jst": "2026-05-20T09:31:48+09:00",
+            "image_used": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png",
+            "hamming_distance": 0,
+            "reasons": [
+              "near_duplicate_media_phash",
+              "same_media_path",
+              "same_media_sha256",
+              "same_prompt_family_cooldown"
+            ]
+          }
+        ],
+        "cooldown_days": 7
+      },
+      "context_mismatch_gate": {
+        "blockers": [],
+        "context_check": {
+          "terms": [],
+          "temporal_terms": [],
+          "event_terms": [],
+          "context_evidence_verified": false,
+          "requires_evidence": false
+        },
+        "pairing_check": {
+          "topic_groups": [],
+          "image_metadata": "villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png /users/raindog/projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png lifestyle_residue_photo",
+          "matched_image_terms": {}
+        }
+      },
+      "deleted_learning_gate": {
+        "blockers": [],
+        "matches": []
+      },
+      "saturation_flags": [],
+      "pilot_score": 284,
+      "eligible": false,
+      "blockers": [
+        "near_duplicate_media_phash",
+        "same_media_path",
+        "same_media_sha256",
+        "same_prompt_family_cooldown"
+      ],
+      "warnings": [
+        "recent_media_reuse_match_found"
+      ],
+      "reason": "Thermos desk residue. No temporal/event claim.",
+      "expected_type": "residual_growth_or_profile_pull",
+      "fallback_action": "hold_for_night_if_context_is_too_heavy",
+      "quality_review": {
+        "candidate_id": "vln-stream-20260519-stock-001",
+        "execution_id": "",
+        "slot": "daytime",
+        "passcode": "C14QB",
+        "image": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png",
+        "text": "机に置いた瞬間、\nグッズじゃなくて、\n生活の一部になる。\n\n広告より、\n使われた跡の方が強い。\n\n#着て稼ぐ #villain $PPP @0xmavillain C14QB",
+        "text_preview": "机に置いた瞬間、 / グッズじゃなくて、 / 生活の一部になる。 / 広告より、 / 使われた跡の方が強い。 / #着て稼ぐ #villain $PPP @0xmavillain C14QB",
+        "final_quality_status": "READY",
+        "blockers": [],
+        "warnings": [],
+        "context_terms": [],
+        "context_evidence": {
+          "verified": false,
+          "requires_evidence": false,
+          "core_question": "この投稿は何を見て言っているのか？"
+        },
+        "topic_image_fit": {
+          "status": "OK",
+          "checks": {
+            "topic_groups": [],
+            "image_metadata": "villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png /users/raindog/projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png lifestyle_residue_photo",
+            "matched_image_terms": {}
+          }
+        },
+        "ad_like_score": 0,
+        "native_tone_score": 72,
+        "persona_fit": 78,
+        "deleted_nearby_match": [],
+        "human_check_checklist": [
+          "この投稿は何を見て言っているのか？",
+          "本文の現実文脈は今日の状況と一致しているか？",
+          "画像は本文topicを本当に支えているか？",
+          "広告ではなくタイムライン上の観測として混ざるか？",
+          "鬼徹アカウントの余白と人格に合っているか？"
+        ]
+      }
+    },
+    {
+      "slot": "daytime",
+      "source": "candidate_stream",
+      "source_id": "vln-stream-20260519-stock-002",
+      "category": "poster_summary",
+      "passcode": "DKLS8",
+      "text": "持ち物って、\n置かれた場所で\nだいたい正体が出る。\n\nきれいな写真より、\n帰ってきた後の方が本物っぽい。\n\n#着て稼ぐ #villain $PPP @0xmavillain DKLS8",
+      "text_preview": "持ち物って、 / 置かれた場所で / だいたい正体が出る。 / きれいな写真より、 / 帰ってきた後の方が本物っぽい。 / #着て稼ぐ #villain $PPP @0xmavillain DKLS8",
+      "token_verification": {
+        "required_layer": "Required Token Layer v1",
+        "mandatory_footer_order": "#着て稼ぐ #villain $PPP @0xmavillain",
+        "missing_before": [],
+        "duplicates_before": [],
+        "changed": false,
+        "before_counts": {
+          "#着て稼ぐ": 1,
+          "#villain": 1,
+          "$PPP": 1,
+          "@0xmavillain": 1
+        },
+        "after_counts": {
+          "#着て稼ぐ": 1,
+          "#villain": 1,
+          "$PPP": 1,
+          "@0xmavillain": 1
+        },
+        "final_order": "#着て稼ぐ #villain $PPP @0xmavillain",
+        "passcode": "DKLS8",
+        "passcode_exists_in_db": true,
+        "valid_after": true
+      },
+      "image": {
+        "required": true,
+        "ready": true,
+        "file_path": "villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png",
+        "image_type": "lifestyle_residue_photo",
+        "match_score": 94,
+        "rights_notes": "公式ショップ実物グッズを参照した生活痕/着用画像。商品画像そのままではない。",
+        "absolute_path": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png"
+      },
+      "score": 92,
+      "risk": "low",
+      "novelty_score": 76,
+      "raw_novelty_score": 80,
+      "remixability_score": 74,
+      "remixability": {
+        "source": "candidate_score",
+        "signals": [],
+        "components": {}
+      },
+      "media_deduplication": {
+        "signature": {
+          "path": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png",
+          "sha256": "4de3bef0230faf0c5c6a5888df83ad45c6ce5afe921dceca4da165df5e4c2ad0",
+          "perceptual_hash": "c3c7819168602021",
+          "prompt_family": "lifestyle_residue_photo_wearable_stock_011_bag_entryway",
+          "composition": "",
+          "layout": "",
+          "image_type": "lifestyle_residue_photo"
+        },
+        "blockers": [
+          "near_duplicate_media_phash",
+          "same_media_path",
+          "same_media_sha256",
+          "same_prompt_family_cooldown"
+        ],
+        "matches": [
+          {
+            "tweet_id": "2056736652442353980",
+            "url": "https://x.com/raindog_kitetu/status/2056736652442353980",
+            "posted_at_jst": "2026-05-19T23:00:05+09:00",
+            "image_used": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png",
+            "hamming_distance": 0,
+            "reasons": [
+              "near_duplicate_media_phash",
+              "same_media_path",
+              "same_media_sha256",
+              "same_prompt_family_cooldown"
+            ]
+          }
+        ],
+        "cooldown_days": 7
+      },
+      "context_mismatch_gate": {
+        "blockers": [],
+        "context_check": {
+          "terms": [],
+          "temporal_terms": [],
+          "event_terms": [],
+          "context_evidence_verified": false,
+          "requires_evidence": false
+        },
+        "pairing_check": {
+          "topic_groups": [],
+          "image_metadata": "villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png /users/raindog/projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png lifestyle_residue_photo",
+          "matched_image_terms": {}
+        }
+      },
+      "deleted_learning_gate": {
+        "blockers": [
+          "deleted_text_near_match"
+        ],
+        "matches": [
+          {
+            "tweet_id": "2057684471256879127",
+            "execution_id": "vln-exec-daytime-vln-stream-20260519-auto-005",
+            "candidate_id": "vln-stream-20260519-auto-005",
+            "image_used": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png",
+            "prompt_family": "lifestyle_residue_wearable_stock_003_bag_workdesk",
+            "topic_cluster": "poster_summary_residual",
+            "delete_reason": "Deleted by human after review: Codex posted a replacement without Chappy image approval; image/candidate must not be reused for replacement flow.",
+            "reasons": [
+              "deleted_text_near_match"
+            ]
+          }
+        ]
+      },
+      "saturation_flags": [
+        "repeated_structure"
+      ],
+      "pilot_score": 290,
+      "eligible": false,
+      "blockers": [
+        "deleted_text_near_match",
+        "near_duplicate_media_phash",
+        "same_media_path",
+        "same_media_sha256",
+        "same_prompt_family_cooldown"
+      ],
+      "warnings": [
+        "deleted_nearby_match_found",
+        "near_deleted_or_dropped_post",
+        "recent_media_reuse_match_found"
+      ],
+      "reason": "Bag entryway residue. No temporal/event claim.",
+      "expected_type": "residual_growth",
+      "fallback_action": "hold_for_night_if_context_is_too_heavy",
+      "quality_review": {
+        "candidate_id": "vln-stream-20260519-stock-002",
+        "execution_id": "",
+        "slot": "daytime",
+        "passcode": "DKLS8",
+        "image": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png",
+        "text": "持ち物って、\n置かれた場所で\nだいたい正体が出る。\n\nきれいな写真より、\n帰ってきた後の方が本物っぽい。\n\n#着て稼ぐ #villain $PPP @0xmavillain DKLS8",
+        "text_preview": "持ち物って、 / 置かれた場所で / だいたい正体が出る。 / きれいな写真より、 / 帰ってきた後の方が本物っぽい。 / #着て稼ぐ #villain $PPP @0xmavillain DKLS8",
+        "final_quality_status": "BLOCKED",
+        "blockers": [
+          "deleted_text_near_match"
+        ],
+        "warnings": [
+          "deleted_nearby_match_found"
+        ],
+        "context_terms": [],
+        "context_evidence": {
+          "verified": false,
+          "requires_evidence": false,
+          "core_question": "この投稿は何を見て言っているのか？"
+        },
+        "topic_image_fit": {
+          "status": "OK",
+          "checks": {
+            "topic_groups": [],
+            "image_metadata": "villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png /users/raindog/projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png lifestyle_residue_photo",
+            "matched_image_terms": {}
+          }
+        },
+        "ad_like_score": 0,
+        "native_tone_score": 77,
+        "persona_fit": 78,
+        "deleted_nearby_match": [
+          {
+            "tweet_id": "2057684471256879127",
+            "execution_id": "vln-exec-daytime-vln-stream-20260519-auto-005",
+            "candidate_id": "vln-stream-20260519-auto-005",
+            "image_used": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png",
+            "prompt_family": "lifestyle_residue_wearable_stock_003_bag_workdesk",
+            "topic_cluster": "poster_summary_residual",
+            "delete_reason": "Deleted by human after review: Codex posted a replacement without Chappy image approval; image/candidate must not be reused for replacement flow.",
+            "reasons": [
+              "deleted_text_near_match"
+            ]
+          }
+        ],
+        "human_check_checklist": [
+          "この投稿は何を見て言っているのか？",
+          "本文の現実文脈は今日の状況と一致しているか？",
+          "画像は本文topicを本当に支えているか？",
+          "広告ではなくタイムライン上の観測として混ざるか？",
+          "鬼徹アカウントの余白と人格に合っているか？"
+        ]
+      }
+    },
+    {
+      "slot": "daytime",
+      "source": "candidate_stream",
+      "source_id": "vln-stream-20260519-stock-003",
+      "category": "culture_observer",
+      "passcode": "GQ2UB",
+      "text": "服は主張しすぎると、\n急に広告になる。\n\n少しだけ見えて、\n勝手に残るくらいがちょうどいい。\n\n#着て稼ぐ #villain $PPP @0xmavillain GQ2UB",
+      "text_preview": "服は主張しすぎると、 / 急に広告になる。 / 少しだけ見えて、 / 勝手に残るくらいがちょうどいい。 / #着て稼ぐ #villain $PPP @0xmavillain GQ2UB",
+      "token_verification": {
+        "required_layer": "Required Token Layer v1",
+        "mandatory_footer_order": "#着て稼ぐ #villain $PPP @0xmavillain",
+        "missing_before": [],
+        "duplicates_before": [],
+        "changed": false,
+        "before_counts": {
+          "#着て稼ぐ": 1,
+          "#villain": 1,
+          "$PPP": 1,
+          "@0xmavillain": 1
+        },
+        "after_counts": {
+          "#着て稼ぐ": 1,
+          "#villain": 1,
+          "$PPP": 1,
+          "@0xmavillain": 1
+        },
+        "final_order": "#着て稼ぐ #villain $PPP @0xmavillain",
+        "passcode": "GQ2UB",
+        "passcode_exists_in_db": true,
+        "valid_after": true
+      },
+      "image": {
+        "required": true,
+        "ready": true,
+        "file_path": "villain_post_images/wearable_stock/wearable_stock_012_hoodie_mirror_person.png",
+        "image_type": "wearable_lifestyle_photo",
+        "match_score": 94,
+        "rights_notes": "公式ショップ実物グッズを参照した生活痕/着用画像。商品画像そのままではない。",
+        "absolute_path": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_012_hoodie_mirror_person.png"
+      },
+      "score": 92,
+      "risk": "low",
+      "novelty_score": 72,
+      "raw_novelty_score": 80,
+      "remixability_score": 74,
+      "remixability": {
+        "source": "candidate_score",
+        "signals": [],
+        "components": {}
+      },
+      "media_deduplication": {
+        "signature": {
+          "path": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_012_hoodie_mirror_person.png",
+          "sha256": "c08bd7a3905ae1a98aa927b96794a1690eefe2dc3535c25d17ca9f476821daa4",
+          "perceptual_hash": "263228e4d8c8b8f8",
+          "prompt_family": "wearable_lifestyle_photo_wearable_stock_012_hoodie_mirror_person",
+          "composition": "",
+          "layout": "",
+          "image_type": "wearable_lifestyle_photo"
+        },
+        "blockers": [
+          "near_duplicate_media_phash",
+          "same_media_path",
+          "same_media_sha256"
+        ],
+        "matches": [
+          {
+            "tweet_id": "2057473911550521382",
+            "url": "https://x.com/raindog_kitetu/status/2057473911550521382",
+            "posted_at_jst": "2026-05-21T23:49:41+09:00",
+            "image_used": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_012_hoodie_mirror_person.png",
+            "hamming_distance": 0,
+            "reasons": [
+              "near_duplicate_media_phash",
+              "same_media_path",
+              "same_media_sha256"
+            ]
+          }
+        ],
+        "cooldown_days": 7
+      },
+      "context_mismatch_gate": {
+        "blockers": [],
+        "context_check": {
+          "terms": [],
+          "temporal_terms": [],
+          "event_terms": [],
+          "context_evidence_verified": false,
+          "requires_evidence": false
+        },
+        "pairing_check": {
+          "topic_groups": [],
+          "image_metadata": "villain_post_images/wearable_stock/wearable_stock_012_hoodie_mirror_person.png /users/raindog/projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_012_hoodie_mirror_person.png wearable_lifestyle_photo",
+          "matched_image_terms": {}
+        }
+      },
+      "deleted_learning_gate": {
+        "blockers": [],
+        "matches": []
+      },
+      "saturation_flags": [
+        "same_black_hoodie"
+      ],
+      "pilot_score": 276,
+      "eligible": false,
+      "blockers": [
+        "near_duplicate_media_phash",
+        "same_media_path",
+        "same_media_sha256"
+      ],
+      "warnings": [
+        "recent_media_reuse_match_found"
+      ],
+      "reason": "Hoodie mirror person. No temporal/event claim.",
+      "expected_type": "residual_growth_or_profile_pull",
+      "fallback_action": "hold_for_night_if_context_is_too_heavy",
+      "quality_review": {
+        "candidate_id": "vln-stream-20260519-stock-003",
+        "execution_id": "",
+        "slot": "daytime",
+        "passcode": "GQ2UB",
+        "image": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_012_hoodie_mirror_person.png",
+        "text": "服は主張しすぎると、\n急に広告になる。\n\n少しだけ見えて、\n勝手に残るくらいがちょうどいい。\n\n#着て稼ぐ #villain $PPP @0xmavillain GQ2UB",
+        "text_preview": "服は主張しすぎると、 / 急に広告になる。 / 少しだけ見えて、 / 勝手に残るくらいがちょうどいい。 / #着て稼ぐ #villain $PPP @0xmavillain GQ2UB",
+        "final_quality_status": "READY",
+        "blockers": [],
+        "warnings": [],
+        "context_terms": [],
+        "context_evidence": {
+          "verified": false,
+          "requires_evidence": false,
+          "core_question": "この投稿は何を見て言っているのか？"
+        },
+        "topic_image_fit": {
+          "status": "OK",
+          "checks": {
+            "topic_groups": [],
+            "image_metadata": "villain_post_images/wearable_stock/wearable_stock_012_hoodie_mirror_person.png /users/raindog/projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_012_hoodie_mirror_person.png wearable_lifestyle_photo",
+            "matched_image_terms": {}
+          }
+        },
+        "ad_like_score": 0,
+        "native_tone_score": 82,
+        "persona_fit": 83,
+        "deleted_nearby_match": [],
+        "human_check_checklist": [
+          "この投稿は何を見て言っているのか？",
+          "本文の現実文脈は今日の状況と一致しているか？",
+          "画像は本文topicを本当に支えているか？",
+          "広告ではなくタイムライン上の観測として混ざるか？",
+          "鬼徹アカウントの余白と人格に合っているか？"
+        ]
+      }
+    },
+    {
+      "slot": "daytime",
+      "source": "candidate_stream",
+      "source_id": "vln-stream-20260519-auto-004",
+      "category": "culture_observer",
+      "passcode": "F3X7M",
+      "text": "机に置いた瞬間、\nグッズじゃなくて、\n生活の一部になる。\n\n広告より、\n使われた跡の方が強い。\n\n#着て稼ぐ #villain $PPP @0xmavillain F3X7M",
+      "text_preview": "机に置いた瞬間、 / グッズじゃなくて、 / 生活の一部になる。 / 広告より、 / 使われた跡の方が強い。 / #着て稼ぐ #villain $PPP @0xmavillain F3X7M",
+      "token_verification": {
+        "required_layer": "Required Token Layer v1",
+        "mandatory_footer_order": "#着て稼ぐ #villain $PPP @0xmavillain",
+        "missing_before": [],
+        "duplicates_before": [],
+        "changed": false,
+        "before_counts": {
+          "#着て稼ぐ": 1,
+          "#villain": 1,
+          "$PPP": 1,
+          "@0xmavillain": 1
+        },
+        "after_counts": {
+          "#着て稼ぐ": 1,
+          "#villain": 1,
+          "$PPP": 1,
+          "@0xmavillain": 1
+        },
+        "final_order": "#着て稼ぐ #villain $PPP @0xmavillain",
+        "passcode": "F3X7M",
+        "passcode_exists_in_db": true,
+        "valid_after": true
+      },
+      "image": {
+        "required": true,
+        "ready": true,
+        "file_path": "villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png",
+        "image_type": "lifestyle_residue",
+        "match_score": 92,
+        "rights_notes": "maintenance refill from approved shop wearable stock; not raw shop image.",
+        "absolute_path": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png"
+      },
+      "score": 90,
+      "risk": "low",
+      "novelty_score": 78,
+      "raw_novelty_score": 78,
+      "remixability_score": 72,
+      "remixability": {
+        "source": "candidate_score",
+        "signals": [],
+        "components": {}
+      },
+      "media_deduplication": {
+        "signature": {
+          "path": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png",
+          "sha256": "9257441a33698225b81a8439603a5f1402dbfff677bc1ed4199c8f4cbfde7715",
+          "perceptual_hash": "0000c013c3c90d17",
+          "prompt_family": "lifestyle_residue_wearable_stock_006_thermos_desk_residue",
+          "composition": "",
+          "layout": "",
+          "image_type": "lifestyle_residue"
+        },
+        "blockers": [
+          "near_duplicate_media_phash",
+          "same_media_path",
+          "same_media_sha256",
+          "same_prompt_family_cooldown"
+        ],
+        "matches": [
+          {
+            "tweet_id": "2057067435744997644",
+            "url": "https://x.com/raindog_kitetu/status/2057067435744997644",
+            "posted_at_jst": "2026-05-20T20:54:30+09:00",
+            "image_used": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png",
+            "hamming_distance": 0,
+            "reasons": [
+              "near_duplicate_media_phash",
+              "same_media_path",
+              "same_media_sha256",
+              "same_prompt_family_cooldown"
+            ]
+          }
+        ],
+        "cooldown_days": 7
+      },
+      "context_mismatch_gate": {
+        "blockers": [],
+        "context_check": {
+          "terms": [],
+          "temporal_terms": [],
+          "event_terms": [],
+          "context_evidence_verified": false,
+          "requires_evidence": false
+        },
+        "pairing_check": {
+          "topic_groups": [],
+          "image_metadata": "villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png /users/raindog/projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png lifestyle_residue",
+          "matched_image_terms": {}
+        }
+      },
+      "deleted_learning_gate": {
+        "blockers": [
+          "deleted_candidate_blacklist"
+        ],
+        "matches": [
+          {
+            "tweet_id": "2057067435744997644",
+            "execution_id": "vln-exec-daytime-vln-stream-20260519-auto-004",
+            "candidate_id": "vln-stream-20260519-auto-004",
+            "image_used": "/Users/raindog/Documents/New project/villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png",
+            "prompt_family": "lifestyle_residue_wearable_stock_006_thermos_desk_residue",
+            "topic_cluster": "culture_observer_apparel_context",
+            "delete_reason": "Deleted by human: image quality was terrible; flat product composite did not fit account quality bar.",
+            "reasons": [
+              "deleted_candidate_blacklist"
+            ]
+          }
+        ]
+      },
+      "saturation_flags": [],
+      "pilot_score": 278,
+      "eligible": false,
+      "blockers": [
+        "near_duplicate_media_phash",
+        "same_media_path",
+        "same_media_sha256",
+        "same_prompt_family_cooldown"
+      ],
+      "warnings": [
+        "deleted_nearby_match_found",
+        "near_deleted_or_dropped_post",
+        "recent_media_reuse_match_found"
+      ],
+      "reason": "Auto-refilled by maintenance from wearable_stock_006_thermos_desk_residue; no reality/event claim.",
+      "expected_type": "residual_growth_or_profile_pull",
+      "fallback_action": "hold_for_night_if_context_is_too_heavy",
+      "quality_review": {
+        "candidate_id": "vln-stream-20260519-auto-004",
+        "execution_id": "",
+        "slot": "daytime",
+        "passcode": "F3X7M",
+        "image": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png",
+        "text": "机に置いた瞬間、\nグッズじゃなくて、\n生活の一部になる。\n\n広告より、\n使われた跡の方が強い。\n\n#着て稼ぐ #villain $PPP @0xmavillain F3X7M",
+        "text_preview": "机に置いた瞬間、 / グッズじゃなくて、 / 生活の一部になる。 / 広告より、 / 使われた跡の方が強い。 / #着て稼ぐ #villain $PPP @0xmavillain F3X7M",
+        "final_quality_status": "REVIEW_REQUIRED",
+        "blockers": [],
+        "warnings": [
+          "deleted_nearby_match_found"
+        ],
+        "context_terms": [],
+        "context_evidence": {
+          "verified": false,
+          "requires_evidence": false,
+          "core_question": "この投稿は何を見て言っているのか？"
+        },
+        "topic_image_fit": {
+          "status": "OK",
+          "checks": {
+            "topic_groups": [],
+            "image_metadata": "villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png /users/raindog/projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png lifestyle_residue",
+            "matched_image_terms": {}
+          }
+        },
+        "ad_like_score": 0,
+        "native_tone_score": 72,
+        "persona_fit": 78,
+        "deleted_nearby_match": [
+          {
+            "tweet_id": "2057067435744997644",
+            "execution_id": "vln-exec-daytime-vln-stream-20260519-auto-004",
+            "candidate_id": "vln-stream-20260519-auto-004",
+            "image_used": "/Users/raindog/Documents/New project/villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png",
+            "prompt_family": "lifestyle_residue_wearable_stock_006_thermos_desk_residue",
+            "topic_cluster": "culture_observer_apparel_context",
+            "delete_reason": "Deleted by human: image quality was terrible; flat product composite did not fit account quality bar.",
+            "reasons": [
+              "deleted_candidate_blacklist"
+            ]
+          }
+        ],
+        "human_check_checklist": [
+          "この投稿は何を見て言っているのか？",
+          "本文の現実文脈は今日の状況と一致しているか？",
+          "画像は本文topicを本当に支えているか？",
+          "広告ではなくタイムライン上の観測として混ざるか？",
+          "鬼徹アカウントの余白と人格に合っているか？"
+        ]
+      }
+    },
+    {
+      "slot": "daytime",
+      "source": "candidate_stream",
+      "source_id": "vln-stream-20260519-auto-005",
+      "category": "poster_summary",
+      "passcode": "H9J6L",
+      "text": "持ち物って、\n置かれた場所で\nだいたい正体が出る。\n\nきれいな写真より、\n帰ってきた後の方が本物っぽい。\n\n#着て稼ぐ #villain $PPP @0xmavillain H9J6L",
+      "text_preview": "持ち物って、 / 置かれた場所で / だいたい正体が出る。 / きれいな写真より、 / 帰ってきた後の方が本物っぽい。 / #着て稼ぐ #villain $PPP @0xmavillain H9J6L",
+      "token_verification": {
+        "required_layer": "Required Token Layer v1",
+        "mandatory_footer_order": "#着て稼ぐ #villain $PPP @0xmavillain",
+        "missing_before": [],
+        "duplicates_before": [],
+        "changed": false,
+        "before_counts": {
+          "#着て稼ぐ": 1,
+          "#villain": 1,
+          "$PPP": 1,
+          "@0xmavillain": 1
+        },
+        "after_counts": {
+          "#着て稼ぐ": 1,
+          "#villain": 1,
+          "$PPP": 1,
+          "@0xmavillain": 1
+        },
+        "final_order": "#着て稼ぐ #villain $PPP @0xmavillain",
+        "passcode": "H9J6L",
+        "passcode_exists_in_db": true,
+        "valid_after": true
+      },
+      "image": {
+        "required": true,
+        "ready": true,
+        "file_path": "villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png",
+        "image_type": "lifestyle_residue",
+        "match_score": 92,
+        "rights_notes": "maintenance refill from approved shop wearable stock; not raw shop image.",
+        "absolute_path": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png"
+      },
+      "score": 90,
+      "risk": "low",
+      "novelty_score": 74,
+      "raw_novelty_score": 78,
+      "remixability_score": 72,
+      "remixability": {
+        "source": "candidate_score",
+        "signals": [],
+        "components": {}
+      },
+      "media_deduplication": {
+        "signature": {
+          "path": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png",
+          "sha256": "5e2b6a199e9ba18f149d24337d510a7d56f1e314cf4f2178127709d37ccfc28f",
+          "perceptual_hash": "0000681f97c76b31",
+          "prompt_family": "lifestyle_residue_wearable_stock_003_bag_workdesk",
+          "composition": "",
+          "layout": "",
+          "image_type": "lifestyle_residue"
+        },
+        "blockers": [
+          "near_duplicate_media_phash",
+          "same_media_path",
+          "same_media_sha256",
+          "same_prompt_family_cooldown"
+        ],
+        "matches": [
+          {
+            "tweet_id": "2057684471256879127",
+            "url": "https://x.com/raindog_kitetu/status/2057684471256879127",
+            "posted_at_jst": "2026-05-22T13:46:22+09:00",
+            "image_used": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png",
+            "hamming_distance": 0,
+            "reasons": [
+              "near_duplicate_media_phash",
+              "same_media_path",
+              "same_media_sha256",
+              "same_prompt_family_cooldown"
+            ]
+          }
+        ],
+        "cooldown_days": 7
+      },
+      "context_mismatch_gate": {
+        "blockers": [],
+        "context_check": {
+          "terms": [],
+          "temporal_terms": [],
+          "event_terms": [],
+          "context_evidence_verified": false,
+          "requires_evidence": false
+        },
+        "pairing_check": {
+          "topic_groups": [],
+          "image_metadata": "villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png /users/raindog/projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png lifestyle_residue",
+          "matched_image_terms": {}
+        }
+      },
+      "deleted_learning_gate": {
+        "blockers": [
+          "deleted_candidate_blacklist",
+          "deleted_image_cooldown",
+          "deleted_text_near_match"
+        ],
+        "matches": [
+          {
+            "tweet_id": "2057684471256879127",
+            "execution_id": "vln-exec-daytime-vln-stream-20260519-auto-005",
+            "candidate_id": "vln-stream-20260519-auto-005",
+            "image_used": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png",
+            "prompt_family": "lifestyle_residue_wearable_stock_003_bag_workdesk",
+            "topic_cluster": "poster_summary_residual",
+            "delete_reason": "Deleted by human after review: Codex posted a replacement without Chappy image approval; image/candidate must not be reused for replacement flow.",
+            "reasons": [
+              "deleted_candidate_blacklist",
+              "deleted_image_cooldown",
+              "deleted_text_near_match"
+            ]
+          }
+        ]
+      },
+      "saturation_flags": [
+        "repeated_structure"
+      ],
+      "pilot_score": 284,
+      "eligible": false,
+      "blockers": [
+        "deleted_text_near_match",
+        "near_duplicate_media_phash",
+        "same_media_path",
+        "same_media_sha256",
+        "same_prompt_family_cooldown"
+      ],
+      "warnings": [
+        "deleted_nearby_match_found",
+        "near_deleted_or_dropped_post",
+        "recent_media_reuse_match_found"
+      ],
+      "reason": "Auto-refilled by maintenance from wearable_stock_003_bag_workdesk; no reality/event claim.",
+      "expected_type": "residual_growth",
+      "fallback_action": "hold_for_night_if_context_is_too_heavy",
+      "quality_review": {
+        "candidate_id": "vln-stream-20260519-auto-005",
+        "execution_id": "",
+        "slot": "daytime",
+        "passcode": "H9J6L",
+        "image": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png",
+        "text": "持ち物って、\n置かれた場所で\nだいたい正体が出る。\n\nきれいな写真より、\n帰ってきた後の方が本物っぽい。\n\n#着て稼ぐ #villain $PPP @0xmavillain H9J6L",
+        "text_preview": "持ち物って、 / 置かれた場所で / だいたい正体が出る。 / きれいな写真より、 / 帰ってきた後の方が本物っぽい。 / #着て稼ぐ #villain $PPP @0xmavillain H9J6L",
+        "final_quality_status": "BLOCKED",
+        "blockers": [
+          "deleted_text_near_match"
+        ],
+        "warnings": [
+          "deleted_nearby_match_found"
+        ],
+        "context_terms": [],
+        "context_evidence": {
+          "verified": false,
+          "requires_evidence": false,
+          "core_question": "この投稿は何を見て言っているのか？"
+        },
+        "topic_image_fit": {
+          "status": "OK",
+          "checks": {
+            "topic_groups": [],
+            "image_metadata": "villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png /users/raindog/projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png lifestyle_residue",
+            "matched_image_terms": {}
+          }
+        },
+        "ad_like_score": 0,
+        "native_tone_score": 77,
+        "persona_fit": 78,
+        "deleted_nearby_match": [
+          {
+            "tweet_id": "2057684471256879127",
+            "execution_id": "vln-exec-daytime-vln-stream-20260519-auto-005",
+            "candidate_id": "vln-stream-20260519-auto-005",
+            "image_used": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png",
+            "prompt_family": "lifestyle_residue_wearable_stock_003_bag_workdesk",
+            "topic_cluster": "poster_summary_residual",
+            "delete_reason": "Deleted by human after review: Codex posted a replacement without Chappy image approval; image/candidate must not be reused for replacement flow.",
+            "reasons": [
+              "deleted_candidate_blacklist",
+              "deleted_image_cooldown",
+              "deleted_text_near_match"
+            ]
+          }
+        ],
+        "human_check_checklist": [
+          "この投稿は何を見て言っているのか？",
+          "本文の現実文脈は今日の状況と一致しているか？",
+          "画像は本文topicを本当に支えているか？",
+          "広告ではなくタイムライン上の観測として混ざるか？",
+          "鬼徹アカウントの余白と人格に合っているか？"
+        ]
+      }
+    },
+    {
+      "slot": "night",
+      "source": "candidate_stream",
+      "source_id": "vln-stream-20260519-stock-001",
+      "category": "culture_observer",
+      "passcode": "C14QB",
+      "text": "机に置いた瞬間、\nグッズじゃなくて、\n生活の一部になる。\n\n広告より、\n使われた跡の方が強い。\n\n#着て稼ぐ #villain $PPP @0xmavillain C14QB",
+      "text_preview": "机に置いた瞬間、 / グッズじゃなくて、 / 生活の一部になる。 / 広告より、 / 使われた跡の方が強い。 / #着て稼ぐ #villain $PPP @0xmavillain C14QB",
+      "token_verification": {
+        "required_layer": "Required Token Layer v1",
+        "mandatory_footer_order": "#着て稼ぐ #villain $PPP @0xmavillain",
+        "missing_before": [],
+        "duplicates_before": [],
+        "changed": false,
+        "before_counts": {
+          "#着て稼ぐ": 1,
+          "#villain": 1,
+          "$PPP": 1,
+          "@0xmavillain": 1
+        },
+        "after_counts": {
+          "#着て稼ぐ": 1,
+          "#villain": 1,
+          "$PPP": 1,
+          "@0xmavillain": 1
+        },
+        "final_order": "#着て稼ぐ #villain $PPP @0xmavillain",
+        "passcode": "C14QB",
+        "passcode_exists_in_db": true,
+        "valid_after": true
+      },
+      "image": {
+        "required": true,
+        "ready": true,
+        "file_path": "villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png",
+        "image_type": "lifestyle_residue_photo",
+        "match_score": 94,
+        "rights_notes": "公式ショップ実物グッズを参照した生活痕/着用画像。商品画像そのままではない。",
+        "absolute_path": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png"
+      },
+      "score": 92,
+      "risk": "low",
+      "novelty_score": 80,
+      "raw_novelty_score": 80,
+      "remixability_score": 74,
+      "remixability": {
+        "source": "candidate_score",
+        "signals": [],
+        "components": {}
+      },
+      "media_deduplication": {
+        "signature": {
+          "path": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png",
+          "sha256": "536ed31d6942711bf8ef87c8d6c2c9ee189732bb5df6615fd4d8ffdd77aa5fc2",
+          "perceptual_hash": "1f19113034302030",
+          "prompt_family": "lifestyle_residue_photo_wearable_stock_010_thermos_workdesk",
+          "composition": "",
+          "layout": "",
+          "image_type": "lifestyle_residue_photo"
+        },
+        "blockers": [
+          "near_duplicate_media_phash",
+          "same_media_path",
+          "same_media_sha256",
+          "same_prompt_family_cooldown"
+        ],
+        "matches": [
+          {
+            "tweet_id": "2056897607105192401",
+            "url": "https://x.com/raindog_kitetu/status/2056897607105192401",
+            "posted_at_jst": "2026-05-20T09:31:48+09:00",
+            "image_used": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png",
+            "hamming_distance": 0,
+            "reasons": [
+              "near_duplicate_media_phash",
+              "same_media_path",
+              "same_media_sha256",
+              "same_prompt_family_cooldown"
+            ]
+          }
+        ],
+        "cooldown_days": 7
+      },
+      "context_mismatch_gate": {
+        "blockers": [],
+        "context_check": {
+          "terms": [],
+          "temporal_terms": [],
+          "event_terms": [],
+          "context_evidence_verified": false,
+          "requires_evidence": false
+        },
+        "pairing_check": {
+          "topic_groups": [],
+          "image_metadata": "villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png /users/raindog/projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png lifestyle_residue_photo",
+          "matched_image_terms": {}
+        }
+      },
+      "deleted_learning_gate": {
+        "blockers": [],
+        "matches": []
+      },
+      "saturation_flags": [],
+      "pilot_score": 294,
+      "eligible": false,
+      "blockers": [
+        "near_duplicate_media_phash",
+        "same_media_path",
+        "same_media_sha256",
+        "same_prompt_family_cooldown"
+      ],
+      "warnings": [
+        "recent_media_reuse_match_found"
+      ],
+      "reason": "Thermos desk residue. No temporal/event claim.",
+      "expected_type": "residual_growth_or_profile_pull",
+      "fallback_action": "fallback_to_poster_summary_image_ready",
+      "quality_review": {
+        "candidate_id": "vln-stream-20260519-stock-001",
+        "execution_id": "",
+        "slot": "night",
+        "passcode": "C14QB",
+        "image": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png",
+        "text": "机に置いた瞬間、\nグッズじゃなくて、\n生活の一部になる。\n\n広告より、\n使われた跡の方が強い。\n\n#着て稼ぐ #villain $PPP @0xmavillain C14QB",
+        "text_preview": "机に置いた瞬間、 / グッズじゃなくて、 / 生活の一部になる。 / 広告より、 / 使われた跡の方が強い。 / #着て稼ぐ #villain $PPP @0xmavillain C14QB",
+        "final_quality_status": "READY",
+        "blockers": [],
+        "warnings": [],
+        "context_terms": [],
+        "context_evidence": {
+          "verified": false,
+          "requires_evidence": false,
+          "core_question": "この投稿は何を見て言っているのか？"
+        },
+        "topic_image_fit": {
+          "status": "OK",
+          "checks": {
+            "topic_groups": [],
+            "image_metadata": "villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png /users/raindog/projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png lifestyle_residue_photo",
+            "matched_image_terms": {}
+          }
+        },
+        "ad_like_score": 0,
+        "native_tone_score": 72,
+        "persona_fit": 78,
+        "deleted_nearby_match": [],
+        "human_check_checklist": [
+          "この投稿は何を見て言っているのか？",
+          "本文の現実文脈は今日の状況と一致しているか？",
+          "画像は本文topicを本当に支えているか？",
+          "広告ではなくタイムライン上の観測として混ざるか？",
+          "鬼徹アカウントの余白と人格に合っているか？"
+        ]
+      }
+    },
+    {
+      "slot": "night",
+      "source": "candidate_stream",
+      "source_id": "vln-stream-20260519-stock-002",
+      "category": "poster_summary",
+      "passcode": "DKLS8",
+      "text": "持ち物って、\n置かれた場所で\nだいたい正体が出る。\n\nきれいな写真より、\n帰ってきた後の方が本物っぽい。\n\n#着て稼ぐ #villain $PPP @0xmavillain DKLS8",
+      "text_preview": "持ち物って、 / 置かれた場所で / だいたい正体が出る。 / きれいな写真より、 / 帰ってきた後の方が本物っぽい。 / #着て稼ぐ #villain $PPP @0xmavillain DKLS8",
+      "token_verification": {
+        "required_layer": "Required Token Layer v1",
+        "mandatory_footer_order": "#着て稼ぐ #villain $PPP @0xmavillain",
+        "missing_before": [],
+        "duplicates_before": [],
+        "changed": false,
+        "before_counts": {
+          "#着て稼ぐ": 1,
+          "#villain": 1,
+          "$PPP": 1,
+          "@0xmavillain": 1
+        },
+        "after_counts": {
+          "#着て稼ぐ": 1,
+          "#villain": 1,
+          "$PPP": 1,
+          "@0xmavillain": 1
+        },
+        "final_order": "#着て稼ぐ #villain $PPP @0xmavillain",
+        "passcode": "DKLS8",
+        "passcode_exists_in_db": true,
+        "valid_after": true
+      },
+      "image": {
+        "required": true,
+        "ready": true,
+        "file_path": "villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png",
+        "image_type": "lifestyle_residue_photo",
+        "match_score": 94,
+        "rights_notes": "公式ショップ実物グッズを参照した生活痕/着用画像。商品画像そのままではない。",
+        "absolute_path": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png"
+      },
+      "score": 92,
+      "risk": "low",
+      "novelty_score": 76,
+      "raw_novelty_score": 80,
+      "remixability_score": 74,
+      "remixability": {
+        "source": "candidate_score",
+        "signals": [],
+        "components": {}
+      },
+      "media_deduplication": {
+        "signature": {
+          "path": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png",
+          "sha256": "4de3bef0230faf0c5c6a5888df83ad45c6ce5afe921dceca4da165df5e4c2ad0",
+          "perceptual_hash": "c3c7819168602021",
+          "prompt_family": "lifestyle_residue_photo_wearable_stock_011_bag_entryway",
+          "composition": "",
+          "layout": "",
+          "image_type": "lifestyle_residue_photo"
+        },
+        "blockers": [
+          "near_duplicate_media_phash",
+          "same_media_path",
+          "same_media_sha256",
+          "same_prompt_family_cooldown"
+        ],
+        "matches": [
+          {
+            "tweet_id": "2056736652442353980",
+            "url": "https://x.com/raindog_kitetu/status/2056736652442353980",
+            "posted_at_jst": "2026-05-19T23:00:05+09:00",
+            "image_used": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png",
+            "hamming_distance": 0,
+            "reasons": [
+              "near_duplicate_media_phash",
+              "same_media_path",
+              "same_media_sha256",
+              "same_prompt_family_cooldown"
+            ]
+          }
+        ],
+        "cooldown_days": 7
+      },
+      "context_mismatch_gate": {
+        "blockers": [],
+        "context_check": {
+          "terms": [],
+          "temporal_terms": [],
+          "event_terms": [],
+          "context_evidence_verified": false,
+          "requires_evidence": false
+        },
+        "pairing_check": {
+          "topic_groups": [],
+          "image_metadata": "villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png /users/raindog/projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png lifestyle_residue_photo",
+          "matched_image_terms": {}
+        }
+      },
+      "deleted_learning_gate": {
+        "blockers": [
+          "deleted_text_near_match"
+        ],
+        "matches": [
+          {
+            "tweet_id": "2057684471256879127",
+            "execution_id": "vln-exec-daytime-vln-stream-20260519-auto-005",
+            "candidate_id": "vln-stream-20260519-auto-005",
+            "image_used": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png",
+            "prompt_family": "lifestyle_residue_wearable_stock_003_bag_workdesk",
+            "topic_cluster": "poster_summary_residual",
+            "delete_reason": "Deleted by human after review: Codex posted a replacement without Chappy image approval; image/candidate must not be reused for replacement flow.",
+            "reasons": [
+              "deleted_text_near_match"
+            ]
+          }
+        ]
+      },
+      "saturation_flags": [
+        "repeated_structure"
+      ],
+      "pilot_score": 290,
+      "eligible": false,
+      "blockers": [
+        "deleted_text_near_match",
+        "near_duplicate_media_phash",
+        "same_media_path",
+        "same_media_sha256",
+        "same_prompt_family_cooldown"
+      ],
+      "warnings": [
+        "deleted_nearby_match_found",
+        "near_deleted_or_dropped_post",
+        "recent_media_reuse_match_found"
+      ],
+      "reason": "Bag entryway residue. No temporal/event claim.",
+      "expected_type": "residual_growth",
+      "fallback_action": "fallback_to_poster_summary_image_ready",
+      "quality_review": {
+        "candidate_id": "vln-stream-20260519-stock-002",
+        "execution_id": "",
+        "slot": "night",
+        "passcode": "DKLS8",
+        "image": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png",
+        "text": "持ち物って、\n置かれた場所で\nだいたい正体が出る。\n\nきれいな写真より、\n帰ってきた後の方が本物っぽい。\n\n#着て稼ぐ #villain $PPP @0xmavillain DKLS8",
+        "text_preview": "持ち物って、 / 置かれた場所で / だいたい正体が出る。 / きれいな写真より、 / 帰ってきた後の方が本物っぽい。 / #着て稼ぐ #villain $PPP @0xmavillain DKLS8",
+        "final_quality_status": "BLOCKED",
+        "blockers": [
+          "deleted_text_near_match"
+        ],
+        "warnings": [
+          "deleted_nearby_match_found"
+        ],
+        "context_terms": [],
+        "context_evidence": {
+          "verified": false,
+          "requires_evidence": false,
+          "core_question": "この投稿は何を見て言っているのか？"
+        },
+        "topic_image_fit": {
+          "status": "OK",
+          "checks": {
+            "topic_groups": [],
+            "image_metadata": "villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png /users/raindog/projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png lifestyle_residue_photo",
+            "matched_image_terms": {}
+          }
+        },
+        "ad_like_score": 0,
+        "native_tone_score": 77,
+        "persona_fit": 78,
+        "deleted_nearby_match": [
+          {
+            "tweet_id": "2057684471256879127",
+            "execution_id": "vln-exec-daytime-vln-stream-20260519-auto-005",
+            "candidate_id": "vln-stream-20260519-auto-005",
+            "image_used": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png",
+            "prompt_family": "lifestyle_residue_wearable_stock_003_bag_workdesk",
+            "topic_cluster": "poster_summary_residual",
+            "delete_reason": "Deleted by human after review: Codex posted a replacement without Chappy image approval; image/candidate must not be reused for replacement flow.",
+            "reasons": [
+              "deleted_text_near_match"
+            ]
+          }
+        ],
+        "human_check_checklist": [
+          "この投稿は何を見て言っているのか？",
+          "本文の現実文脈は今日の状況と一致しているか？",
+          "画像は本文topicを本当に支えているか？",
+          "広告ではなくタイムライン上の観測として混ざるか？",
+          "鬼徹アカウントの余白と人格に合っているか？"
+        ]
+      }
+    },
+    {
+      "slot": "night",
+      "source": "candidate_stream",
+      "source_id": "vln-stream-20260519-stock-003",
+      "category": "culture_observer",
+      "passcode": "GQ2UB",
+      "text": "服は主張しすぎると、\n急に広告になる。\n\n少しだけ見えて、\n勝手に残るくらいがちょうどいい。\n\n#着て稼ぐ #villain $PPP @0xmavillain GQ2UB",
+      "text_preview": "服は主張しすぎると、 / 急に広告になる。 / 少しだけ見えて、 / 勝手に残るくらいがちょうどいい。 / #着て稼ぐ #villain $PPP @0xmavillain GQ2UB",
+      "token_verification": {
+        "required_layer": "Required Token Layer v1",
+        "mandatory_footer_order": "#着て稼ぐ #villain $PPP @0xmavillain",
+        "missing_before": [],
+        "duplicates_before": [],
+        "changed": false,
+        "before_counts": {
+          "#着て稼ぐ": 1,
+          "#villain": 1,
+          "$PPP": 1,
+          "@0xmavillain": 1
+        },
+        "after_counts": {
+          "#着て稼ぐ": 1,
+          "#villain": 1,
+          "$PPP": 1,
+          "@0xmavillain": 1
+        },
+        "final_order": "#着て稼ぐ #villain $PPP @0xmavillain",
+        "passcode": "GQ2UB",
+        "passcode_exists_in_db": true,
+        "valid_after": true
+      },
+      "image": {
+        "required": true,
+        "ready": true,
+        "file_path": "villain_post_images/wearable_stock/wearable_stock_012_hoodie_mirror_person.png",
+        "image_type": "wearable_lifestyle_photo",
+        "match_score": 94,
+        "rights_notes": "公式ショップ実物グッズを参照した生活痕/着用画像。商品画像そのままではない。",
+        "absolute_path": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_012_hoodie_mirror_person.png"
+      },
+      "score": 92,
+      "risk": "low",
+      "novelty_score": 72,
+      "raw_novelty_score": 80,
+      "remixability_score": 74,
+      "remixability": {
+        "source": "candidate_score",
+        "signals": [],
+        "components": {}
+      },
+      "media_deduplication": {
+        "signature": {
+          "path": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_012_hoodie_mirror_person.png",
+          "sha256": "c08bd7a3905ae1a98aa927b96794a1690eefe2dc3535c25d17ca9f476821daa4",
+          "perceptual_hash": "263228e4d8c8b8f8",
+          "prompt_family": "wearable_lifestyle_photo_wearable_stock_012_hoodie_mirror_person",
+          "composition": "",
+          "layout": "",
+          "image_type": "wearable_lifestyle_photo"
+        },
+        "blockers": [
+          "near_duplicate_media_phash",
+          "same_media_path",
+          "same_media_sha256"
+        ],
+        "matches": [
+          {
+            "tweet_id": "2057473911550521382",
+            "url": "https://x.com/raindog_kitetu/status/2057473911550521382",
+            "posted_at_jst": "2026-05-21T23:49:41+09:00",
+            "image_used": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_012_hoodie_mirror_person.png",
+            "hamming_distance": 0,
+            "reasons": [
+              "near_duplicate_media_phash",
+              "same_media_path",
+              "same_media_sha256"
+            ]
+          }
+        ],
+        "cooldown_days": 7
+      },
+      "context_mismatch_gate": {
+        "blockers": [],
+        "context_check": {
+          "terms": [],
+          "temporal_terms": [],
+          "event_terms": [],
+          "context_evidence_verified": false,
+          "requires_evidence": false
+        },
+        "pairing_check": {
+          "topic_groups": [],
+          "image_metadata": "villain_post_images/wearable_stock/wearable_stock_012_hoodie_mirror_person.png /users/raindog/projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_012_hoodie_mirror_person.png wearable_lifestyle_photo",
+          "matched_image_terms": {}
+        }
+      },
+      "deleted_learning_gate": {
+        "blockers": [],
+        "matches": []
+      },
+      "saturation_flags": [
+        "same_black_hoodie"
+      ],
+      "pilot_score": 286,
+      "eligible": false,
+      "blockers": [
+        "near_duplicate_media_phash",
+        "same_media_path",
+        "same_media_sha256"
+      ],
+      "warnings": [
+        "recent_media_reuse_match_found"
+      ],
+      "reason": "Hoodie mirror person. No temporal/event claim.",
+      "expected_type": "residual_growth_or_profile_pull",
+      "fallback_action": "fallback_to_poster_summary_image_ready",
+      "quality_review": {
+        "candidate_id": "vln-stream-20260519-stock-003",
+        "execution_id": "",
+        "slot": "night",
+        "passcode": "GQ2UB",
+        "image": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_012_hoodie_mirror_person.png",
+        "text": "服は主張しすぎると、\n急に広告になる。\n\n少しだけ見えて、\n勝手に残るくらいがちょうどいい。\n\n#着て稼ぐ #villain $PPP @0xmavillain GQ2UB",
+        "text_preview": "服は主張しすぎると、 / 急に広告になる。 / 少しだけ見えて、 / 勝手に残るくらいがちょうどいい。 / #着て稼ぐ #villain $PPP @0xmavillain GQ2UB",
+        "final_quality_status": "READY",
+        "blockers": [],
+        "warnings": [],
+        "context_terms": [],
+        "context_evidence": {
+          "verified": false,
+          "requires_evidence": false,
+          "core_question": "この投稿は何を見て言っているのか？"
+        },
+        "topic_image_fit": {
+          "status": "OK",
+          "checks": {
+            "topic_groups": [],
+            "image_metadata": "villain_post_images/wearable_stock/wearable_stock_012_hoodie_mirror_person.png /users/raindog/projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_012_hoodie_mirror_person.png wearable_lifestyle_photo",
+            "matched_image_terms": {}
+          }
+        },
+        "ad_like_score": 0,
+        "native_tone_score": 82,
+        "persona_fit": 83,
+        "deleted_nearby_match": [],
+        "human_check_checklist": [
+          "この投稿は何を見て言っているのか？",
+          "本文の現実文脈は今日の状況と一致しているか？",
+          "画像は本文topicを本当に支えているか？",
+          "広告ではなくタイムライン上の観測として混ざるか？",
+          "鬼徹アカウントの余白と人格に合っているか？"
+        ]
+      }
+    },
+    {
+      "slot": "night",
+      "source": "candidate_stream",
+      "source_id": "vln-stream-20260519-auto-004",
+      "category": "culture_observer",
+      "passcode": "F3X7M",
+      "text": "机に置いた瞬間、\nグッズじゃなくて、\n生活の一部になる。\n\n広告より、\n使われた跡の方が強い。\n\n#着て稼ぐ #villain $PPP @0xmavillain F3X7M",
+      "text_preview": "机に置いた瞬間、 / グッズじゃなくて、 / 生活の一部になる。 / 広告より、 / 使われた跡の方が強い。 / #着て稼ぐ #villain $PPP @0xmavillain F3X7M",
+      "token_verification": {
+        "required_layer": "Required Token Layer v1",
+        "mandatory_footer_order": "#着て稼ぐ #villain $PPP @0xmavillain",
+        "missing_before": [],
+        "duplicates_before": [],
+        "changed": false,
+        "before_counts": {
+          "#着て稼ぐ": 1,
+          "#villain": 1,
+          "$PPP": 1,
+          "@0xmavillain": 1
+        },
+        "after_counts": {
+          "#着て稼ぐ": 1,
+          "#villain": 1,
+          "$PPP": 1,
+          "@0xmavillain": 1
+        },
+        "final_order": "#着て稼ぐ #villain $PPP @0xmavillain",
+        "passcode": "F3X7M",
+        "passcode_exists_in_db": true,
+        "valid_after": true
+      },
+      "image": {
+        "required": true,
+        "ready": true,
+        "file_path": "villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png",
+        "image_type": "lifestyle_residue",
+        "match_score": 92,
+        "rights_notes": "maintenance refill from approved shop wearable stock; not raw shop image.",
+        "absolute_path": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png"
+      },
+      "score": 90,
+      "risk": "low",
+      "novelty_score": 78,
+      "raw_novelty_score": 78,
+      "remixability_score": 72,
+      "remixability": {
+        "source": "candidate_score",
+        "signals": [],
+        "components": {}
+      },
+      "media_deduplication": {
+        "signature": {
+          "path": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png",
+          "sha256": "9257441a33698225b81a8439603a5f1402dbfff677bc1ed4199c8f4cbfde7715",
+          "perceptual_hash": "0000c013c3c90d17",
+          "prompt_family": "lifestyle_residue_wearable_stock_006_thermos_desk_residue",
+          "composition": "",
+          "layout": "",
+          "image_type": "lifestyle_residue"
+        },
+        "blockers": [
+          "near_duplicate_media_phash",
+          "same_media_path",
+          "same_media_sha256",
+          "same_prompt_family_cooldown"
+        ],
+        "matches": [
+          {
+            "tweet_id": "2057067435744997644",
+            "url": "https://x.com/raindog_kitetu/status/2057067435744997644",
+            "posted_at_jst": "2026-05-20T20:54:30+09:00",
+            "image_used": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png",
+            "hamming_distance": 0,
+            "reasons": [
+              "near_duplicate_media_phash",
+              "same_media_path",
+              "same_media_sha256",
+              "same_prompt_family_cooldown"
+            ]
+          }
+        ],
+        "cooldown_days": 7
+      },
+      "context_mismatch_gate": {
+        "blockers": [],
+        "context_check": {
+          "terms": [],
+          "temporal_terms": [],
+          "event_terms": [],
+          "context_evidence_verified": false,
+          "requires_evidence": false
+        },
+        "pairing_check": {
+          "topic_groups": [],
+          "image_metadata": "villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png /users/raindog/projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png lifestyle_residue",
+          "matched_image_terms": {}
+        }
+      },
+      "deleted_learning_gate": {
+        "blockers": [
+          "deleted_candidate_blacklist"
+        ],
+        "matches": [
+          {
+            "tweet_id": "2057067435744997644",
+            "execution_id": "vln-exec-daytime-vln-stream-20260519-auto-004",
+            "candidate_id": "vln-stream-20260519-auto-004",
+            "image_used": "/Users/raindog/Documents/New project/villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png",
+            "prompt_family": "lifestyle_residue_wearable_stock_006_thermos_desk_residue",
+            "topic_cluster": "culture_observer_apparel_context",
+            "delete_reason": "Deleted by human: image quality was terrible; flat product composite did not fit account quality bar.",
+            "reasons": [
+              "deleted_candidate_blacklist"
+            ]
+          }
+        ]
+      },
+      "saturation_flags": [],
+      "pilot_score": 288,
+      "eligible": false,
+      "blockers": [
+        "near_duplicate_media_phash",
+        "same_media_path",
+        "same_media_sha256",
+        "same_prompt_family_cooldown"
+      ],
+      "warnings": [
+        "deleted_nearby_match_found",
+        "near_deleted_or_dropped_post",
+        "recent_media_reuse_match_found"
+      ],
+      "reason": "Auto-refilled by maintenance from wearable_stock_006_thermos_desk_residue; no reality/event claim.",
+      "expected_type": "residual_growth_or_profile_pull",
+      "fallback_action": "fallback_to_poster_summary_image_ready",
+      "quality_review": {
+        "candidate_id": "vln-stream-20260519-auto-004",
+        "execution_id": "",
+        "slot": "night",
+        "passcode": "F3X7M",
+        "image": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png",
+        "text": "机に置いた瞬間、\nグッズじゃなくて、\n生活の一部になる。\n\n広告より、\n使われた跡の方が強い。\n\n#着て稼ぐ #villain $PPP @0xmavillain F3X7M",
+        "text_preview": "机に置いた瞬間、 / グッズじゃなくて、 / 生活の一部になる。 / 広告より、 / 使われた跡の方が強い。 / #着て稼ぐ #villain $PPP @0xmavillain F3X7M",
+        "final_quality_status": "REVIEW_REQUIRED",
+        "blockers": [],
+        "warnings": [
+          "deleted_nearby_match_found"
+        ],
+        "context_terms": [],
+        "context_evidence": {
+          "verified": false,
+          "requires_evidence": false,
+          "core_question": "この投稿は何を見て言っているのか？"
+        },
+        "topic_image_fit": {
+          "status": "OK",
+          "checks": {
+            "topic_groups": [],
+            "image_metadata": "villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png /users/raindog/projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png lifestyle_residue",
+            "matched_image_terms": {}
+          }
+        },
+        "ad_like_score": 0,
+        "native_tone_score": 72,
+        "persona_fit": 78,
+        "deleted_nearby_match": [
+          {
+            "tweet_id": "2057067435744997644",
+            "execution_id": "vln-exec-daytime-vln-stream-20260519-auto-004",
+            "candidate_id": "vln-stream-20260519-auto-004",
+            "image_used": "/Users/raindog/Documents/New project/villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png",
+            "prompt_family": "lifestyle_residue_wearable_stock_006_thermos_desk_residue",
+            "topic_cluster": "culture_observer_apparel_context",
+            "delete_reason": "Deleted by human: image quality was terrible; flat product composite did not fit account quality bar.",
+            "reasons": [
+              "deleted_candidate_blacklist"
+            ]
+          }
+        ],
+        "human_check_checklist": [
+          "この投稿は何を見て言っているのか？",
+          "本文の現実文脈は今日の状況と一致しているか？",
+          "画像は本文topicを本当に支えているか？",
+          "広告ではなくタイムライン上の観測として混ざるか？",
+          "鬼徹アカウントの余白と人格に合っているか？"
+        ]
+      }
+    },
+    {
+      "slot": "night",
+      "source": "candidate_stream",
+      "source_id": "vln-stream-20260519-auto-005",
+      "category": "poster_summary",
+      "passcode": "H9J6L",
+      "text": "持ち物って、\n置かれた場所で\nだいたい正体が出る。\n\nきれいな写真より、\n帰ってきた後の方が本物っぽい。\n\n#着て稼ぐ #villain $PPP @0xmavillain H9J6L",
+      "text_preview": "持ち物って、 / 置かれた場所で / だいたい正体が出る。 / きれいな写真より、 / 帰ってきた後の方が本物っぽい。 / #着て稼ぐ #villain $PPP @0xmavillain H9J6L",
+      "token_verification": {
+        "required_layer": "Required Token Layer v1",
+        "mandatory_footer_order": "#着て稼ぐ #villain $PPP @0xmavillain",
+        "missing_before": [],
+        "duplicates_before": [],
+        "changed": false,
+        "before_counts": {
+          "#着て稼ぐ": 1,
+          "#villain": 1,
+          "$PPP": 1,
+          "@0xmavillain": 1
+        },
+        "after_counts": {
+          "#着て稼ぐ": 1,
+          "#villain": 1,
+          "$PPP": 1,
+          "@0xmavillain": 1
+        },
+        "final_order": "#着て稼ぐ #villain $PPP @0xmavillain",
+        "passcode": "H9J6L",
+        "passcode_exists_in_db": true,
+        "valid_after": true
+      },
+      "image": {
+        "required": true,
+        "ready": true,
+        "file_path": "villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png",
+        "image_type": "lifestyle_residue",
+        "match_score": 92,
+        "rights_notes": "maintenance refill from approved shop wearable stock; not raw shop image.",
+        "absolute_path": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png"
+      },
+      "score": 90,
+      "risk": "low",
+      "novelty_score": 74,
+      "raw_novelty_score": 78,
+      "remixability_score": 72,
+      "remixability": {
+        "source": "candidate_score",
+        "signals": [],
+        "components": {}
+      },
+      "media_deduplication": {
+        "signature": {
+          "path": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png",
+          "sha256": "5e2b6a199e9ba18f149d24337d510a7d56f1e314cf4f2178127709d37ccfc28f",
+          "perceptual_hash": "0000681f97c76b31",
+          "prompt_family": "lifestyle_residue_wearable_stock_003_bag_workdesk",
+          "composition": "",
+          "layout": "",
+          "image_type": "lifestyle_residue"
+        },
+        "blockers": [
+          "near_duplicate_media_phash",
+          "same_media_path",
+          "same_media_sha256",
+          "same_prompt_family_cooldown"
+        ],
+        "matches": [
+          {
+            "tweet_id": "2057684471256879127",
+            "url": "https://x.com/raindog_kitetu/status/2057684471256879127",
+            "posted_at_jst": "2026-05-22T13:46:22+09:00",
+            "image_used": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png",
+            "hamming_distance": 0,
+            "reasons": [
+              "near_duplicate_media_phash",
+              "same_media_path",
+              "same_media_sha256",
+              "same_prompt_family_cooldown"
+            ]
+          }
+        ],
+        "cooldown_days": 7
+      },
+      "context_mismatch_gate": {
+        "blockers": [],
+        "context_check": {
+          "terms": [],
+          "temporal_terms": [],
+          "event_terms": [],
+          "context_evidence_verified": false,
+          "requires_evidence": false
+        },
+        "pairing_check": {
+          "topic_groups": [],
+          "image_metadata": "villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png /users/raindog/projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png lifestyle_residue",
+          "matched_image_terms": {}
+        }
+      },
+      "deleted_learning_gate": {
+        "blockers": [
+          "deleted_candidate_blacklist",
+          "deleted_image_cooldown",
+          "deleted_text_near_match"
+        ],
+        "matches": [
+          {
+            "tweet_id": "2057684471256879127",
+            "execution_id": "vln-exec-daytime-vln-stream-20260519-auto-005",
+            "candidate_id": "vln-stream-20260519-auto-005",
+            "image_used": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png",
+            "prompt_family": "lifestyle_residue_wearable_stock_003_bag_workdesk",
+            "topic_cluster": "poster_summary_residual",
+            "delete_reason": "Deleted by human after review: Codex posted a replacement without Chappy image approval; image/candidate must not be reused for replacement flow.",
+            "reasons": [
+              "deleted_candidate_blacklist",
+              "deleted_image_cooldown",
+              "deleted_text_near_match"
+            ]
+          }
+        ]
+      },
+      "saturation_flags": [
+        "repeated_structure"
+      ],
+      "pilot_score": 284,
+      "eligible": false,
+      "blockers": [
+        "deleted_text_near_match",
+        "near_duplicate_media_phash",
+        "same_media_path",
+        "same_media_sha256",
+        "same_prompt_family_cooldown"
+      ],
+      "warnings": [
+        "deleted_nearby_match_found",
+        "near_deleted_or_dropped_post",
+        "recent_media_reuse_match_found"
+      ],
+      "reason": "Auto-refilled by maintenance from wearable_stock_003_bag_workdesk; no reality/event claim.",
+      "expected_type": "residual_growth",
+      "fallback_action": "fallback_to_poster_summary_image_ready",
+      "quality_review": {
+        "candidate_id": "vln-stream-20260519-auto-005",
+        "execution_id": "",
+        "slot": "night",
+        "passcode": "H9J6L",
+        "image": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png",
+        "text": "持ち物って、\n置かれた場所で\nだいたい正体が出る。\n\nきれいな写真より、\n帰ってきた後の方が本物っぽい。\n\n#着て稼ぐ #villain $PPP @0xmavillain H9J6L",
+        "text_preview": "持ち物って、 / 置かれた場所で / だいたい正体が出る。 / きれいな写真より、 / 帰ってきた後の方が本物っぽい。 / #着て稼ぐ #villain $PPP @0xmavillain H9J6L",
+        "final_quality_status": "BLOCKED",
+        "blockers": [
+          "deleted_text_near_match"
+        ],
+        "warnings": [
+          "deleted_nearby_match_found"
+        ],
+        "context_terms": [],
+        "context_evidence": {
+          "verified": false,
+          "requires_evidence": false,
+          "core_question": "この投稿は何を見て言っているのか？"
+        },
+        "topic_image_fit": {
+          "status": "OK",
+          "checks": {
+            "topic_groups": [],
+            "image_metadata": "villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png /users/raindog/projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png lifestyle_residue",
+            "matched_image_terms": {}
+          }
+        },
+        "ad_like_score": 0,
+        "native_tone_score": 77,
+        "persona_fit": 78,
+        "deleted_nearby_match": [
+          {
+            "tweet_id": "2057684471256879127",
+            "execution_id": "vln-exec-daytime-vln-stream-20260519-auto-005",
+            "candidate_id": "vln-stream-20260519-auto-005",
+            "image_used": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png",
+            "prompt_family": "lifestyle_residue_wearable_stock_003_bag_workdesk",
+            "topic_cluster": "poster_summary_residual",
+            "delete_reason": "Deleted by human after review: Codex posted a replacement without Chappy image approval; image/candidate must not be reused for replacement flow.",
+            "reasons": [
+              "deleted_candidate_blacklist",
+              "deleted_image_cooldown",
+              "deleted_text_near_match"
+            ]
+          }
+        ],
+        "human_check_checklist": [
+          "この投稿は何を見て言っているのか？",
+          "本文の現実文脈は今日の状況と一致しているか？",
+          "画像は本文topicを本当に支えているか？",
+          "広告ではなくタイムライン上の観測として混ざるか？",
+          "鬼徹アカウントの余白と人格に合っているか？"
+        ]
+      }
+    }
+  ]
+}

@@ -13,7 +13,7 @@
 - target account: `@raindog_kitetu`
 - selected image queue_id: `vln-imgq-vln-dryrun-20260510-001-001`
 - selected image mode: `OBSERVER_MODE`
-- planned image path: `/Users/raindog/Documents/New project/villain_post_images/villain_observer_001.png`
+- planned image path: `/Users/raindog/Projects/villain-auto-posting/villain_post_images/villain_observer_001.png`
 
 ## 投稿予定本文
 
@@ -39,7 +39,7 @@ and wear it daily...
 {
   "text": "ABOUTの文章、ちょっと強い。\n\nLove $villain,\nand wear it daily...\n\n毎日着ろって。\n\n普通そんなこと言わない。\n\nでもVillainなら、\nまあ言いそう。\n\n#着て稼ぐ #villain @0xmavillain M5Q1C",
   "media": {
-    "image_path": "/Users/raindog/Documents/New project/villain_post_images/villain_observer_001.png",
+    "image_path": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/villain_observer_001.png",
     "upload_media_not_executed": true
   },
   "target_account": "@raindog_kitetu",
@@ -51,7 +51,7 @@ and wear it daily...
 
 - `selected_image_exists`: `pass` (actual `1 selected; status approved`, required `exactly 1 selected approved image`)
 - `target_account_confirmed`: `pass` (actual `@raindog_kitetu; confirmed True`, required `@raindog_kitetu confirmed true`)
-- `image_path_exists`: `pass` (actual `/Users/raindog/Documents/New project/villain_post_images/villain_observer_001.png`, required `image path or placeholder`)
+- `image_path_exists`: `pass` (actual `/Users/raindog/Projects/villain-auto-posting/villain_post_images/villain_observer_001.png`, required `image path or placeholder`)
 - `image_path_not_placeholder`: `pass` (actual `real path`, required `real image path before upload`)
 - `media_upload_ready`: `pass` (actual `True`, required `True`)
 - `approved_for_live_post`: `pass` (actual `True`, required `True`)

@@ -1,0 +1,209 @@
+{
+  "db_name": "Villain投稿運用DB",
+  "version": "0.1.0",
+  "created_at": "2026-05-09",
+  "purpose": "Villain関連の投稿ネタ、下書き、承認、予約、投稿後記録を一箇所で管理する。",
+  "operational_policy": {
+    "auto_posting": false,
+    "requires_human_approval_before_post": true,
+    "allowed_actions": [
+      "投稿ネタの登録",
+      "公開情報にもとづく下書き作成",
+      "投稿前チェック",
+      "承認済み投稿の予約候補管理",
+      "投稿後URLと反応の記録"
+    ],
+    "prohibited_actions": [
+      "未承認の自動投稿",
+      "公式未確認情報の断定",
+      "金融助言または購入推奨",
+      "ウォレット接続",
+      "NFT mint、購入、スワップなどの実行",
+      "証跡なしの事実主張"
+    ]
+  },
+  "pipeline": [
+    {
+      "stage": "idea",
+      "description": "投稿候補を短いメモとして登録する。",
+      "next": "draft"
+    },
+    {
+      "stage": "draft",
+      "description": "証跡と目的に合わせて投稿文を作る。",
+      "next": "review"
+    },
+    {
+      "stage": "review",
+      "description": "事実確認、安全性、口調、文字数を確認する。",
+      "next": "approved"
+    },
+    {
+      "stage": "approved",
+      "description": "人間が投稿可能と判断した状態。",
+      "next": "scheduled"
+    },
+    {
+      "stage": "scheduled",
+      "description": "投稿候補時刻を決めた状態。実投稿は手動。",
+      "next": "published"
+    },
+    {
+      "stage": "published",
+      "description": "投稿URL、投稿時刻、初期反応を記録する。",
+      "next": "archived"
+    }
+  ],
+  "status_values": [
+    "idea",
+    "draft",
+    "needs_evidence",
+    "review",
+    "approved",
+    "scheduled",
+    "published",
+    "rejected",
+    "archived"
+  ],
+  "content_pillars": [
+    {
+      "name": "villain_monitoring",
+      "purpose": "Villain公式・X・コミュニティ巡回の運用記録を投稿化する。",
+      "source_files": [
+        "data/villain_sources.json",
+        "data/villain_logs.json",
+        "data/villain_memory.json"
+      ]
+    },
+    {
+      "name": "ai_operations",
+      "purpose": "Claude停止時のCodex代役、監視、修理、テスト運用を投稿化する。",
+      "source_files": [
+        "data/villain_test_plan.json",
+        "status.json",
+        "content/x_posts/ideas.md"
+      ]
+    },
+    {
+      "name": "research_findings",
+      "purpose": "Whitepaper、NFT、Token、Apparelなどの確認結果を慎重に要約する。",
+      "source_files": [
+        "data/villain_research_categories.json",
+        "data/villain_knowledge.json"
+      ]
+    }
+  ],
+  "posting_slots": [
+    {
+      "slot_id": "morning_villain_note",
+      "time": "06:30",
+      "source_schedule_task": "morning_schedule.sh",
+      "default_pillar": "ai_operations",
+      "target_output": "X short post"
+    },
+    {
+      "slot_id": "afternoon_villain_update",
+      "time": "14:30",
+      "source_schedule_task": "villain-auto-generator",
+      "default_pillar": "villain_monitoring",
+      "target_output": "X short post"
+    },
+    {
+      "slot_id": "evening_villain_report",
+      "time": "18:00",
+      "source_schedule_task": "evening_schedule.sh",
+      "default_pillar": "research_findings",
+      "target_output": "X thread seed or note memo"
+    }
+  ],
+  "pre_publish_checklist": [
+    {
+      "name": "evidence_check",
+      "required": true,
+      "description": "事実主張ごとに参照元URL、DBファイル、または確認ログがある。"
+    },
+    {
+      "name": "claim_scope_check",
+      "required": true,
+      "description": "公式確認済み、未確認、推測、感想を明確に分けている。"
+    },
+    {
+      "name": "risk_check",
+      "required": true,
+      "description": "投資助言、購入誘導、ウォレット操作、断定的な煽りがない。"
+    },
+    {
+      "name": "tone_check",
+      "required": true,
+      "description": "運用ログらしい具体性があり、過度な誇張がない。"
+    },
+    {
+      "name": "length_check",
+      "required": true,
+      "description": "X投稿は原則280字以内。スレッド化する場合は各投稿単位で意味が通る。"
+    },
+    {
+      "name": "human_approval_check",
+      "required": true,
+      "description": "投稿前に人間が本文、証跡、投稿先を確認している。"
+    }
+  ],
+  "queues": {
+    "ideas": [
+      {
+        "id": "vpo-idea-20260509-001",
+        "status": "idea",
+        "pillar": "ai_operations",
+        "title": "Claude停止時にCodexがVillain巡回を代役できるか",
+        "angle": "AI運用の失敗対策として、代役巡回DBを作る話",
+        "source_refs": [
+          "data/villain_test_plan.json",
+          "content/x_posts/ideas.md"
+        ],
+        "priority": "high",
+        "created_at": "2026-05-09",
+        "notes": "自動投稿ではなく、手動承認前提の運用ネタ。"
+      },
+      {
+        "id": "vpo-idea-20260509-002",
+        "status": "idea",
+        "pillar": "villain_monitoring",
+        "title": "公式・X・コミュニティ投稿を毎日巡回させる",
+        "angle": "巡回対象を公式サイト、公式X、X検索、Whitepaper、NFT、Token、Apparelに分ける理由",
+        "source_refs": [
+          "data/villain_workflow.json",
+          "data/villain_research_categories.json"
+        ],
+        "priority": "medium",
+        "created_at": "2026-05-09",
+        "notes": "情報源未設定のため、投稿時はURL設定後に証跡確認する。"
+      }
+    ],
+    "drafts": [],
+    "review": [],
+    "scheduled": [],
+    "published": [],
+    "rejected": []
+  },
+  "recordkeeping": {
+    "append_only_for_published": true,
+    "published_required_fields": [
+      "id",
+      "posted_at",
+      "platform",
+      "post_url",
+      "final_text",
+      "source_refs",
+      "approval_by",
+      "initial_metrics"
+    ],
+    "review_required_fields": [
+      "id",
+      "draft_text",
+      "evidence",
+      "risk_notes",
+      "checklist_results",
+      "approval_status"
+    ]
+  }
+}
