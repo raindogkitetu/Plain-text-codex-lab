@@ -60,6 +60,7 @@ DEFAULT_CONFIG = {
         "passcode_not_in_db",
         "human_review_pending",
         "previous_post_marked_delete_or_drop",
+        "chappy_image_approval_missing",
     ],
     "paths": {
         "state": "data/villain_auto_scheduler_state.json",
@@ -138,6 +139,22 @@ def network_preflight(hosts: list[str]) -> dict[str, Any]:
         "request_sent": False,
         "upload_media_called": False,
         "create_tweet_called": False,
+        "failure_class": "" if all(item["dns_resolved"] for item in results) else "DNS_RESOLUTION_FAILED",
+        "likely_cause": "" if all(item["dns_resolved"] for item in results) else "network_or_dns_environment",
+        "codex_credit_related": False,
+    }
+
+
+def runtime_context() -> dict[str, Any]:
+    """Record enough context to distinguish Codex quota from local network failures."""
+    return {
+        "root": str(ROOT),
+        "python": sys.executable,
+        "codex_credit_visible_to_scheduler": False,
+        "codex_credit_controls_launchd": False,
+        "network_preflight_controls_posting": True,
+        "launchd_target_root_expected": "/Users/raindog/Projects/villain-auto-posting",
+        "running_from_launchd_target_root": str(ROOT) == "/Users/raindog/Projects/villain-auto-posting",
     }
 
 
@@ -155,6 +172,8 @@ def manual_posts_today() -> int:
 
 
 def is_success_outcome(record: dict[str, Any]) -> bool:
+    if record.get("effective_post") is False:
+        return False
     return (
         bool(record.get("tweet_id"))
         and bool(record.get("url"))
@@ -163,19 +182,8 @@ def is_success_outcome(record: dict[str, Any]) -> bool:
     )
 
 
-def is_effective_success_outcome(record: dict[str, Any]) -> bool:
-    if not is_success_outcome(record):
-        return False
-    review = record.get("human_review", {})
-    if review.get("keep") is False:
-        return False
-    if record.get("effective_post") is False or record.get("x_deleted_by_human") is True:
-        return False
-    return True
-
-
 def success_outcomes(outcomes_db: dict[str, Any]) -> list[dict[str, Any]]:
-    return [record for record in outcomes_db.get("outcomes", []) if is_effective_success_outcome(record)]
+    return [record for record in outcomes_db.get("outcomes", []) if is_success_outcome(record)]
 
 
 def outcome_successes_today(outcomes_db: dict[str, Any]) -> int:
@@ -362,6 +370,8 @@ def write_report(result: dict[str, Any]) -> None:
         lines.extend(
             [
                 f"- status: `{preflight.get('status', '')}`",
+                f"- failure_class: `{preflight.get('failure_class', '')}`",
+                f"- codex_credit_related: `{str(preflight.get('codex_credit_related', False)).lower()}`",
                 "- request_sent: `false`",
                 "- upload_media_called: `false`",
                 "- create_tweet_called: `false`",
@@ -384,6 +394,34 @@ def write_report(result: dict[str, Any]) -> None:
             "- Real posting should run only from a network-enabled local environment.",
         ]
     )
+    context = result.get("runtime_context", {})
+    lines.extend(["", "## Runtime Context", ""])
+    if context:
+        lines.extend(
+            [
+                f"- root: `{context.get('root', '')}`",
+                f"- python: `{context.get('python', '')}`",
+                f"- codex_credit_visible_to_scheduler: `{str(context.get('codex_credit_visible_to_scheduler')).lower()}`",
+                f"- codex_credit_controls_launchd: `{str(context.get('codex_credit_controls_launchd')).lower()}`",
+                f"- network_preflight_controls_posting: `{str(context.get('network_preflight_controls_posting')).lower()}`",
+                f"- running_from_launchd_target_root: `{str(context.get('running_from_launchd_target_root')).lower()}`",
+            ]
+        )
+    else:
+        lines.append("- not recorded")
+    diagnosis = result.get("diagnosis", {})
+    lines.extend(["", "## Diagnosis", ""])
+    if diagnosis:
+        lines.extend(
+            [
+                f"- primary_failure: `{diagnosis.get('primary_failure', '')}`",
+                f"- codex_credit_related: `{str(diagnosis.get('codex_credit_related', False)).lower()}`",
+                f"- posting_attempted: `{str(diagnosis.get('posting_attempted', False)).lower()}`",
+                f"- safe_recovery: {diagnosis.get('safe_recovery', '')}",
+            ]
+        )
+    else:
+        lines.append("- none")
     lines.extend(["", "## Commands", ""])
     lines.extend(
         [
@@ -441,6 +479,7 @@ def build_result(args: argparse.Namespace) -> dict[str, Any]:
             "api_key_output_allowed": False,
             "env_output_allowed": False,
         },
+        "runtime_context": runtime_context(),
     }
     if base_blockers:
         return result
@@ -495,6 +534,14 @@ def build_result(args: argparse.Namespace) -> dict[str, Any]:
         if preflight.get("status") != "PASSED":
             result["status"] = "NETWORK_PREFLIGHT_FAILED"
             result["blockers"].append("network_preflight_failed")
+            result["diagnosis"] = {
+                "primary_failure": "network_preflight_failed",
+                "codex_credit_related": False,
+                "posting_attempted": False,
+                "upload_media_attempted": False,
+                "create_tweet_attempted": False,
+                "safe_recovery": "Run the same one-post scheduler only from a network-enabled local environment after confirming human_review and cooldown gates.",
+            }
             state["last_run_at_jst"] = generated_at
             state["last_status"] = result["status"]
             state["last_selected_execution_id"] = selected.get("execution_id", "")

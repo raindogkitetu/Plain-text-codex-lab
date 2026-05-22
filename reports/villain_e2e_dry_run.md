@@ -43,8 +43,8 @@ ABOUTの言葉、
 ## Image Selection
 
 - image_selected: `true`
-- selected_image: `/Users/raindog/Documents/New project/villain_post_images/villain_observer_001.png`
-- selected_image_path: `/Users/raindog/Documents/New project/villain_post_images/villain_observer_001.png`
+- selected_image: `/Users/raindog/Projects/villain-auto-posting/villain_post_images/villain_observer_001.png`
+- selected_image_path: `/Users/raindog/Projects/villain-auto-posting/villain_post_images/villain_observer_001.png`
 - selection_reason: `mode_match:OBSERVER_MODE, about_wording_observer_fit, villain_filename_signal`
 - next_status: `ready_for_human_post_review`
 

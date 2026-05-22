@@ -1,0 +1,177 @@
+{
+  "db_name": "Villain Daily Selection DB",
+  "version": "1.0.0-design",
+  "status": "design_only",
+  "purpose": "candidate_streamから朝・昼・夜・深夜の投稿候補を選定する。投稿実行は行わない。",
+  "safety": {
+    "live_posting_allowed": false,
+    "x_api_write_allowed": false,
+    "upload_media_allowed": false,
+    "create_tweet_allowed": false,
+    "auto_posting_allowed": false,
+    "commit_performed": false
+  },
+  "selection_policy": {
+    "daily_target_posts": {
+      "min": 3,
+      "max": 5
+    },
+    "source_db": "data/villain_candidate_stream.json",
+    "manual_results_db": "data/manual_post_results.json",
+    "image_strategy_db": "data/villain_image_strategy.json",
+    "residual_learning_report": "reports/villain_residual_learning.md",
+    "required_token_layer": "data/villain_required_tokens.json",
+    "selection_does_not_unlock_posting": true,
+    "human_final_approval_required": true,
+    "final_text_requires_mandatory_tokens": true,
+    "final_text_requires_passcode": true,
+    "passcode_policy": {
+      "length": 5,
+      "alphabet": "A-Z0-9",
+      "canonical_source": "data/villain_passcodes.json",
+      "auto_generation_allowed": false,
+      "missing_blocks_posting": true,
+      "not_in_db_blocks_posting": true,
+      "placement": "mandatory footer after @0xmavillain",
+      "blocked_codes": []
+    }
+  },
+  "selection_score_weights": {
+    "current_trend_fit": 12,
+    "residual_type": 14,
+    "image_ready": 16,
+    "category_balance": 10,
+    "freshness_decay": 12,
+    "time_window_fit": 14,
+    "persona_rotation": 10,
+    "quality_prediction": 8,
+    "risk_safety": 14
+  },
+  "slot_definitions": {
+    "morning": {
+      "time_window_jst": "07:00-09:00",
+      "target_count": 1,
+      "best_categories": [
+        "poster_summary",
+        "explainer",
+        "apparel_focus"
+      ],
+      "voice": "軽く読めて、日常に置ける。強すぎる毒は避ける。",
+      "image_policy": "image_ready優先。ただし軽量テキストも可。"
+    },
+    "daytime": {
+      "time_window_jst": "12:00-15:00",
+      "target_count": 1,
+      "best_categories": [
+        "explainer",
+        "poster_summary",
+        "community_info"
+      ],
+      "voice": "説明は短く、初見にも入口を作る。",
+      "image_policy": "図解/summary画像があれば優先。"
+    },
+    "night": {
+      "time_window_jst": "18:00-22:30",
+      "target_count": 1,
+      "best_categories": [
+        "poster_summary",
+        "culture_observer",
+        "community_info"
+      ],
+      "voice": "文化の違和感を短く置く。画像で止める。",
+      "image_policy": "poster/culture/community画像必須寄り。"
+    },
+    "late_night": {
+      "time_window_jst": "23:00-23:59",
+      "target_count": 1,
+      "best_categories": [
+        "community_info",
+        "culture_observer",
+        "poster_summary"
+      ],
+      "voice": "現場を見て短く残す。説明より観測。",
+      "image_policy": "image_readyを強く優先。S画像を使う主力枠。"
+    }
+  },
+  "anti_overuse_rules": {
+    "repeated_topic_penalty": {
+      "condition": "same topic or first-line pattern used within 48h",
+      "penalty": -12,
+      "reason": "同じ観測を擦ると人格が薄くなる。"
+    },
+    "same_image_cooldown": {
+      "condition": "same image file used within 72h",
+      "penalty": -14,
+      "reason": "画像の既視感が強くなる。S画像でも連投しない。"
+    },
+    "same_persona_decay": {
+      "condition": "same persona/category selected 3 times in a row",
+      "penalty": -10,
+      "reason": "culture_observerに寄せすぎると単調になる。"
+    },
+    "same_time_slot_repetition": {
+      "condition": "same category selected in same slot for 2 consecutive days",
+      "penalty": -6,
+      "reason": "勝ち枠を使いながらも見え方をずらす。"
+    }
+  },
+  "residual_type_priority": {
+    "residual_growth": {
+      "score_bonus": 12,
+      "best_slots": [
+        "night",
+        "late_night"
+      ]
+    },
+    "profile_pull": {
+      "score_bonus": 10,
+      "best_slots": [
+        "night",
+        "late_night"
+      ]
+    },
+    "community_resonance": {
+      "score_bonus": 10,
+      "best_slots": [
+        "daytime",
+        "late_night"
+      ]
+    },
+    "instant_reaction": {
+      "score_bonus": 3,
+      "best_slots": [
+        "morning",
+        "daytime"
+      ]
+    },
+    "silent_failure": {
+      "score_bonus": -20,
+      "best_slots": []
+    }
+  },
+  "category_rotation_targets": {
+    "daily_minimum_primary_categories": 2,
+    "max_same_primary_category_per_day": 2,
+    "preferred_mix_for_4_posts": {
+      "culture_observer": 1,
+      "poster_summary": 1,
+      "community_info": 1,
+      "explainer_or_apparel_connected": 1
+    }
+  },
+  "daily_selection_output_template": {
+    "date_jst": "",
+    "selection_run_at_jst": "",
+    "source_stream_count": 0,
+    "selected_slots": {
+      "morning": null,
+      "daytime": null,
+      "night": null,
+      "late_night": null
+    },
+    "backup_candidates": [],
+    "warnings": [],
+    "posting_execution_allowed": false
+  },
+  "updated_at_jst": "2026-05-16"
+}
