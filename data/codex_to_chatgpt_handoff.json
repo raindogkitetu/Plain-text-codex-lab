@@ -1,98 +1,221 @@
 {
   "chatgpt_decision_consumed": {
     "approved_for_review": [
-      {
-        "candidate_id": "vln-gen-20260517-shop-001",
-        "reason": "Keep in human review board as READY candidate, but not approved for posting."
-      }
+      "vln-gen-20260517-shop-001",
+      "vln-gen-20260516-002"
     ],
     "archive_or_drop_candidates": [
-      {
-        "candidate_match": "candidates blocked by deleted_text_near_match plus deleted_topic_context_cooldown",
-        "reason": "Likely repeats deleted/failed pattern; prefer archive/drop over repair unless manually rescued."
-      }
+      "vln-gen-20260516-001"
     ],
-    "context_evidence_required": [
+    "candidate_image_pairing": [
       {
-        "candidate_match": "any candidate using yesterday/今日/集会/recent-event framing",
-        "reason": "Recent event context requires real evidence. '昨日の集会' style context is prohibited without verification."
+        "candidate_id": "vln-gen-20260517-shop-001",
+        "decision": "PAIR_OK_FOR_REVIEW",
+        "image_path": "villain_post_images/99f8c686-07e1-48d0-ad0d-4ce5f14939e2.png",
+        "reason": "Candidate can remain in human review, but not post-ready. Current pairing is acceptable for review only because no explicit mismatch is indicated in the packet."
+      },
+      {
+        "candidate_id": "vln-gen-20260516-002",
+        "decision": "PAIR_OK_FOR_REVIEW",
+        "image_path": "/Users/raindog/Documents/New project/villain_post_images/20260514集会.png",
+        "reason": "Text/image alignment appears acceptable for review only, but posting remains blocked because human approval is false."
       },
       {
         "candidate_id": "vln-gen-20260516-001",
-        "reason": "temporal context unverified."
-      }
-    ],
-    "decision": "REVIEW_READY_NOT_POST_READY",
-    "image_replacement_required": [
-      {
-        "image": "20260514集会.png",
-        "reason": "Do not use for READY posting candidates. Prior failure reason was content/context mismatch."
-      },
-      {
-        "candidate_match": "topic_image_pairing_mismatch candidates",
-        "reason": "Replace image before returning to review."
-      }
-    ],
-    "must_remain_blocked": [
-      {
-        "candidate_id": "vln-gen-20260516-001",
-        "reason": "deleted-near match and temporal context unverified."
+        "decision": "HOLD",
+        "image_path": "/Users/raindog/Documents/New project/villain_post_images/20260514集会.png",
+        "reason": "Blocked by deleted-text near match, deleted-topic cooldown, and unverified temporal context; must not be revived for posting."
       },
       {
         "candidate_id": "vln-gen-20260516-003",
-        "reason": "topic-image mismatch and deleted topic cooldown."
+        "decision": "IMAGE_REPLACEMENT_REQUIRED",
+        "image_path": "/Users/raindog/Documents/New project/villain_post_images/生成画像1.png",
+        "reason": "Topic-image pairing mismatch; requires replacement before any further review consideration."
       }
     ],
-    "next_codex_actions": [
-      "Write this decision to data/chatgpt_to_codex_handoff.json.",
-      "Keep queue_health_status=BLOCKED, review_board_status=READY, posting_execution_status=BLOCKED.",
-      "Keep safe_to_review=true and safe_to_post=false.",
-      "Do not execute posting, upload_media, create_tweet, or tracking_code generation.",
-      "Keep vln-gen-20260517-shop-001 in review board only.",
-      "Mark any READY candidate using 20260514集会.png as not approved for posting.",
-      "Maintain block on vln-gen-20260516-001 and vln-gen-20260516-003.",
-      "Add refill candidates that avoid deleted topic cooldown, deleted near-match text, temporal claims, and 20260514集会.png.",
-      "Update reports/agent_handoff_status.md and reports/villain_quality_review_summary.md with separated statuses."
+    "context_evidence_required": [
+      "vln-gen-20260516-001"
     ],
-    "not_approved_for_posting": [
+    "decision": "REVIEW_READY_NOT_POST_READY",
+    "image_replacement_required": [
+      "20260514集会.png",
+      "villain_post_images/生成画像1.png"
+    ],
+    "image_review_decisions": [
       {
-        "candidate_id": "vln-gen-20260517-shop-001",
-        "reason": "Human review only. safe_to_post must remain false until explicit human approval."
+        "decision": "USE",
+        "fit_for_candidate_ids": [
+          "vln-gen-20260517-shop-001"
+        ],
+        "image_id": "wearable_stock_001_cap_afterhours",
+        "image_path": "villain_post_images/wearable_stock/wearable_stock_001_cap_afterhours.png",
+        "reason": "Natural lifestyle composite, no obvious ad or fabricated apparel artifact, fits review-stage wearable use.",
+        "reject_if": [
+          "If it reads as a product ad or invented cap form.",
+          "If the compositing makes the cap look non-existent or detached."
+        ],
+        "repair_request": ""
       },
       {
-        "candidate_match": "any READY candidate using 20260514集会.png",
-        "reason": "Image is associated with recent content/context mismatch failure and must not be posted without replacement or evidence."
+        "decision": "USE",
+        "fit_for_candidate_ids": [],
+        "image_id": "wearable_stock_002_bucket_street",
+        "image_path": "villain_post_images/wearable_stock/wearable_stock_002_bucket_street.png",
+        "reason": "Seems like a plausible street-lifestyle wearable image and not an obvious ad cutout.",
+        "reject_if": [
+          "If the hat looks pasted on or synthetic in a way that breaks realism."
+        ],
+        "repair_request": ""
+      },
+      {
+        "decision": "USE",
+        "fit_for_candidate_ids": [],
+        "image_id": "wearable_stock_003_bag_workdesk",
+        "image_path": "villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png",
+        "reason": "Residue-style scene is appropriate for review, but should stay non-promotional.",
+        "reject_if": [
+          "If it reads like a product catalog shot rather than lived-in context."
+        ],
+        "repair_request": ""
+      },
+      {
+        "decision": "USE",
+        "fit_for_candidate_ids": [],
+        "image_id": "wearable_stock_004_cap_mirror_crop",
+        "image_path": "villain_post_images/wearable_stock/wearable_stock_004_cap_mirror_crop.png",
+        "reason": "Mirror-crop anonymous lifestyle framing is acceptable for review-stage use.",
+        "reject_if": [
+          "If the crop exposes obvious face/product mismatch or invented apparel shape."
+        ],
+        "repair_request": ""
+      },
+      {
+        "decision": "USE",
+        "fit_for_candidate_ids": [],
+        "image_id": "wearable_stock_005_bucket_backview_after",
+        "image_path": "villain_post_images/wearable_stock/wearable_stock_005_bucket_backview_after.png",
+        "reason": "Back-view after-scene is visually aligned with subtle community/lifestyle posting.",
+        "reject_if": [
+          "If it implies a specific event or temporal claim without evidence."
+        ],
+        "repair_request": ""
+      },
+      {
+        "decision": "USE",
+        "fit_for_candidate_ids": [],
+        "image_id": "wearable_stock_006_thermos_desk_residue",
+        "image_path": "villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png",
+        "reason": "Desk-residue product placement is acceptable if kept observational and non-ad-like.",
+        "reject_if": [
+          "If it becomes a product advertisement lookalike."
+        ],
+        "repair_request": ""
+      },
+      {
+        "decision": "USE",
+        "fit_for_candidate_ids": [
+          "vln-gen-20260517-shop-001"
+        ],
+        "image_id": "wearable_stock_007_cap_mirror_person",
+        "image_path": "villain_post_images/wearable_stock/wearable_stock_007_cap_mirror_person.png",
+        "reason": "Anonymous mirror lifestyle photo is suitable for review-stage wearable content.",
+        "reject_if": [
+          "If the cap silhouette appears invented or mismatched to the source product.",
+          "If it becomes too polished or promotional."
+        ],
+        "repair_request": ""
+      },
+      {
+        "decision": "USE",
+        "fit_for_candidate_ids": [],
+        "image_id": "wearable_stock_008_bucket_mirror_person",
+        "image_path": "villain_post_images/wearable_stock/wearable_stock_008_bucket_mirror_person.png",
+        "reason": "Natural anonymous wear context is acceptable and not inherently ad-like.",
+        "reject_if": [
+          "If the hat shape is materially inconsistent with the actual product."
+        ],
+        "repair_request": ""
+      },
+      {
+        "decision": "USE",
+        "fit_for_candidate_ids": [],
+        "image_id": "wearable_stock_009_cap_rain_street",
+        "image_path": "villain_post_images/wearable_stock/wearable_stock_009_cap_rain_street.png",
+        "reason": "Wet-night street context is plausible and not an obvious product ad.",
+        "reject_if": [
+          "If the image looks like a cutout pasted into a street scene."
+        ],
+        "repair_request": ""
+      },
+      {
+        "decision": "USE",
+        "fit_for_candidate_ids": [],
+        "image_id": "wearable_stock_010_thermos_workdesk",
+        "image_path": "villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png",
+        "reason": "Lifestyle residue framing is acceptable for review use.",
+        "reject_if": [
+          "If it is too close to a promotional product render."
+        ],
+        "repair_request": ""
+      },
+      {
+        "decision": "USE",
+        "fit_for_candidate_ids": [],
+        "image_id": "wearable_stock_011_bag_entryway",
+        "image_path": "villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png",
+        "reason": "Entryway residue scene feels natural and community-safe at review stage.",
+        "reject_if": [
+          "If the bag appears non-existent or artificially productized."
+        ],
+        "repair_request": ""
+      },
+      {
+        "decision": "USE",
+        "fit_for_candidate_ids": [],
+        "image_id": "wearable_stock_012_hoodie_mirror_person",
+        "image_path": "villain_post_images/wearable_stock/wearable_stock_012_hoodie_mirror_person.png",
+        "reason": "Anonymous mirror hoodie context is consistent with subtle wearable/lifestyle review assets.",
+        "reject_if": [
+          "If the hoodie reads as an invented goods mockup rather than real apparel."
+        ],
+        "repair_request": ""
       }
     ],
+    "must_remain_blocked": [
+      "vln-gen-20260516-001",
+      "vln-gen-20260516-003"
+    ],
+    "next_codex_actions": [
+      "Keep review board READY only; do not promote to post-ready.",
+      "Maintain safe_to_post=false and posting_execution_status=BLOCKED.",
+      "Keep vln-gen-20260517-shop-001 and vln-gen-20260516-002 in human review only; require explicit human approval before any posting path.",
+      "Archive or drop vln-gen-20260516-001 due to deleted_text_near_match, deleted_topic_context_cooldown, and temporal_context_unverified.",
+      "Replace the image for vln-gen-20260516-003 before any further review; current pairing is a mismatch.",
+      "Refill the queue with candidates that avoid deleted-topic cooldown, temporal claims, and topic-image mismatch.",
+      "Do not generate tracking codes, passcodes, upload_media, or create_tweet artifacts."
+    ],
+    "not_approved_for_posting": [
+      "vln-gen-20260517-shop-001",
+      "vln-gen-20260516-002",
+      "vln-gen-20260516-001",
+      "vln-gen-20260516-003"
+    ],
     "policy_clarification": [
-      "READY means eligible for human review, not eligible for posting.",
-      "safe_to_post=false remains the default and must not be changed without explicit human approval.",
+      "READY means review-ready only, not post-ready.",
       "Human approval is required before any posting path can run.",
-      "The active passcode must come only from data/villain_passcodes.json.",
-      "Recent-event or temporal claims require context evidence.",
-      "Deleted learning cooldown must override aesthetic fit when there is conflict."
+      "Deleted learning cooldown overrides aesthetic fit.",
+      "The active passcode must come only from data/villain_passcodes.json, but no passcode generation is permitted here.",
+      "Recent-event and temporal claims require verified context evidence."
     ],
     "refill_required": true,
     "repair_candidates": [
-      {
-        "candidate_match": "BLOCKED candidates blocked only by temporal_context_unverified",
-        "repair_type": "context_evidence_required"
-      },
-      {
-        "candidate_match": "BLOCKED candidates blocked only by topic_image_pairing_mismatch",
-        "repair_type": "image_replacement_required"
-      }
+      "vln-gen-20260516-003"
     ]
   },
   "db_name": "Codex to ChatGPT Handoff",
-  "generated_at_jst": "2026-05-17T23:49:27+09:00",
+  "generated_at_jst": "2026-05-25T19:00:45+09:00",
   "implementation_result": {
-    "blockers": [
-      "deleted_text_near_match",
-      "deleted_topic_context_cooldown",
-      "temporal_context_unverified",
-      "topic_image_pairing_mismatch"
-    ],
+    "blockers": [],
     "changed_files": [
       "docs/agent_handoff_protocol.md",
       "data/chatgpt_to_codex_handoff.json",
@@ -103,30 +226,23 @@
       "data/villain_repair_quality_analytics.json",
       "reports/agent_handoff_status.md"
     ],
-    "quality_status": "BLOCKED",
+    "quality_status": "REVIEW_REQUIRED",
     "summary": "Agent handoff loop validated through repo-local protocol, policy, quality runner, and reports.",
     "warnings": [
       "deleted_nearby_match_found"
     ]
   },
   "maintenance_summary": {
-    "blocked_candidate_count": 6,
-    "blocked_reason_frequency": {
-      "deleted_text_near_match": 3,
-      "deleted_topic_context_cooldown": 6,
-      "temporal_context_unverified": 3,
-      "topic_image_pairing_mismatch": 3
-    },
+    "blocked_candidate_count": 0,
+    "blocked_reason_frequency": {},
     "chatgpt_next_codex_actions": [
-      "Write this decision to data/chatgpt_to_codex_handoff.json.",
-      "Keep queue_health_status=BLOCKED, review_board_status=READY, posting_execution_status=BLOCKED.",
-      "Keep safe_to_review=true and safe_to_post=false.",
-      "Do not execute posting, upload_media, create_tweet, or tracking_code generation.",
-      "Keep vln-gen-20260517-shop-001 in review board only.",
-      "Mark any READY candidate using 20260514集会.png as not approved for posting.",
-      "Maintain block on vln-gen-20260516-001 and vln-gen-20260516-003.",
-      "Add refill candidates that avoid deleted topic cooldown, deleted near-match text, temporal claims, and 20260514集会.png.",
-      "Update reports/agent_handoff_status.md and reports/villain_quality_review_summary.md with separated statuses."
+      "Keep review board READY only; do not promote to post-ready.",
+      "Maintain safe_to_post=false and posting_execution_status=BLOCKED.",
+      "Keep vln-gen-20260517-shop-001 and vln-gen-20260516-002 in human review only; require explicit human approval before any posting path.",
+      "Archive or drop vln-gen-20260516-001 due to deleted_text_near_match, deleted_topic_context_cooldown, and temporal_context_unverified.",
+      "Replace the image for vln-gen-20260516-003 before any further review; current pairing is a mismatch.",
+      "Refill the queue with candidates that avoid deleted-topic cooldown, temporal claims, and topic-image mismatch.",
+      "Do not generate tracking codes, passcodes, upload_media, or create_tweet artifacts."
     ],
     "chatgpt_refill_required": true,
     "deleted_learning_cooldown_remaining": [
@@ -136,29 +252,45 @@
         "execution_id": "vln-exec-daytime-vln-gen-20260516-001",
         "image_used": "/Users/raindog/Projects/villain-auto-posting/villain_post_images/20260514集会.png",
         "reason": "Deleted by human: content/context mismatch. Not yesterday's gathering and post did not fit actual situation.",
-        "remaining_hours": 162.5,
+        "remaining_hours": 0.0,
         "topic_cluster": "community_gathering_signal",
         "tweet_id": "2055938300708626713"
+      },
+      {
+        "candidate_id": "vln-stream-20260519-auto-004",
+        "cooldown_until_jst": "2026-05-27T21:04:43+09:00",
+        "execution_id": "vln-exec-daytime-vln-stream-20260519-auto-004",
+        "image_used": "/Users/raindog/Documents/New project/villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png",
+        "reason": "Deleted by human: image quality was terrible; flat product composite did not fit account quality bar.",
+        "remaining_hours": 50.1,
+        "topic_cluster": "culture_observer_apparel_context",
+        "tweet_id": "2057067435744997644"
+      },
+      {
+        "candidate_id": "external_or_untracked_20260520_200005",
+        "cooldown_until_jst": "2026-05-27T21:04:43+09:00",
+        "execution_id": "",
+        "image_used": "",
+        "reason": "Deleted by human: bad image quality / unacceptable visual.",
+        "remaining_hours": 50.1,
+        "topic_cluster": "unknown_deleted_bad_image",
+        "tweet_id": "2057053745704481229"
       }
     ],
     "executable_ready_count": 0,
     "posting_execution_status": "BLOCKED",
-    "queue_health_status": "BLOCKED",
-    "ready_candidate_count": 3,
+    "queue_health_status": "CLEAR",
+    "ready_candidate_count": 9,
     "review_board_status": "READY",
-    "review_required_candidate_count": 0,
+    "review_required_candidate_count": 2,
     "safe_to_post": false,
     "safe_to_review": true,
     "stale_cleanup": {
-      "remaining_count": 9,
+      "remaining_count": 11,
       "removed_count": 0,
       "strategy": "dedupe_current_review_items_by_candidate_execution_slot_image"
     },
     "unresolved_issues_summary": [
-      "context_evidence source fileの標準形式を決める必要がある",
-      "候補が全部BLOCKEDのときのrefill処理は未実装",
-      "画像metadataが薄い候補のtopic-image判定をどう補強するか",
-      "READYだがhuman_approved_for_posting=falseの候補をreview inboxとして別表示できるか",
       "Deleted learning cooldown is active for recent failed posts."
     ]
   },
@@ -171,122 +303,49 @@
   "purpose": "Codexが実装結果・検証結果・未解決課題・次アクションをChatGPTへ返すためのoutbox。",
   "repair_actions": [
     {
-      "blockers": [
-        "deleted_text_near_match",
-        "deleted_topic_context_cooldown",
-        "temporal_context_unverified"
-      ],
-      "candidate_id": "vln-gen-20260516-001",
-      "execution_id": "vln-exec-daytime-vln-gen-20260516-001",
+      "blockers": [],
+      "candidate_id": "vln-stream-20260519-auto-004",
+      "execution_id": "vln-exec-daytime-vln-stream-20260519-auto-004",
       "repair_action": {
-        "reason": "Candidate repeats a deleted/failed text and topic pattern.",
+        "reason": "Subjective quality signal needs review before any later approval.",
         "required": true,
-        "type": "archive_or_drop"
+        "type": "human_review_required"
       },
       "slot": "daytime"
     },
     {
-      "blockers": [
-        "deleted_topic_context_cooldown",
-        "topic_image_pairing_mismatch"
-      ],
-      "candidate_id": "vln-gen-20260516-003",
-      "execution_id": "vln-exec-daytime-vln-gen-20260516-003",
+      "blockers": [],
+      "candidate_id": "vln-stream-20260519-auto-004",
+      "execution_id": "vln-exec-night-vln-stream-20260519-auto-004",
       "repair_action": {
-        "reason": "Text topic and image metadata do not support each other.",
+        "reason": "Subjective quality signal needs review before any later approval.",
         "required": true,
-        "type": "image_replacement_required"
-      },
-      "slot": "daytime"
-    },
-    {
-      "blockers": [
-        "deleted_text_near_match",
-        "deleted_topic_context_cooldown",
-        "temporal_context_unverified"
-      ],
-      "candidate_id": "vln-gen-20260516-001",
-      "execution_id": "vln-exec-night-vln-gen-20260516-001",
-      "repair_action": {
-        "reason": "Candidate repeats a deleted/failed text and topic pattern.",
-        "required": true,
-        "type": "archive_or_drop"
+        "type": "human_review_required"
       },
       "slot": "night"
-    },
-    {
-      "blockers": [
-        "deleted_topic_context_cooldown",
-        "topic_image_pairing_mismatch"
-      ],
-      "candidate_id": "vln-gen-20260516-003",
-      "execution_id": "vln-exec-night-vln-gen-20260516-003",
-      "repair_action": {
-        "reason": "Text topic and image metadata do not support each other.",
-        "required": true,
-        "type": "image_replacement_required"
-      },
-      "slot": "night"
-    },
-    {
-      "blockers": [
-        "deleted_text_near_match",
-        "deleted_topic_context_cooldown",
-        "temporal_context_unverified"
-      ],
-      "candidate_id": "vln-gen-20260516-001",
-      "execution_id": "vln-exec-late_night-vln-gen-20260516-001",
-      "repair_action": {
-        "reason": "Candidate repeats a deleted/failed text and topic pattern.",
-        "required": true,
-        "type": "archive_or_drop"
-      },
-      "slot": "late_night"
-    },
-    {
-      "blockers": [
-        "deleted_topic_context_cooldown",
-        "topic_image_pairing_mismatch"
-      ],
-      "candidate_id": "vln-gen-20260516-003",
-      "execution_id": "vln-exec-late_night-vln-gen-20260516-003",
-      "repair_action": {
-        "reason": "Text topic and image metadata do not support each other.",
-        "required": true,
-        "type": "image_replacement_required"
-      },
-      "slot": "late_night"
     }
   ],
   "repair_execution": {
-    "context_evidence_request_count": 3,
+    "context_evidence_request_count": 0,
     "recurring_repair_failure_clusters": [
       {
-        "cluster": "ARCHIVED_FROM_REVIEW:archive_or_drop",
-        "count": 3,
-        "recurring": true
-      },
-      {
-        "cluster": "REPAIRED_FOR_REVIEW_ONLY:image_replacement_required",
-        "count": 3,
+        "cluster": "SKIPPED:human_review_required",
+        "count": 2,
         "recurring": true
       }
     ],
     "repair_quality_summary": {
-      "average_repair_confidence": 70.0,
-      "average_repair_quality_score": 85.0,
-      "evaluated_repaired_candidate_count": 3,
-      "repair_regression_risk_frequency": {
-        "medium": 3
-      },
+      "average_repair_confidence": 0,
+      "average_repair_quality_score": 0,
+      "evaluated_repaired_candidate_count": 0,
+      "repair_regression_risk_frequency": {},
       "safe_to_post": false
     },
-    "repair_result_count": 6,
+    "repair_result_count": 2,
     "repair_status_frequency": {
-      "ARCHIVED_FROM_REVIEW": 3,
-      "REPAIRED_FOR_REVIEW_ONLY": 3
+      "SKIPPED": 2
     },
-    "repaired_candidate_count": 3,
+    "repaired_candidate_count": 0,
     "safe_to_post": false,
     "status": "COMPLETED_REVIEW_ONLY"
   },
@@ -311,10 +370,6 @@
   "status": "READY_FOR_CHATGPT_REVIEW",
   "tweet_creation_executed": false,
   "unresolved_issues": [
-    "context_evidence source fileの標準形式を決める必要がある",
-    "候補が全部BLOCKEDのときのrefill処理は未実装",
-    "画像metadataが薄い候補のtopic-image判定をどう補強するか",
-    "READYだがhuman_approved_for_posting=falseの候補をreview inboxとして別表示できるか",
     "Deleted learning cooldown is active for recent failed posts."
   ],
   "upload_media_executed": false,
