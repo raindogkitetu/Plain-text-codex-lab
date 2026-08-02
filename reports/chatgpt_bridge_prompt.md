@@ -15,8 +15,8 @@ Return only JSON matching the expected response schema. Do not ask Codex to post
 
 ## Current Summary
 
-- generated_at_jst: `2026-08-02T20:21:41+09:00`
-- bridge_prompt_hash: `8011b05aa28166bfb961dac50770d00a3bb4c8cfc80239febc3cf251f061f71a`
+- generated_at_jst: `2026-08-02T22:44:49+09:00`
+- bridge_prompt_hash: `9f556c49df47b8f5159e052803167d07c3553b448b7f34c0b8ac1afdf95e8a22`
 - codex_outbox_status: `READY_FOR_CHATGPT_REVIEW`
 - review_state: `CHATGPT_DECISION_CONSUMED`
 - queue_health_status: `BLOCKED`
@@ -1642,7 +1642,7 @@ Latest recorded post remains the manually recovered one:
 ## ChatGPT Bridge
 
 - bridge prompt: `reports/chatgpt_bridge_prompt.md`
-- last ingestion at JST: `2026-08-02T18:15:26+09:00`
+- last ingestion at JST: `2026-08-02T20:21:58+09:00`
 - last_chatgpt_response_status: `ACCEPTED`
 - ingestion_errors: `none`
 - safe_to_post: `false`
