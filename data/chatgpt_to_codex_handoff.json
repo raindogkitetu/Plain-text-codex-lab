@@ -2,31 +2,60 @@
   "chatgpt_review_decision": {
     "approved_for_review": [
       "vln-gen-20260517-shop-001",
-      "vln-gen-20260516-002"
+      "vln-gen-20260516-002",
+      "vln-gen-20260516-003"
     ],
     "archive_or_drop_candidates": [
       "vln-gen-20260516-001"
     ],
-    "candidate_image_pairing": [],
+    "candidate_image_pairing": [
+      {
+        "candidate_id": "vln-gen-20260517-shop-001",
+        "decision": "PAIR_OK_FOR_REVIEW",
+        "image_path": "/Users/raindog/Documents/New project/villain_post_images/99f8c686-07e1-48d0-ad0d-4ce5f14939e2.png",
+        "reason": "Review-only pairing is acceptable, but it is not post-approved and still requires human approval."
+      },
+      {
+        "candidate_id": "vln-gen-20260516-001",
+        "decision": "HOLD",
+        "image_path": "/Users/raindog/Documents/New project/villain_post_images/20260514集会.png",
+        "reason": "Temporal/gathering framing is blocked by deleted-near-match and cooldown; do not reuse."
+      },
+      {
+        "candidate_id": "vln-gen-20260516-002",
+        "decision": "PAIR_OK_FOR_REVIEW",
+        "image_path": "/Users/raindog/Documents/New project/villain_post_images/20260514集会.png",
+        "reason": "Review-only pairing is acceptable, but no posting path is allowed without human approval."
+      },
+      {
+        "candidate_id": "vln-gen-20260516-003",
+        "decision": "IMAGE_REPLACEMENT_REQUIRED",
+        "image_path": "/Users/raindog/Documents/New project/villain_post_images/生成画像1.png",
+        "reason": "Text-image semantics mismatch; the current image does not support the gathering/topic framing."
+      }
+    ],
     "context_evidence_required": [
-      "Any candidate using temporal or gathering framing such as yesterday/今日/集会/recent-event claims must have verified context evidence.",
+      "any candidate using yesterday/今日/集会/recent-event framing",
       "vln-gen-20260516-001"
     ],
-    "decision": "REQUEST_REPAIR",
+    "decision": "REQUEST_REFILL",
     "image_replacement_required": [
       "20260514集会.png",
-      "villain_post_images/生成画像1.png"
+      "生成画像1.png"
     ],
     "image_review_decisions": [
       {
         "decision": "USE",
-        "fit_for_candidate_ids": [],
+        "fit_for_candidate_ids": [
+          "vln-gen-20260517-shop-001"
+        ],
         "image_id": "wearable_stock_001_cap_afterhours",
         "image_path": "villain_post_images/wearable_stock/wearable_stock_001_cap_afterhours.png",
-        "reason": "Natural wearable residue framing; no obvious ad-like or fake-product signal.",
+        "reason": "Natural wearable silhouette; low ad pressure; fits review-only wearable residue direction.",
         "reject_if": [
-          "If later paired with temporal/gathering claims without evidence.",
-          "If compositing makes the cap look invented."
+          "looks like invented apparel shape",
+          "reads as product ad",
+          "feels pasted"
         ],
         "repair_request": ""
       },
@@ -35,9 +64,11 @@
         "fit_for_candidate_ids": [],
         "image_id": "wearable_stock_002_bucket_street",
         "image_path": "villain_post_images/wearable_stock/wearable_stock_002_bucket_street.png",
-        "reason": "Natural street wearable framing; acceptable for review-only use.",
+        "reason": "Composited product-on-person framing appears natural and non-ad-like.",
         "reject_if": [
-          "If it reads like a product ad or fabricated goods rendering."
+          "looks like product cutout",
+          "street scene feels staged",
+          "mismatched apparel geometry"
         ],
         "repair_request": ""
       },
@@ -46,9 +77,10 @@
         "fit_for_candidate_ids": [],
         "image_id": "wearable_stock_003_bag_workdesk",
         "image_path": "villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png",
-        "reason": "Lifestyle residue scene fits observational tone.",
+        "reason": "Workdesk residue framing is suitable and avoids explicit sales language.",
         "reject_if": [
-          "If product cutout dominates too strongly or feels pasted in."
+          "too product-forward",
+          "looks like catalog placement"
         ],
         "repair_request": ""
       },
@@ -57,9 +89,10 @@
         "fit_for_candidate_ids": [],
         "image_id": "wearable_stock_004_cap_mirror_crop",
         "image_path": "villain_post_images/wearable_stock/wearable_stock_004_cap_mirror_crop.png",
-        "reason": "Anonymous mirror crop is consistent with non-ad lifestyle posting.",
+        "reason": "Anonymous mirror-crop lifestyle framing is acceptable for review-only use.",
         "reject_if": [
-          "If face/product rendering becomes implausible."
+          "face/product crop feels artificial",
+          "product silhouette is distorted"
         ],
         "repair_request": ""
       },
@@ -68,9 +101,10 @@
         "fit_for_candidate_ids": [],
         "image_id": "wearable_stock_005_bucket_backview_after",
         "image_path": "villain_post_images/wearable_stock/wearable_stock_005_bucket_backview_after.png",
-        "reason": "After-use silhouette is acceptable and low-ad-pressure.",
+        "reason": "After-use back-view scene matches subtle lifestyle residue.",
         "reject_if": [
-          "If it overstates an event or temporal claim."
+          "reads as event photo",
+          "looks like an ad"
         ],
         "repair_request": ""
       },
@@ -79,31 +113,34 @@
         "fit_for_candidate_ids": [],
         "image_id": "wearable_stock_006_thermos_desk_residue",
         "image_path": "villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png",
-        "reason": "Desk residue composition is natural and non-promotional.",
+        "reason": "Desk residue framing is natural and non-promotional.",
         "reject_if": [
-          "If the thermos appears as an isolated ad cutout."
+          "product is too isolated",
+          "catalog feel increases"
         ],
         "repair_request": ""
       },
       {
-        "decision": "HOLD",
+        "decision": "USE",
         "fit_for_candidate_ids": [],
         "image_id": "wearable_stock_007_cap_mirror_person",
         "image_path": "villain_post_images/wearable_stock/wearable_stock_007_cap_mirror_person.png",
-        "reason": "Plausible, but generated lifestyle-photo realism should be validated before recurring scheduling.",
+        "reason": "Anonymous mirror lifestyle photo is acceptable if realism holds.",
         "reject_if": [
-          "If the person looks synthetic or the cap shape feels invented."
+          "looks staged",
+          "cap shape diverges from source product"
         ],
-        "repair_request": "Continue realism validation before reuse."
+        "repair_request": ""
       },
       {
         "decision": "USE",
         "fit_for_candidate_ids": [],
         "image_id": "wearable_stock_008_bucket_mirror_person",
         "image_path": "villain_post_images/wearable_stock/wearable_stock_008_bucket_mirror_person.png",
-        "reason": "Anonymous mirror lifestyle context is acceptable for review-only use.",
+        "reason": "Natural person-in-space framing fits lifestyle review direction.",
         "reject_if": [
-          "If apparel appears non-existent or product-like in an ad sense."
+          "too promotional",
+          "bucket hat looks fake"
         ],
         "repair_request": ""
       },
@@ -112,20 +149,21 @@
         "fit_for_candidate_ids": [],
         "image_id": "wearable_stock_009_cap_rain_street",
         "image_path": "villain_post_images/wearable_stock/wearable_stock_009_cap_rain_street.png",
-        "reason": "Cinematic rain styling may push it toward stylized ad-like territory.",
+        "reason": "Cinematic rain styling may drift toward mood-ad aesthetics.",
         "reject_if": [
-          "If the scene becomes too theatrical or promotional."
+          "becomes ad-like",
+          "urban/dramatic styling dominates the apparel"
         ],
-        "repair_request": "Reduce cinematic styling if reused."
+        "repair_request": "Use only after realism check and tone validation."
       },
       {
         "decision": "USE",
         "fit_for_candidate_ids": [],
         "image_id": "wearable_stock_010_thermos_workdesk",
         "image_path": "villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png",
-        "reason": "Lived-in desk scene supports observational framing.",
+        "reason": "Workdesk use-case feels observational and community-safe.",
         "reject_if": [
-          "If it begins to read like a goods advertisement."
+          "product placement feels staged"
         ],
         "repair_request": ""
       },
@@ -134,9 +172,9 @@
         "fit_for_candidate_ids": [],
         "image_id": "wearable_stock_011_bag_entryway",
         "image_path": "villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png",
-        "reason": "Entryway after-use scene is natural and community-safe for review only.",
+        "reason": "Entryway after-use framing is aligned with residue-based posting.",
         "reject_if": [
-          "If it appears as a product placement shot."
+          "reads like a commercial still"
         ],
         "repair_request": ""
       },
@@ -145,11 +183,12 @@
         "fit_for_candidate_ids": [],
         "image_id": "wearable_stock_012_hoodie_mirror_person",
         "image_path": "villain_post_images/wearable_stock/wearable_stock_012_hoodie_mirror_person.png",
-        "reason": "Promising but should continue realism validation before recurring scheduled use.",
+        "reason": "Needs continued realism validation before becoming recurring scheduled candidate.",
         "reject_if": [
-          "If the hoodie or person looks fabricated or cutout-like."
+          "hoodie looks invented",
+          "mirror/person composite feels artificial"
         ],
-        "repair_request": "Continue realism validation before reuse."
+        "repair_request": "Hold until stronger realism confirmation."
       }
     ],
     "must_remain_blocked": [
@@ -157,65 +196,91 @@
       "vln-gen-20260516-003"
     ],
     "next_codex_actions": [
-      "Keep queue_health_status=BLOCKED, review_board_status=READY, posting_execution_status=BLOCKED.",
-      "Keep safe_to_review=true and safe_to_post=false.",
-      "Maintain READY items as review-only, not post-ready.",
-      "Archive or drop vln-gen-20260516-001 due to deleted-text near match plus temporal context unverified.",
-      "Replace mismatched image assets before re-reviewing vln-gen-20260516-003.",
+      "Keep review_board_status=READY and posting_execution_status=BLOCKED.",
+      "Keep safe_to_post=false and safe_to_review=true.",
       "Do not execute posting, upload_media, create_tweet, or tracking_code generation.",
-      "Refill with candidates that avoid deleted-topic cooldown, temporal claims, and image/topic mismatches."
+      "Archive or drop vln-gen-20260516-001 due to deleted-near-match and temporal-context cooldown.",
+      "Repair vln-gen-20260516-003 by replacing the image with one that clearly matches the text's non-event lifestyle/residue framing.",
+      "Keep vln-gen-20260517-shop-001 in review-only status; human approval is still required.",
+      "Refill with new candidates that avoid deleted-topic cooldown, near-match text, temporal claims, and weak topic-image pairing.",
+      "Prefer wearable residue / anonymous lifestyle / entryway / workdesk scenes over event or gathering framing."
     ],
     "not_approved_for_posting": [
       "vln-gen-20260517-shop-001",
-      "vln-gen-20260516-002"
+      "vln-gen-20260516-002",
+      "vln-gen-20260516-003",
+      "vln-gen-20260516-001"
     ],
     "policy_clarification": [
-      "READY means review-ready only, never posting permission.",
+      "READY means review-ready only, never post-ready.",
       "Human approval is required before any posting path can run.",
-      "Deleted-learning cooldown overrides aesthetic fit when there is conflict.",
-      "No upload_media, no create_tweet, no GitHub issues, no tracking_code generation."
+      "Deleted-learning cooldown overrides aesthetic fit.",
+      "Temporal or recent-event claims require verified external context evidence.",
+      "Generated/shop-derived images must be reviewed for ad-like, product-cutout, or mismatched visuals before recurring use."
     ],
     "refill_required": true,
     "repair_candidates": [
-      {
-        "candidate_id": "vln-gen-20260516-002",
-        "reason": "READY candidate only for human review; keep review-ready but not post-ready until explicit human approval exists."
-      },
-      {
-        "candidate_id": "vln-gen-20260516-003",
-        "reason": "Image/topic mismatch requires replacement before any review return."
-      }
+      "vln-gen-20260516-003"
     ]
   },
   "decision_payload": {
     "chatgpt_review_decision": {
       "approved_for_review": [
         "vln-gen-20260517-shop-001",
-        "vln-gen-20260516-002"
+        "vln-gen-20260516-002",
+        "vln-gen-20260516-003"
       ],
       "archive_or_drop_candidates": [
         "vln-gen-20260516-001"
       ],
-      "candidate_image_pairing": [],
+      "candidate_image_pairing": [
+        {
+          "candidate_id": "vln-gen-20260517-shop-001",
+          "decision": "PAIR_OK_FOR_REVIEW",
+          "image_path": "/Users/raindog/Documents/New project/villain_post_images/99f8c686-07e1-48d0-ad0d-4ce5f14939e2.png",
+          "reason": "Review-only pairing is acceptable, but it is not post-approved and still requires human approval."
+        },
+        {
+          "candidate_id": "vln-gen-20260516-001",
+          "decision": "HOLD",
+          "image_path": "/Users/raindog/Documents/New project/villain_post_images/20260514集会.png",
+          "reason": "Temporal/gathering framing is blocked by deleted-near-match and cooldown; do not reuse."
+        },
+        {
+          "candidate_id": "vln-gen-20260516-002",
+          "decision": "PAIR_OK_FOR_REVIEW",
+          "image_path": "/Users/raindog/Documents/New project/villain_post_images/20260514集会.png",
+          "reason": "Review-only pairing is acceptable, but no posting path is allowed without human approval."
+        },
+        {
+          "candidate_id": "vln-gen-20260516-003",
+          "decision": "IMAGE_REPLACEMENT_REQUIRED",
+          "image_path": "/Users/raindog/Documents/New project/villain_post_images/生成画像1.png",
+          "reason": "Text-image semantics mismatch; the current image does not support the gathering/topic framing."
+        }
+      ],
       "context_evidence_required": [
-        "Any candidate using temporal or gathering framing such as yesterday/今日/集会/recent-event claims must have verified context evidence.",
+        "any candidate using yesterday/今日/集会/recent-event framing",
         "vln-gen-20260516-001"
       ],
-      "decision": "REQUEST_REPAIR",
+      "decision": "REQUEST_REFILL",
       "image_replacement_required": [
         "20260514集会.png",
-        "villain_post_images/生成画像1.png"
+        "生成画像1.png"
       ],
       "image_review_decisions": [
         {
           "decision": "USE",
-          "fit_for_candidate_ids": [],
+          "fit_for_candidate_ids": [
+            "vln-gen-20260517-shop-001"
+          ],
           "image_id": "wearable_stock_001_cap_afterhours",
           "image_path": "villain_post_images/wearable_stock/wearable_stock_001_cap_afterhours.png",
-          "reason": "Natural wearable residue framing; no obvious ad-like or fake-product signal.",
+          "reason": "Natural wearable silhouette; low ad pressure; fits review-only wearable residue direction.",
           "reject_if": [
-            "If later paired with temporal/gathering claims without evidence.",
-            "If compositing makes the cap look invented."
+            "looks like invented apparel shape",
+            "reads as product ad",
+            "feels pasted"
           ],
           "repair_request": ""
         },
@@ -224,9 +289,11 @@
           "fit_for_candidate_ids": [],
           "image_id": "wearable_stock_002_bucket_street",
           "image_path": "villain_post_images/wearable_stock/wearable_stock_002_bucket_street.png",
-          "reason": "Natural street wearable framing; acceptable for review-only use.",
+          "reason": "Composited product-on-person framing appears natural and non-ad-like.",
           "reject_if": [
-            "If it reads like a product ad or fabricated goods rendering."
+            "looks like product cutout",
+            "street scene feels staged",
+            "mismatched apparel geometry"
           ],
           "repair_request": ""
         },
@@ -235,9 +302,10 @@
           "fit_for_candidate_ids": [],
           "image_id": "wearable_stock_003_bag_workdesk",
           "image_path": "villain_post_images/wearable_stock/wearable_stock_003_bag_workdesk.png",
-          "reason": "Lifestyle residue scene fits observational tone.",
+          "reason": "Workdesk residue framing is suitable and avoids explicit sales language.",
           "reject_if": [
-            "If product cutout dominates too strongly or feels pasted in."
+            "too product-forward",
+            "looks like catalog placement"
           ],
           "repair_request": ""
         },
@@ -246,9 +314,10 @@
           "fit_for_candidate_ids": [],
           "image_id": "wearable_stock_004_cap_mirror_crop",
           "image_path": "villain_post_images/wearable_stock/wearable_stock_004_cap_mirror_crop.png",
-          "reason": "Anonymous mirror crop is consistent with non-ad lifestyle posting.",
+          "reason": "Anonymous mirror-crop lifestyle framing is acceptable for review-only use.",
           "reject_if": [
-            "If face/product rendering becomes implausible."
+            "face/product crop feels artificial",
+            "product silhouette is distorted"
           ],
           "repair_request": ""
         },
@@ -257,9 +326,10 @@
           "fit_for_candidate_ids": [],
           "image_id": "wearable_stock_005_bucket_backview_after",
           "image_path": "villain_post_images/wearable_stock/wearable_stock_005_bucket_backview_after.png",
-          "reason": "After-use silhouette is acceptable and low-ad-pressure.",
+          "reason": "After-use back-view scene matches subtle lifestyle residue.",
           "reject_if": [
-            "If it overstates an event or temporal claim."
+            "reads as event photo",
+            "looks like an ad"
           ],
           "repair_request": ""
         },
@@ -268,31 +338,34 @@
           "fit_for_candidate_ids": [],
           "image_id": "wearable_stock_006_thermos_desk_residue",
           "image_path": "villain_post_images/wearable_stock/wearable_stock_006_thermos_desk_residue.png",
-          "reason": "Desk residue composition is natural and non-promotional.",
+          "reason": "Desk residue framing is natural and non-promotional.",
           "reject_if": [
-            "If the thermos appears as an isolated ad cutout."
+            "product is too isolated",
+            "catalog feel increases"
           ],
           "repair_request": ""
         },
         {
-          "decision": "HOLD",
+          "decision": "USE",
           "fit_for_candidate_ids": [],
           "image_id": "wearable_stock_007_cap_mirror_person",
           "image_path": "villain_post_images/wearable_stock/wearable_stock_007_cap_mirror_person.png",
-          "reason": "Plausible, but generated lifestyle-photo realism should be validated before recurring scheduling.",
+          "reason": "Anonymous mirror lifestyle photo is acceptable if realism holds.",
           "reject_if": [
-            "If the person looks synthetic or the cap shape feels invented."
+            "looks staged",
+            "cap shape diverges from source product"
           ],
-          "repair_request": "Continue realism validation before reuse."
+          "repair_request": ""
         },
         {
           "decision": "USE",
           "fit_for_candidate_ids": [],
           "image_id": "wearable_stock_008_bucket_mirror_person",
           "image_path": "villain_post_images/wearable_stock/wearable_stock_008_bucket_mirror_person.png",
-          "reason": "Anonymous mirror lifestyle context is acceptable for review-only use.",
+          "reason": "Natural person-in-space framing fits lifestyle review direction.",
           "reject_if": [
-            "If apparel appears non-existent or product-like in an ad sense."
+            "too promotional",
+            "bucket hat looks fake"
           ],
           "repair_request": ""
         },
@@ -301,20 +374,21 @@
           "fit_for_candidate_ids": [],
           "image_id": "wearable_stock_009_cap_rain_street",
           "image_path": "villain_post_images/wearable_stock/wearable_stock_009_cap_rain_street.png",
-          "reason": "Cinematic rain styling may push it toward stylized ad-like territory.",
+          "reason": "Cinematic rain styling may drift toward mood-ad aesthetics.",
           "reject_if": [
-            "If the scene becomes too theatrical or promotional."
+            "becomes ad-like",
+            "urban/dramatic styling dominates the apparel"
           ],
-          "repair_request": "Reduce cinematic styling if reused."
+          "repair_request": "Use only after realism check and tone validation."
         },
         {
           "decision": "USE",
           "fit_for_candidate_ids": [],
           "image_id": "wearable_stock_010_thermos_workdesk",
           "image_path": "villain_post_images/wearable_stock/wearable_stock_010_thermos_workdesk.png",
-          "reason": "Lived-in desk scene supports observational framing.",
+          "reason": "Workdesk use-case feels observational and community-safe.",
           "reject_if": [
-            "If it begins to read like a goods advertisement."
+            "product placement feels staged"
           ],
           "repair_request": ""
         },
@@ -323,9 +397,9 @@
           "fit_for_candidate_ids": [],
           "image_id": "wearable_stock_011_bag_entryway",
           "image_path": "villain_post_images/wearable_stock/wearable_stock_011_bag_entryway.png",
-          "reason": "Entryway after-use scene is natural and community-safe for review only.",
+          "reason": "Entryway after-use framing is aligned with residue-based posting.",
           "reject_if": [
-            "If it appears as a product placement shot."
+            "reads like a commercial still"
           ],
           "repair_request": ""
         },
@@ -334,11 +408,12 @@
           "fit_for_candidate_ids": [],
           "image_id": "wearable_stock_012_hoodie_mirror_person",
           "image_path": "villain_post_images/wearable_stock/wearable_stock_012_hoodie_mirror_person.png",
-          "reason": "Promising but should continue realism validation before recurring scheduled use.",
+          "reason": "Needs continued realism validation before becoming recurring scheduled candidate.",
           "reject_if": [
-            "If the hoodie or person looks fabricated or cutout-like."
+            "hoodie looks invented",
+            "mirror/person composite feels artificial"
           ],
-          "repair_request": "Continue realism validation before reuse."
+          "repair_request": "Hold until stronger realism confirmation."
         }
       ],
       "must_remain_blocked": [
@@ -346,38 +421,35 @@
         "vln-gen-20260516-003"
       ],
       "next_codex_actions": [
-        "Keep queue_health_status=BLOCKED, review_board_status=READY, posting_execution_status=BLOCKED.",
-        "Keep safe_to_review=true and safe_to_post=false.",
-        "Maintain READY items as review-only, not post-ready.",
-        "Archive or drop vln-gen-20260516-001 due to deleted-text near match plus temporal context unverified.",
-        "Replace mismatched image assets before re-reviewing vln-gen-20260516-003.",
+        "Keep review_board_status=READY and posting_execution_status=BLOCKED.",
+        "Keep safe_to_post=false and safe_to_review=true.",
         "Do not execute posting, upload_media, create_tweet, or tracking_code generation.",
-        "Refill with candidates that avoid deleted-topic cooldown, temporal claims, and image/topic mismatches."
+        "Archive or drop vln-gen-20260516-001 due to deleted-near-match and temporal-context cooldown.",
+        "Repair vln-gen-20260516-003 by replacing the image with one that clearly matches the text's non-event lifestyle/residue framing.",
+        "Keep vln-gen-20260517-shop-001 in review-only status; human approval is still required.",
+        "Refill with new candidates that avoid deleted-topic cooldown, near-match text, temporal claims, and weak topic-image pairing.",
+        "Prefer wearable residue / anonymous lifestyle / entryway / workdesk scenes over event or gathering framing."
       ],
       "not_approved_for_posting": [
         "vln-gen-20260517-shop-001",
-        "vln-gen-20260516-002"
+        "vln-gen-20260516-002",
+        "vln-gen-20260516-003",
+        "vln-gen-20260516-001"
       ],
       "policy_clarification": [
-        "READY means review-ready only, never posting permission.",
+        "READY means review-ready only, never post-ready.",
         "Human approval is required before any posting path can run.",
-        "Deleted-learning cooldown overrides aesthetic fit when there is conflict.",
-        "No upload_media, no create_tweet, no GitHub issues, no tracking_code generation."
+        "Deleted-learning cooldown overrides aesthetic fit.",
+        "Temporal or recent-event claims require verified external context evidence.",
+        "Generated/shop-derived images must be reviewed for ad-like, product-cutout, or mismatched visuals before recurring use."
       ],
       "refill_required": true,
       "repair_candidates": [
-        {
-          "candidate_id": "vln-gen-20260516-002",
-          "reason": "READY candidate only for human review; keep review-ready but not post-ready until explicit human approval exists."
-        },
-        {
-          "candidate_id": "vln-gen-20260516-003",
-          "reason": "Image/topic mismatch requires replacement before any review return."
-        }
+        "vln-gen-20260516-003"
       ]
     },
     "create_tweet_performed": false,
-    "generated_at_jst": "2026-09-04T23:10:45+09:00",
+    "generated_at_jst": "2026-09-05T03:15:45+09:00",
     "generated_by": "github_chatgpt_review_bot",
     "github_issue_created": false,
     "model": "gpt-5.4-mini",
