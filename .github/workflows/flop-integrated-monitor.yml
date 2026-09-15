@@ -1,0 +1,174 @@
+name: FLOP Integrated Monitor
+
+on:
+  push:
+    paths:
+      - '.github/workflows/flop-integrated-monitor.yml'
+  schedule:
+    - cron: '41 */3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: flop-integrated-monitor
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Collect official FLOP signals
+        id: collect
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const crypto = require('crypto');
+
+          const statePath = 'data/flop_integrated_monitor_state.json';
+          fs.mkdirSync('data', { recursive: true });
+
+          async function getText(url) {
+            const c = new AbortController();
+            const t = setTimeout(() => c.abort(), 15000);
+            try {
+              const r = await fetch(url, { headers: { 'user-agent': 'raindog-flop-integrated-monitor/1.0' }, signal: c.signal });
+              if (!r.ok) throw new Error(`${url} HTTP ${r.status}`);
+              return await r.text();
+            } finally { clearTimeout(t); }
+          }
+
+          async function getJson(url) { return JSON.parse(await getText(url)); }
+          function sha(s) { return crypto.createHash('sha256').update(s).digest('hex'); }
+          function hasAny(text, words) { const x = text.toLowerCase(); return words.some(w => x.includes(w.toLowerCase())); }
+
+          async function main() {
+            let old = null;
+            try { old = JSON.parse(fs.readFileSync(statePath, 'utf8')); } catch {}
+
+            const urls = {
+              technocore_release: 'https://api.github.com/repos/flop-labs/technocore-chat/releases/latest',
+              technocore_commits: 'https://api.github.com/repos/flop-labs/technocore-chat/commits?per_page=1',
+              tclk_release: 'https://api.github.com/repos/flop-labs/tclk/releases/latest',
+              tclk_commits: 'https://api.github.com/repos/flop-labs/tclk/commits?per_page=1',
+              yellow_commits: 'https://api.github.com/repos/flop-labs/yellowpaper/commits?per_page=1',
+              sonnet_commits: 'https://api.github.com/repos/flop-labs/technocore-sonnet-challenge/commits?per_page=1',
+              yellow_web: 'https://flop.finance/intro/yellowpaper/',
+              teaser: 'https://flop.finance/teaser/',
+            };
+
+            const [techRel, techCommits, tclkRel, tclkCommits, ypCommits, sonnetCommits, yellowWeb, teaser] = await Promise.all([
+              getJson(urls.technocore_release).catch(e => ({ error: String(e) })),
+              getJson(urls.technocore_commits).catch(e => ({ error: String(e) })),
+              getJson(urls.tclk_release).catch(e => ({ error: String(e) })),
+              getJson(urls.tclk_commits).catch(e => ({ error: String(e) })),
+              getJson(urls.yellow_commits).catch(e => ({ error: String(e) })),
+              getJson(urls.sonnet_commits).catch(e => ({ error: String(e) })),
+              getText(urls.yellow_web).catch(e => `ERROR:${e}`),
+              getText(urls.teaser).catch(e => `ERROR:${e}`),
+            ]);
+
+            const allWeb = `${yellowWeb}\n${teaser}`;
+            const state = {
+              schema_version: 1,
+              checked_at: new Date().toISOString(),
+              technocore: {
+                release: techRel.tag_name || techRel.name || null,
+                release_published_at: techRel.published_at || null,
+                head_sha: Array.isArray(techCommits) ? techCommits[0]?.sha || null : null,
+                head_message: Array.isArray(techCommits) ? techCommits[0]?.commit?.message || null : null,
+              },
+              tclk: {
+                release: tclkRel.tag_name || tclkRel.name || null,
+                release_published_at: tclkRel.published_at || null,
+                head_sha: Array.isArray(tclkCommits) ? tclkCommits[0]?.sha || null : null,
+                head_message: Array.isArray(tclkCommits) ? tclkCommits[0]?.commit?.message || null : null,
+              },
+              yellowpaper: {
+                head_sha: Array.isArray(ypCommits) ? ypCommits[0]?.sha || null : null,
+                head_message: Array.isArray(ypCommits) ? ypCommits[0]?.commit?.message || null : null,
+                web_sha256: sha(yellowWeb),
+                has_D_0440: /D-0440/i.test(yellowWeb),
+                has_E38_TBD: /E\.38[^]{0,2500}TBD/i.test(yellowWeb),
+                has_E40_TBD: /E\.40[^]{0,2500}TBD/i.test(yellowWeb),
+              },
+              sonnet: {
+                head_sha: Array.isArray(sonnetCommits) ? sonnetCommits[0]?.sha || null : null,
+                head_message: Array.isArray(sonnetCommits) ? sonnetCommits[0]?.commit?.message || null : null,
+              },
+              launch_signals: {
+                testnet: hasAny(allWeb, ['testnet live', 'testnet launched', 'testnet is live']),
+                faucet: hasAny(allWeb, ['faucet live', 'faucet is live', 'testnet faucet']),
+                rpc: hasAny(allWeb, ['rpc endpoint', 'rpc url', 'json-rpc']),
+                explorer: hasAny(allWeb, ['block explorer', 'explorer live']),
+                airdrop_claim: hasAny(allWeb, ['airdrop claim', 'claim is live', 'claim now']),
+                snapshot: hasAny(allWeb, ['snapshot taken', 'snapshot date', 'snapshot block']),
+              },
+            };
+
+            const semantic = {
+              technocore_release: state.technocore.release,
+              technocore_head: state.technocore.head_sha,
+              tclk_release: state.tclk.release,
+              tclk_head: state.tclk.head_sha,
+              yp_head: state.yellowpaper.head_sha,
+              yp_d0440: state.yellowpaper.has_D_0440,
+              yp_e38_tbd: state.yellowpaper.has_E38_TBD,
+              yp_e40_tbd: state.yellowpaper.has_E40_TBD,
+              sonnet_head: state.sonnet.head_sha,
+              launch_signals: state.launch_signals,
+            };
+            state.semantic_fingerprint = sha(JSON.stringify(semantic));
+
+            const changed = !old || old.semantic_fingerprint !== state.semantic_fingerprint;
+            const important = !old ||
+              old?.technocore?.release !== state.technocore.release ||
+              old?.tclk?.release !== state.tclk.release ||
+              old?.yellowpaper?.has_D_0440 !== state.yellowpaper.has_D_0440 ||
+              old?.yellowpaper?.has_E38_TBD !== state.yellowpaper.has_E38_TBD ||
+              old?.yellowpaper?.has_E40_TBD !== state.yellowpaper.has_E40_TBD ||
+              JSON.stringify(old?.launch_signals || {}) !== JSON.stringify(state.launch_signals);
+
+            if (changed) fs.writeFileSync(statePath, JSON.stringify(state, null, 2) + '\n');
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `changed=${changed}\nimportant=${important}\n`);
+            console.log(JSON.stringify({ changed, important, state }, null, 2));
+          }
+
+          main().catch(e => { console.error(e); process.exit(1); });
+          NODE
+
+      - name: Persist semantic state
+        if: steps.collect.outputs.changed == 'true'
+        shell: bash
+        run: |
+          git config user.name "flop-integrated-monitor"
+          git config user.email "flop-integrated-monitor@users.noreply.github.com"
+          git add data/flop_integrated_monitor_state.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: update FLOP integrated monitor state [skip ci]"
+            git push
+          fi
+
+      - name: Open important FLOP change issue
+        if: steps.collect.outputs.important == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node - <<'NODE' > /tmp/flop_issue_body.txt
+          const s = require('./data/flop_integrated_monitor_state.json');
+          console.log(`Technocore release: ${s.technocore.release}\nTechnocore head: ${s.technocore.head_sha}\ntclk release: ${s.tclk.release}\ntclk head: ${s.tclk.head_sha}\nYellow Paper head: ${s.yellowpaper.head_sha}\nD-0440 on web: ${s.yellowpaper.has_D_0440}\nE.38 TBD: ${s.yellowpaper.has_E38_TBD}\nE.40 TBD: ${s.yellowpaper.has_E40_TBD}\nSonnet head: ${s.sonnet.head_sha}\nLaunch signals: ${JSON.stringify(s.launch_signals)}\n\nThis issue is generated from official sources only. Activity is not treated as airdrop eligibility without explicit official text.`);
+          NODE
+          TITLE='[FLOP] Important ecosystem state change'
+          NUM=$(gh issue list --state open --search "$TITLE in:title" --json number,title --jq '.[] | select(.title == "[FLOP] Important ecosystem state change") | .number' | head -1)
+          if [ -n "$NUM" ]; then
+            gh issue comment "$NUM" --body-file /tmp/flop_issue_body.txt
+          else
+            gh issue create --title "$TITLE" --body-file /tmp/flop_issue_body.txt
+          fi
