@@ -19,22 +19,11 @@ concurrency:
 jobs:
   monitor:
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 2
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check existing terminal state
-        id: precheck
-        shell: bash
-        run: |
-          if [ -f data/sonnet_receipt_monitor_state.json ] && grep -q '"terminal": true' data/sonnet_receipt_monitor_state.json; then
-            echo "terminal=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "terminal=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Read Technocore and verify referee receipt
-        if: steps.precheck.outputs.terminal != 'true'
+      - name: Read Technocore incrementally and verify referee receipt
         id: check
         shell: bash
         env:
@@ -42,6 +31,7 @@ jobs:
           SUBJECT_DID: did:key:z6MkpLFbURxSo93yf4njy2KSsFNLkixNnKALs2wEsEM15fx4
           REFEREE_DID: did:key:z6MkowHQwsx9xr84WbWN3YCnKutyBnBXkT1ChKY4uEAAMzte
           ROOM: mb-sonnet-2-registration
+          INITIAL_CURSOR: '82924'
         run: |
           node <<'NODE'
           const fs = require('fs');
@@ -51,8 +41,7 @@ jobs:
           const subjectDid = process.env.SUBJECT_DID;
           const refereeDid = process.env.REFEREE_DID;
           const room = process.env.ROOM;
-          const exportUrl = `https://technocore.chat/r/${room}/export`;
-          const roomsUrl = 'https://technocore.chat/rooms';
+          const statePath = 'data/sonnet_receipt_monitor_state.json';
 
           const B58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
           const B58_INDEX = new Map([...B58].map((c, i) => [c, i]));
@@ -73,35 +62,25 @@ jobs:
           }
 
           function publicKeyBytesFromDid(did) {
-            if (!did.startsWith('did:key:z')) throw new Error('unsupported did');
             const decoded = b58decode(did.slice('did:key:z'.length));
-            if (decoded.length !== 34 || decoded[0] !== 0xed || decoded[1] !== 0x01) {
-              throw new Error('not ed25519-pub did:key');
-            }
+            if (decoded.length !== 34 || decoded[0] !== 0xed || decoded[1] !== 0x01) throw new Error('not ed25519 did:key');
             return decoded.subarray(2);
           }
 
-          function ed25519Spki(raw32) {
-            return Buffer.concat([
-              Buffer.from('302a300506032b6570032100', 'hex'),
-              raw32,
-            ]);
-          }
-
           function verifyRoomMessage(message) {
-            if (!message || message.from !== refereeDid || !message.nonce || !message.text || !message.sig) return false;
             try {
+              if (!message || message.from !== refereeDid || !message.nonce || !message.text || !message.sig) return false;
               const key = crypto.createPublicKey({
-                key: ed25519Spki(publicKeyBytesFromDid(message.from)),
-                format: 'der',
-                type: 'spki',
+                key: Buffer.concat([Buffer.from('302a300506032b6570032100', 'hex'), publicKeyBytesFromDid(message.from)]),
+                format: 'der', type: 'spki',
               });
-              const signature = Buffer.from(`${message.sig}==`, 'base64url');
-              const signed = Buffer.from(`${room}|${message.nonce}|${message.text}`, 'utf8');
-              return crypto.verify(null, signed, key, signature);
-            } catch {
-              return false;
-            }
+              return crypto.verify(
+                null,
+                Buffer.from(`${room}|${message.nonce}|${message.text}`, 'utf8'),
+                key,
+                Buffer.from(`${message.sig}==`, 'base64url')
+              );
+            } catch { return false; }
           }
 
           function deepFind(obj, keys) {
@@ -116,106 +95,133 @@ jobs:
             return null;
           }
 
-          async function main() {
-            const checkedAt = new Date().toISOString();
-            let latestRoomSeq = null;
+          async function fetchJson(url, timeoutMs = 15000) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
             try {
-              const roomsRes = await fetch(roomsUrl, { headers: { 'user-agent': 'raindog-sonnet-monitor/1.0' } });
-              if (roomsRes.ok) {
-                const roomsText = await roomsRes.text();
-                const escaped = room.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                const m = roomsText.match(new RegExp(`/r/${escaped}\\s+seq\\s+(\\d+)`));
-                if (m) latestRoomSeq = Number(m[1]);
-              }
-            } catch {}
+              const r = await fetch(url, {
+                headers: { 'user-agent': 'raindog-sonnet-monitor/1.1', 'cache-control': 'no-cache' },
+                signal: controller.signal,
+              });
+              if (!r.ok) throw new Error(`HTTP ${r.status}`);
+              return JSON.parse(await r.text());
+            } finally { clearTimeout(timer); }
+          }
 
-            const res = await fetch(exportUrl, { headers: { 'user-agent': 'raindog-sonnet-monitor/1.0' } });
-            if (!res.ok) throw new Error(`Technocore export HTTP ${res.status}`);
-            const raw = await res.text();
-            const lines = raw.split('\n').filter(Boolean);
+          async function main() {
+            fs.mkdirSync('data', { recursive: true });
+            let previous = null;
+            try { previous = JSON.parse(fs.readFileSync(statePath, 'utf8')); } catch {}
 
-            let firstSeq = null;
-            let lastSeq = null;
-            let registrationRetained = false;
-            let receipt = null;
-
-            for (const line of lines) {
-              let msg;
-              try { msg = JSON.parse(line); } catch { continue; }
-              const seq = Number(msg.seq || 0);
-              if (seq) {
-                if (firstSeq == null || seq < firstSeq) firstSeq = seq;
-                if (lastSeq == null || seq > lastSeq) lastSeq = seq;
-              }
-
-              let payload;
-              try { payload = JSON.parse(msg.text); } catch { continue; }
-
-              if (msg.from === subjectDid && payload?.type === 'sonnet.register.v1' && payload?.contest_id === 'sonnet-2' && String(payload?.request_id || '') === requestId) {
-                registrationRetained = true;
-              }
-
-              if (msg.from !== refereeDid || payload?.type !== 'sonnet.receipt.v1') continue;
-              if (payload?.contest_id && payload.contest_id !== 'sonnet-2') continue;
-              const rid = deepFind(payload, ['request_id']);
-              if (String(rid || '') !== requestId) continue;
-              if (!verifyRoomMessage(msg)) continue;
-
-              const participantDid = deepFind(payload, ['participant_did', 'sender_did', 'did']);
-              if (participantDid && String(participantDid) !== subjectDid) continue;
-
-              const decisionRaw = String(deepFind(payload, ['status', 'decision']) || 'unknown').toLowerCase();
-              const decision = decisionRaw === 'accepted' ? 'ACCEPTED' : (decisionRaw === 'rejected' || decisionRaw === 'refused' ? 'REFUSED' : decisionRaw.toUpperCase());
-              const reason = deepFind(payload, ['reason', 'reason_code', 'error']);
-
-              receipt = {
-                seq: seq || null,
-                ts: msg.ts || null,
-                decision,
-                reason: reason == null ? null : String(reason),
-                participant_did: participantDid == null ? null : String(participantDid),
-                referee_did: refereeDid,
-                signature_verified: true,
-              };
-              break;
+            if (previous?.terminal === true) {
+              console.log('terminal state already persisted');
+              fs.appendFileSync(process.env.GITHUB_OUTPUT, `status=${previous.status}\nterminal=true\nanomaly=false\npersist=false\n`);
+              return;
             }
 
+            let cursor = Number(previous?.cursor || process.env.INITIAL_CURSOR);
+            const startCursor = cursor;
+            let receipt = null;
+            let anomaly = null;
+            let pageCount = 0;
+            let latestFirstSeq = null;
+            let latestLastSeq = cursor;
+
+            while (pageCount < 20) {
+              pageCount++;
+              const url = `https://technocore.chat/r/${room}?format=json&since=${cursor}&limit=200&wait=0&n=${Date.now()}`;
+              let view;
+              try {
+                view = await fetchJson(url);
+              } catch (e) {
+                anomaly = `READ_ERROR:${String(e?.name || e)}:${String(e?.message || e)}`;
+                break;
+              }
+
+              const messages = Array.isArray(view.messages) ? view.messages : [];
+              const firstSeq = view.first_seq == null ? null : Number(view.first_seq);
+              const lastSeq = Number(view.last_seq || cursor);
+              latestFirstSeq = firstSeq;
+              latestLastSeq = Math.max(latestLastSeq, lastSeq);
+
+              if (firstSeq != null && firstSeq > cursor + 1) {
+                anomaly = `RETENTION_GAP:first_seq=${firstSeq}:cursor=${cursor}`;
+                break;
+              }
+
+              for (const msg of messages) {
+                if (msg?.from !== refereeDid) continue;
+                let payload;
+                try { payload = JSON.parse(msg.text); } catch { continue; }
+                if (payload?.type !== 'sonnet.receipt.v1') continue;
+                if (payload?.contest_id && payload.contest_id !== 'sonnet-2') continue;
+                if (String(deepFind(payload, ['request_id']) || '') !== requestId) continue;
+                if (!verifyRoomMessage(msg)) continue;
+                const participantDid = deepFind(payload, ['participant_did', 'sender_did', 'did']);
+                if (participantDid && String(participantDid) !== subjectDid) continue;
+                const raw = String(deepFind(payload, ['status', 'decision']) || 'unknown').toLowerCase();
+                const decision = raw === 'accepted' ? 'ACCEPTED' : ((raw === 'rejected' || raw === 'refused') ? 'REFUSED' : raw.toUpperCase());
+                receipt = {
+                  seq: Number(msg.seq || 0) || null,
+                  ts: msg.ts || null,
+                  decision,
+                  reason: deepFind(payload, ['reason', 'reason_code', 'error']) ?? null,
+                  participant_did: participantDid ?? null,
+                  referee_did: refereeDid,
+                  signature_verified: true,
+                };
+                break;
+              }
+
+              if (receipt) break;
+              if (lastSeq <= cursor) break;
+              cursor = lastSeq;
+              if (messages.length < 200) break;
+            }
+
+            if (!receipt && !anomaly) cursor = Math.max(cursor, latestLastSeq);
+
+            const status = receipt ? receipt.decision : (anomaly ? 'ANOMALY' : 'PENDING');
             const terminal = !!receipt && (receipt.decision === 'ACCEPTED' || receipt.decision === 'REFUSED');
+            const now = new Date();
+            const prevPersist = previous?.persisted_at ? Date.parse(previous.persisted_at) : 0;
+            const persistDue = !previous || terminal || !!anomaly || (now.getTime() - prevPersist >= 30 * 60 * 1000);
+
             const state = {
-              schema_version: 1,
+              schema_version: 2,
               contest: 'sonnet-2',
               request_id: requestId,
               subject_did: subjectDid,
               referee_did: refereeDid,
               room,
-              checked_at: checkedAt,
-              retained_first_seq: firstSeq,
-              retained_last_seq: lastSeq,
-              live_room_seq: latestRoomSeq,
               registration_seq: 82476,
-              registration_retained: registrationRetained,
-              status: receipt ? receipt.decision : 'PENDING',
+              last_pre_monitor_checked_seq: 82924,
+              cursor,
+              scan_start_cursor: startCursor,
+              observed_first_seq: latestFirstSeq,
+              observed_last_seq: latestLastSeq,
+              page_count: pageCount,
+              checked_at: now.toISOString(),
+              persisted_at: persistDue ? now.toISOString() : (previous?.persisted_at || null),
+              status,
               terminal,
+              anomaly,
               receipt,
               technocore_write_count: 0,
               registration_resend_count: 0,
               new_request_id_generated: false,
             };
 
-            fs.mkdirSync('data', { recursive: true });
-            fs.writeFileSync('data/sonnet_receipt_monitor_state.json', JSON.stringify(state, null, 2) + '\n');
-            fs.appendFileSync(process.env.GITHUB_OUTPUT, `status=${state.status}\nterminal=${terminal}\n`);
+            fs.writeFileSync(statePath, JSON.stringify(state, null, 2) + '\n');
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `status=${status}\nterminal=${terminal}\nanomaly=${!!anomaly}\npersist=${persistDue}\n`);
             console.log(JSON.stringify(state, null, 2));
           }
 
-          main().catch((error) => {
-            console.error(error);
-            process.exit(1);
-          });
+          main().catch((e) => { console.error(e); process.exit(1); });
           NODE
 
-      - name: Persist initial/terminal monitor state
-        if: steps.precheck.outputs.terminal != 'true'
+      - name: Persist checkpoint / terminal / anomaly state
+        if: steps.check.outputs.persist == 'true'
         shell: bash
         run: |
           git config user.name "sonnet-receipt-monitor"
@@ -226,8 +232,8 @@ jobs:
             git push
           fi
 
-      - name: Open terminal receipt issue
-        if: steps.check.outputs.terminal == 'true'
+      - name: Open terminal or anomaly issue
+        if: steps.check.outputs.terminal == 'true' || steps.check.outputs.anomaly == 'true'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -237,5 +243,5 @@ jobs:
           if gh issue list --state all --search "${TITLE} in:title" --json title --jq '.[].title' | grep -Fxq "$TITLE"; then
             exit 0
           fi
-          BODY=$(node -e "const s=require('./data/sonnet_receipt_monitor_state.json'); console.log('request_id: '+s.request_id+'\nstatus: '+s.status+'\nreceipt seq: '+(s.receipt?.seq ?? 'none')+'\nreferee signature verified: '+(s.receipt?.signature_verified ? 'YES' : 'NO')+'\nreason: '+(s.receipt?.reason ?? 'none')+'\n\nTechnocore WRITE count: 0. Registration was not resent.')")
+          BODY=$(node -e "const s=require('./data/sonnet_receipt_monitor_state.json'); console.log('request_id: '+s.request_id+'\nstatus: '+s.status+'\ncursor: '+s.cursor+'\nreceipt seq: '+(s.receipt?.seq ?? 'none')+'\nreferee signature verified: '+(s.receipt?.signature_verified ? 'YES' : 'NO')+'\nreason/anomaly: '+(s.receipt?.reason ?? s.anomaly ?? 'none')+'\n\nTechnocore WRITE count: 0. Registration was not resent.')")
           gh issue create --title "$TITLE" --body "$BODY"
