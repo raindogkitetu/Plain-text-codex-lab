@@ -1,0 +1,138 @@
+name: FLOP Source Consistency Monitor
+
+on:
+  push:
+    paths:
+      - '.github/workflows/flop-source-consistency-monitor.yml'
+  schedule:
+    - cron: '17 */3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: flop-source-consistency-monitor
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compare official Yellow Paper web vs public GitHub mirror
+        id: check
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+
+          const WEB = 'https://flop.finance/intro/yellowpaper/';
+          const GH = 'https://raw.githubusercontent.com/flop-labs/yellowpaper/main/yellowpaper.md';
+
+          function detectSupply(text) {
+            const t = text.replace(/\s+/g, ' ');
+            const tests = [
+              [/genesis_supply[^\n<]{0,160}(4[,_ ]?400[,_ ]?000[,_ ]?000)/i, '4400000000'],
+              [/genesis_supply[^\n<]{0,160}(3[,_ ]?500[,_ ]?000[,_ ]?000)/i, '3500000000'],
+              [/(4,400,000,000|4_400_000_000|4400000000) FLOP/i, '4400000000'],
+              [/(3,500,000,000|3_500_000_000|3500000000) FLOP/i, '3500000000'],
+            ];
+            for (const [re, value] of tests) if (re.test(t)) return value;
+            return 'UNKNOWN';
+          }
+
+          async function get(url) {
+            const r = await fetch(url, { headers: { 'user-agent': 'raindog-flop-monitor/1.0' } });
+            if (!r.ok) throw new Error(`${url} HTTP ${r.status}`);
+            return await r.text();
+          }
+
+          async function main() {
+            const [web, gh] = await Promise.all([get(WEB), get(GH)]);
+
+            const state = {
+              schema_version: 1,
+              web_genesis_supply: detectSupply(web),
+              github_genesis_supply: detectSupply(gh),
+              web_has_D_0440: /D-0440/i.test(web),
+              github_has_D_0440: /D-0440/i.test(gh),
+              web_has_D_0438: /D-0438/i.test(web),
+              github_has_D_0438: /D-0438/i.test(gh),
+              web_E38_TBD: /E\.38[^]{0,2500}\[TBD\]/i.test(web) || /E\.38[^]{0,2500}TBD/i.test(web),
+              github_E38_TBD: /E\.38[^]{0,2500}\[TBD\]/i.test(gh) || /E\.38[^]{0,2500}TBD/i.test(gh),
+            };
+            state.source_mismatch = state.web_genesis_supply !== state.github_genesis_supply || state.web_has_D_0440 !== state.github_has_D_0440;
+            state.fingerprint = [
+              state.web_genesis_supply,
+              state.github_genesis_supply,
+              state.web_has_D_0440,
+              state.github_has_D_0440,
+              state.web_E38_TBD,
+              state.github_E38_TBD,
+            ].join('|');
+
+            fs.mkdirSync('data', { recursive: true });
+            const path = 'data/flop_source_consistency_state.json';
+            let old = null;
+            try { old = JSON.parse(fs.readFileSync(path, 'utf8')); } catch {}
+            const changed = !old || old.fingerprint !== state.fingerprint || old.source_mismatch !== state.source_mismatch;
+            if (changed) {
+              state.changed_at = new Date().toISOString();
+              fs.writeFileSync(path, JSON.stringify(state, null, 2) + '\n');
+            }
+
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `changed=${changed}\n`);
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `mismatch=${state.source_mismatch}\n`);
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `web_supply=${state.web_genesis_supply}\n`);
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `gh_supply=${state.github_genesis_supply}\n`);
+            console.log(JSON.stringify({ ...state, changed }, null, 2));
+          }
+
+          main().catch((e) => { console.error(e); process.exit(1); });
+          NODE
+
+      - name: Persist semantic state change only
+        if: steps.check.outputs.changed == 'true'
+        shell: bash
+        run: |
+          git config user.name "flop-source-monitor"
+          git config user.email "flop-source-monitor@users.noreply.github.com"
+          git add data/flop_source_consistency_state.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: update FLOP source consistency state [skip ci]"
+            git push
+          fi
+
+      - name: Open or update mismatch issue
+        if: steps.check.outputs.changed == 'true' && steps.check.outputs.mismatch == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WEB_SUPPLY: ${{ steps.check.outputs.web_supply }}
+          GH_SUPPLY: ${{ steps.check.outputs.gh_supply }}
+        run: |
+          TITLE='[FLOP] Yellow Paper source mismatch'
+          NUM=$(gh issue list --state open --search "$TITLE in:title" --json number,title --jq '.[] | select(.title == "[FLOP] Yellow Paper source mismatch") | .number' | head -1)
+          BODY="Official web genesis_supply: ${WEB_SUPPLY}\nPublic GitHub mirror genesis_supply: ${GH_SUPPLY}\n\nThis is tracked as an unresolved source inconsistency. No airdrop/miner/agent scoring assumptions should be upgraded from this mismatch alone.\n\nState: data/flop_source_consistency_state.json"
+          if [ -n "$NUM" ]; then
+            gh issue comment "$NUM" --body "$BODY"
+          else
+            gh issue create --title "$TITLE" --body "$BODY"
+          fi
+
+      - name: Close mismatch issue when sources converge
+        if: steps.check.outputs.changed == 'true' && steps.check.outputs.mismatch == 'false'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TITLE='[FLOP] Yellow Paper source mismatch'
+          NUM=$(gh issue list --state open --search "$TITLE in:title" --json number,title --jq '.[] | select(.title == "[FLOP] Yellow Paper source mismatch") | .number' | head -1)
+          if [ -n "$NUM" ]; then
+            gh issue comment "$NUM" --body 'Official web and public GitHub mirror have converged on the monitored genesis/D-0440 fields. Closing mismatch tracker.'
+            gh issue close "$NUM"
+          fi
