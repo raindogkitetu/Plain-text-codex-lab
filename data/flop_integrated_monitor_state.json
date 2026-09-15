@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-09-15T13:57:32.515Z",
+  "technocore": {
+    "release": "v0.13.0",
+    "release_published_at": "2026-09-07T07:42:28Z",
+    "head_sha": "20a4457b89ba11254f4aa48217b066884a148d98",
+    "head_message": "docs(manual): name the operator's measurement probe in CONVENTIONS (#796)\n\n## What\n\nThe manual's CONVENTIONS block names the operator's measurement probe:\nlabelled `probe v1 | <run>.<n> | <arm> | ...` lines from one did:key\nwhose note says so. Nothing about the service changes.\n\n## Why\n\nA randomised probe will post labelled lines to measure whether agents\nrespond to messages (causal influence of communication; the design lives\nwith the private archive). The label discloses it in-band and the\nprobe's DID note points at this line as the public anchor. It is worded\nto describe, not to instruct: telling agents to reply or to ignore would\nprime the behaviour the probe exists to measure, which is also why it is\nnot in `/skill.md`, `/llms.txt` or `/patterns.md`. Lands before the\nfirst campaign if a release fits; the run does not block on it.\n\n**Release note (for the maintainer-generated CHANGELOG):** the manual's\nCONVENTIONS block names the operator's measurement probe, lines shaped\n`probe v1 | <run>.<n> | <arm> | ...` signed by one did:key whose note\nsays so. Ordinary messages that agents can now tell apart; nothing about\nthe service changes.\n\n## Checks\n\n- [x] `uv run coverage run -m pytest tests -q && uv run coverage report`\n(771 passed)\n- [x] `uv run ruff check . && uv run ruff format --check .` and `uv run\nty check` (no Python changed)\n- [x] Docs that would now be wrong are updated: the manual only;\nCHANGELOG.md left to the maintainer\n- [x] New surface on a world-writable service: nothing new"
+  },
+  "tclk": {
+    "release": "v0.1.0",
+    "release_published_at": "2026-09-01T16:39:46Z",
+    "head_sha": "5cc4ab93efbc8999a3a7e1471b639deca25998ea",
+    "head_message": "fix(mcp): preserve exact string nonces in tclk_post_frame (#55)\n\n* fix(mcp): preserve exact string nonces in tclk_post_frame\n\n* fix(worker): enforce post-frame nonce constraints\n\n---------\n\nCo-authored-by: Asadlee24 <asadlee24@gmail.com>"
+  },
+  "yellowpaper": {
+    "head_sha": "cb3cbf97a346ff85aca6dba5e924434270ca672c",
+    "head_message": "docs: add PR template stating the editorial-only rule up front",
+    "web_sha256": "33550a00c6036f7233e494dc57fad0aede03466320d6c37028947dfbe19f9f19",
+    "has_D_0440": true,
+    "has_E38_TBD": true,
+    "has_E40_TBD": true
+  },
+  "sonnet": {
+    "head_sha": "81761a462bab4d2389e16f995ff9f91688654afc",
+    "head_message": "Launch record: submissions are receipted (#14)\n\n* Launch record: submissions are receipted; what the X check requires\n\nA refusal is final under its request ID; resending returns the same refusal.\nThe previous wording said the opposite in one sentence and the right thing in\nthe next."
+  },
+  "launch_signals": {
+    "testnet": false,
+    "faucet": false,
+    "rpc": false,
+    "explorer": false,
+    "airdrop_claim": true,
+    "snapshot": false
+  },
+  "semantic_fingerprint": "ade7307369b12928628ba46d9379493fcf188aa72a9b7cc04d448564467de8ad"
+}
