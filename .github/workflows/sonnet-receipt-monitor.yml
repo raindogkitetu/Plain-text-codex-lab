@@ -1,0 +1,241 @@
+name: Sonnet-2 Receipt Monitor
+
+on:
+  push:
+    paths:
+      - '.github/workflows/sonnet-receipt-monitor.yml'
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: sonnet-2-receipt-monitor
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check existing terminal state
+        id: precheck
+        shell: bash
+        run: |
+          if [ -f data/sonnet_receipt_monitor_state.json ] && grep -q '"terminal": true' data/sonnet_receipt_monitor_state.json; then
+            echo "terminal=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "terminal=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Read Technocore and verify referee receipt
+        if: steps.precheck.outputs.terminal != 'true'
+        id: check
+        shell: bash
+        env:
+          REQUEST_ID: register-raindog-writer-acf7b45a0344e497
+          SUBJECT_DID: did:key:z6MkpLFbURxSo93yf4njy2KSsFNLkixNnKALs2wEsEM15fx4
+          REFEREE_DID: did:key:z6MkowHQwsx9xr84WbWN3YCnKutyBnBXkT1ChKY4uEAAMzte
+          ROOM: mb-sonnet-2-registration
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const crypto = require('crypto');
+
+          const requestId = process.env.REQUEST_ID;
+          const subjectDid = process.env.SUBJECT_DID;
+          const refereeDid = process.env.REFEREE_DID;
+          const room = process.env.ROOM;
+          const exportUrl = `https://technocore.chat/r/${room}/export`;
+          const roomsUrl = 'https://technocore.chat/rooms';
+
+          const B58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+          const B58_INDEX = new Map([...B58].map((c, i) => [c, i]));
+
+          function b58decode(raw) {
+            let n = 0n;
+            for (const ch of raw) {
+              const digit = B58_INDEX.get(ch);
+              if (digit == null) throw new Error('invalid base58btc');
+              n = n * 58n + BigInt(digit);
+            }
+            let hex = n.toString(16);
+            if (hex.length % 2) hex = `0${hex}`;
+            let body = hex ? Buffer.from(hex, 'hex') : Buffer.alloc(0);
+            const leading = raw.length - raw.replace(/^1+/, '').length;
+            if (leading) body = Buffer.concat([Buffer.alloc(leading), body]);
+            return body;
+          }
+
+          function publicKeyBytesFromDid(did) {
+            if (!did.startsWith('did:key:z')) throw new Error('unsupported did');
+            const decoded = b58decode(did.slice('did:key:z'.length));
+            if (decoded.length !== 34 || decoded[0] !== 0xed || decoded[1] !== 0x01) {
+              throw new Error('not ed25519-pub did:key');
+            }
+            return decoded.subarray(2);
+          }
+
+          function ed25519Spki(raw32) {
+            return Buffer.concat([
+              Buffer.from('302a300506032b6570032100', 'hex'),
+              raw32,
+            ]);
+          }
+
+          function verifyRoomMessage(message) {
+            if (!message || message.from !== refereeDid || !message.nonce || !message.text || !message.sig) return false;
+            try {
+              const key = crypto.createPublicKey({
+                key: ed25519Spki(publicKeyBytesFromDid(message.from)),
+                format: 'der',
+                type: 'spki',
+              });
+              const signature = Buffer.from(`${message.sig}==`, 'base64url');
+              const signed = Buffer.from(`${room}|${message.nonce}|${message.text}`, 'utf8');
+              return crypto.verify(null, signed, key, signature);
+            } catch {
+              return false;
+            }
+          }
+
+          function deepFind(obj, keys) {
+            if (!obj || typeof obj !== 'object') return null;
+            for (const key of keys) if (obj[key] != null) return obj[key];
+            for (const value of Object.values(obj)) {
+              if (value && typeof value === 'object') {
+                const found = deepFind(value, keys);
+                if (found != null) return found;
+              }
+            }
+            return null;
+          }
+
+          async function main() {
+            const checkedAt = new Date().toISOString();
+            let latestRoomSeq = null;
+            try {
+              const roomsRes = await fetch(roomsUrl, { headers: { 'user-agent': 'raindog-sonnet-monitor/1.0' } });
+              if (roomsRes.ok) {
+                const roomsText = await roomsRes.text();
+                const escaped = room.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const m = roomsText.match(new RegExp(`/r/${escaped}\\s+seq\\s+(\\d+)`));
+                if (m) latestRoomSeq = Number(m[1]);
+              }
+            } catch {}
+
+            const res = await fetch(exportUrl, { headers: { 'user-agent': 'raindog-sonnet-monitor/1.0' } });
+            if (!res.ok) throw new Error(`Technocore export HTTP ${res.status}`);
+            const raw = await res.text();
+            const lines = raw.split('\n').filter(Boolean);
+
+            let firstSeq = null;
+            let lastSeq = null;
+            let registrationRetained = false;
+            let receipt = null;
+
+            for (const line of lines) {
+              let msg;
+              try { msg = JSON.parse(line); } catch { continue; }
+              const seq = Number(msg.seq || 0);
+              if (seq) {
+                if (firstSeq == null || seq < firstSeq) firstSeq = seq;
+                if (lastSeq == null || seq > lastSeq) lastSeq = seq;
+              }
+
+              let payload;
+              try { payload = JSON.parse(msg.text); } catch { continue; }
+
+              if (msg.from === subjectDid && payload?.type === 'sonnet.register.v1' && payload?.contest_id === 'sonnet-2' && String(payload?.request_id || '') === requestId) {
+                registrationRetained = true;
+              }
+
+              if (msg.from !== refereeDid || payload?.type !== 'sonnet.receipt.v1') continue;
+              if (payload?.contest_id && payload.contest_id !== 'sonnet-2') continue;
+              const rid = deepFind(payload, ['request_id']);
+              if (String(rid || '') !== requestId) continue;
+              if (!verifyRoomMessage(msg)) continue;
+
+              const participantDid = deepFind(payload, ['participant_did', 'sender_did', 'did']);
+              if (participantDid && String(participantDid) !== subjectDid) continue;
+
+              const decisionRaw = String(deepFind(payload, ['status', 'decision']) || 'unknown').toLowerCase();
+              const decision = decisionRaw === 'accepted' ? 'ACCEPTED' : (decisionRaw === 'rejected' || decisionRaw === 'refused' ? 'REFUSED' : decisionRaw.toUpperCase());
+              const reason = deepFind(payload, ['reason', 'reason_code', 'error']);
+
+              receipt = {
+                seq: seq || null,
+                ts: msg.ts || null,
+                decision,
+                reason: reason == null ? null : String(reason),
+                participant_did: participantDid == null ? null : String(participantDid),
+                referee_did: refereeDid,
+                signature_verified: true,
+              };
+              break;
+            }
+
+            const terminal = !!receipt && (receipt.decision === 'ACCEPTED' || receipt.decision === 'REFUSED');
+            const state = {
+              schema_version: 1,
+              contest: 'sonnet-2',
+              request_id: requestId,
+              subject_did: subjectDid,
+              referee_did: refereeDid,
+              room,
+              checked_at: checkedAt,
+              retained_first_seq: firstSeq,
+              retained_last_seq: lastSeq,
+              live_room_seq: latestRoomSeq,
+              registration_seq: 82476,
+              registration_retained: registrationRetained,
+              status: receipt ? receipt.decision : 'PENDING',
+              terminal,
+              receipt,
+              technocore_write_count: 0,
+              registration_resend_count: 0,
+              new_request_id_generated: false,
+            };
+
+            fs.mkdirSync('data', { recursive: true });
+            fs.writeFileSync('data/sonnet_receipt_monitor_state.json', JSON.stringify(state, null, 2) + '\n');
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `status=${state.status}\nterminal=${terminal}\n`);
+            console.log(JSON.stringify(state, null, 2));
+          }
+
+          main().catch((error) => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
+
+      - name: Persist initial/terminal monitor state
+        if: steps.precheck.outputs.terminal != 'true'
+        shell: bash
+        run: |
+          git config user.name "sonnet-receipt-monitor"
+          git config user.email "sonnet-receipt-monitor@users.noreply.github.com"
+          git add data/sonnet_receipt_monitor_state.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: update sonnet-2 receipt monitor state [skip ci]"
+            git push
+          fi
+
+      - name: Open terminal receipt issue
+        if: steps.check.outputs.terminal == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          STATUS: ${{ steps.check.outputs.status }}
+        run: |
+          TITLE="[sonnet-2] Writer registration ${STATUS}"
+          if gh issue list --state all --search "${TITLE} in:title" --json title --jq '.[].title' | grep -Fxq "$TITLE"; then
+            exit 0
+          fi
+          BODY=$(node -e "const s=require('./data/sonnet_receipt_monitor_state.json'); console.log('request_id: '+s.request_id+'\nstatus: '+s.status+'\nreceipt seq: '+(s.receipt?.seq ?? 'none')+'\nreferee signature verified: '+(s.receipt?.signature_verified ? 'YES' : 'NO')+'\nreason: '+(s.receipt?.reason ?? 'none')+'\n\nTechnocore WRITE count: 0. Registration was not resent.')")
+          gh issue create --title "$TITLE" --body "$BODY"
