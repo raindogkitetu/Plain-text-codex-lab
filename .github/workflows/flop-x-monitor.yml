@@ -1,0 +1,169 @@
+name: FLOP Labs X Monitor
+
+on:
+  push:
+    paths:
+      - '.github/workflows/flop-x-monitor.yml'
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: flop-labs-x-monitor
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read @flop_labs public X surface
+        id: collect
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const crypto = require('crypto');
+
+          const statePath = 'data/flop_x_monitor_state.json';
+          const handle = 'flop_labs';
+          const directUrl = `https://x.com/${handle}`;
+          const fallbackUrl = `https://r.jina.ai/http://x.com/${handle}`;
+          const keywords = [
+            'testnet','mainnet','faucet','rpc','explorer','airdrop','snapshot','claim',
+            'yellow paper','yellowpaper','tokenomics','genesis','miner','validator','agent',
+            'technocore','tclk','sonnet','launch','release','deadline'
+          ];
+
+          fs.mkdirSync('data', { recursive: true });
+          let old = null;
+          try { old = JSON.parse(fs.readFileSync(statePath, 'utf8')); } catch {}
+
+          function hash(s) { return crypto.createHash('sha256').update(s).digest('hex'); }
+          function clean(s) { return s.replace(/\r/g,'').replace(/[ \t]+/g,' ').replace(/\n{3,}/g,'\n\n').trim(); }
+          async function get(url) {
+            const c = new AbortController();
+            const t = setTimeout(() => c.abort(), 15000);
+            try {
+              const r = await fetch(url, {
+                headers: {
+                  'user-agent': 'Mozilla/5.0 (compatible; raindog-flop-x-monitor/1.0)',
+                  'accept': 'text/html, text/plain, */*',
+                  'cache-control': 'no-cache'
+                },
+                signal: c.signal,
+              });
+              const text = await r.text();
+              if (!r.ok) throw new Error(`HTTP ${r.status}`);
+              return text;
+            } finally { clearTimeout(t); }
+          }
+
+          function extractPostIds(text) {
+            const ids = [];
+            const re = /(?:https?:\/\/)?(?:x\.com|twitter\.com)\/flop_labs\/status\/(\d{8,25})/gi;
+            let m;
+            while ((m = re.exec(text)) && ids.length < 30) if (!ids.includes(m[1])) ids.push(m[1]);
+            return ids;
+          }
+
+          function keywordHits(text) {
+            const lower = text.toLowerCase();
+            return keywords.filter(k => lower.includes(k));
+          }
+
+          async function main() {
+            let source = 'UNAVAILABLE';
+            let text = '';
+            let directError = null;
+            let fallbackError = null;
+
+            try {
+              const t = await get(directUrl);
+              if (t && t.length > 1000 && /flop_labs|FLOP/i.test(t)) {
+                source = 'DIRECT_X';
+                text = t;
+              }
+            } catch (e) { directError = String(e?.message || e); }
+
+            if (!text) {
+              try {
+                const t = await get(fallbackUrl);
+                if (t && t.length > 200) {
+                  source = 'JINA_MIRROR';
+                  text = t;
+                }
+              } catch (e) { fallbackError = String(e?.message || e); }
+            }
+
+            const normalized = clean(text);
+            const postIds = extractPostIds(normalized);
+            const hits = keywordHits(normalized);
+            const contentHash = normalized ? hash(normalized) : null;
+            const checkedAt = new Date().toISOString();
+
+            const state = {
+              schema_version: 1,
+              account: '@flop_labs',
+              profile_url: directUrl,
+              checked_at: checkedAt,
+              source,
+              source_note: source === 'JINA_MIRROR' ? 'Third-party rendering used only for early warning; verify material claims against the original X post and normative FLOP sources.' : null,
+              accessible: !!normalized,
+              content_sha256: contentHash,
+              visible_post_ids: postIds,
+              keyword_hits: hits,
+              direct_error: directError,
+              fallback_error: fallbackError,
+            };
+
+            const baseline = !old;
+            const postSetChanged = !!old && JSON.stringify(old.visible_post_ids || []) !== JSON.stringify(postIds);
+            const sourceChanged = !!old && old.source !== source;
+            const becameUnavailable = !!old && old.accessible === true && !state.accessible;
+            const changed = baseline || postSetChanged || sourceChanged || becameUnavailable;
+            const important = !baseline && postSetChanged;
+
+            if (changed) fs.writeFileSync(statePath, JSON.stringify(state, null, 2) + '\n');
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `changed=${changed}\nimportant=${important}\nsource=${source}\naccessible=${state.accessible}\n`);
+            console.log(JSON.stringify({ baseline, changed, important, state }, null, 2));
+          }
+
+          main().catch(e => { console.error(e); process.exit(1); });
+          NODE
+
+      - name: Persist X monitor state
+        if: steps.collect.outputs.changed == 'true'
+        shell: bash
+        run: |
+          git config user.name "flop-x-monitor"
+          git config user.email "flop-x-monitor@users.noreply.github.com"
+          git add data/flop_x_monitor_state.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: update FLOP Labs X monitor state [skip ci]"
+            git push
+          fi
+
+      - name: Open early-warning issue for new X posts
+        if: steps.collect.outputs.important == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node - <<'NODE' > /tmp/x_issue_body.txt
+          const s = require('./data/flop_x_monitor_state.json');
+          console.log(`Account: ${s.account}\nProfile: ${s.profile_url}\nRead path: ${s.source}\nVisible post IDs: ${(s.visible_post_ids || []).join(', ') || 'none parsed'}\nKeyword hits: ${(s.keyword_hits || []).join(', ') || 'none'}\n\nEARLY WARNING ONLY: material protocol/tokenomics/testnet/airdrop claims must be cross-checked against the original post and FLOP's normative docs/GitHub before being treated as confirmed.`);
+          NODE
+          TITLE='[FLOP X] New @flop_labs signal'
+          NUM=$(gh issue list --state open --search "$TITLE in:title" --json number,title --jq '.[] | select(.title == "[FLOP X] New @flop_labs signal") | .number' | head -1)
+          if [ -n "$NUM" ]; then
+            gh issue comment "$NUM" --body-file /tmp/x_issue_body.txt
+          else
+            gh issue create --title "$TITLE" --body-file /tmp/x_issue_body.txt
+          fi
