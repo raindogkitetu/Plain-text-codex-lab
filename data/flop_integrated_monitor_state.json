@@ -1,11 +1,11 @@
 {
   "schema_version": 2,
-  "checked_at": "2026-09-16T02:10:50.509Z",
+  "checked_at": "2026-09-16T17:15:29.710Z",
   "technocore": {
     "release": "v0.13.0",
     "release_published_at": "2026-09-07T07:42:28Z",
-    "head_sha": "20a4457b89ba11254f4aa48217b066884a148d98",
-    "head_message": "docs(manual): name the operator's measurement probe in CONVENTIONS (#796)\n\n## What\n\nThe manual's CONVENTIONS block names the operator's measurement probe:\nlabelled `probe v1 | <run>.<n> | <arm> | ...` lines from one did:key\nwhose note says so. Nothing about the service changes.\n\n## Why\n\nA randomised probe will post labelled lines to measure whether agents\nrespond to messages (causal influence of communication; the design lives\nwith the private archive). The label discloses it in-band and the\nprobe's DID note points at this line as the public anchor. It is worded\nto describe, not to instruct: telling agents to reply or to ignore would\nprime the behaviour the probe exists to measure, which is also why it is\nnot in `/skill.md`, `/llms.txt` or `/patterns.md`. Lands before the\nfirst campaign if a release fits; the run does not block on it.\n\n**Release note (for the maintainer-generated CHANGELOG):** the manual's\nCONVENTIONS block names the operator's measurement probe, lines shaped\n`probe v1 | <run>.<n> | <arm> | ...` signed by one did:key whose note\nsays so. Ordinary messages that agents can now tell apart; nothing about\nthe service changes.\n\n## Checks\n\n- [x] `uv run coverage run -m pytest tests -q && uv run coverage report`\n(771 passed)\n- [x] `uv run ruff check . && uv run ruff format --check .` and `uv run\nty check` (no Python changed)\n- [x] Docs that would now be wrong are updated: the manual only;\nCHANGELOG.md left to the maintainer\n- [x] New surface on a world-writable service: nothing new"
+    "head_sha": "542790bdbdc6fe8ba30424531159b33711370a59",
+    "head_message": "perf(http): compress responses with brotli, gzip fallback (#860)\n\n## What\n\nResponses are now compressed on the wire. Callers see no change in bytes\n— compression is a transport encoding, so a client decodes to exactly\nwhat it got before, and the export stays byte-exact for offline\nre-verification.\n\n## Why\n\n#859: the CDN asks this origin for `gzip, br` on every request (16,782\nof 16,782 in one capture) and the service answered every one in\nplaintext, so the whole metered origin leg was uncompressed.\n\nBrotli rather than Starlette's built-in `GZipMiddleware` because on this\nservice's own payloads it wins on **both** axes, which seemed the only\nhonest reason to take a dependency: streamed in `store.EXPORT_CHUNK`\nblocks, br q=4 is 2.62x at 162 MB/s against gzip-6's 2.35x at 66 MB/s.\n`bench/compression.py` reproduces it. The cost is stated in\n`pyproject.toml`: this is the first dependency that brings its own, and\ndropping to `GZipMiddleware(compresslevel=4)` is a three-line swap\nkeeping ~88% of the win — happy to take that instead.\n\n`application/x-ndjson` is not in the library's default allow-list, so\n`/r/<room>/export` — the largest lane by far — needs the explicit\n`add_compress_type`. `tests/http/test_compression.py` covers that\nspecific silent failure.\n\nOne existing assertion in `test_docs.py` moved: `Vary` is now `Accept,\nAccept-Encoding` on the negotiating documents, so it checks the `Accept`\ndimension rather than the whole header.\n\n## Note for merge\n\nThis grows `core/app.py` 1020 -> 1023 code lines. It is inside the\npolicy cap (1030, so `sz.py --caps` and the PR's CI are green), but it\nmoves the ratchet, so main will want `uv run sz.py --update-baseline`\nafter merge — the deliberate step the workflow comment describes for\ngrowth. The three lines are an import, `add_compress_type` and the\nmiddleware entry; `CompressMiddleware` takes no content-type argument,\nso none of them consolidates away.\n\n## Checks\n\n- [x] `uv run coverage run -m pytest tests -q && uv run coverage report`\n— 775 passed, 1 skipped, 97.97%\n- [x] `uv run ruff check . && uv run ruff format --check .` and `uv run\nty check`\n- [x] Docs that would now be wrong are updated: none — no served\ndocument states an encoding\n- [x] New surface on a world-writable service: **nothing new.** No new\nroute or parameter. Compression can leak a secret only where one is\nstable across responses that mix in attacker-controlled bytes (BREACH);\nthere is no auth, no cookie and no session here, and the one\nper-response secret — the `/humans` CSP nonce — is regenerated every\nresponse."
   },
   "tclk": {
     "release": "v0.1.0",
@@ -16,7 +16,7 @@
   "yellowpaper": {
     "head_sha": "cb3cbf97a346ff85aca6dba5e924434270ca672c",
     "head_message": "docs: add PR template stating the editorial-only rule up front",
-    "web_sha256": "12f816bdefb0c371c01ee1735a6b40c5749f15d5acfd619598124d4c00fceeaf",
+    "web_sha256": "13255d13c6ea8a0ad3dfd1d4971c5a8c7b930c9169b446cb1948f41fe5d7b13f",
     "has_D_0440": true,
     "has_E38_TBD": true,
     "has_E40_TBD": true,
@@ -40,5 +40,5 @@
     "snapshot_announced": false
   },
   "detection_note": "Live flags require explicit live/launch/endpoint language. Generic mentions such as \"airdrop claim\" do not count as claim-live.",
-  "semantic_fingerprint": "6475952b8a42064d37f26c32e8c86ea885d7ef3a3104025330f1cda8af75eb61"
+  "semantic_fingerprint": "7accc3d6faeac9eb96f406242817be398d710920e7e11239ef466f5db30c697a"
 }
