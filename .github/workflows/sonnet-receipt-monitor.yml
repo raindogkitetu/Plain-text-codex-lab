@@ -126,7 +126,7 @@ jobs:
             const timer = setTimeout(() => controller.abort(), timeoutMs);
             try {
               const r = await fetch(url, {
-                headers: { 'user-agent': 'raindog-sonnet-monitor/2.0', 'cache-control': 'no-cache' },
+                headers: { 'user-agent': 'raindog-sonnet-monitor/2.1', 'cache-control': 'no-cache' },
                 signal: controller.signal,
               });
               if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -143,6 +143,7 @@ jobs:
 
             let receipt = null;
             let readError = null;
+            let incrementalReadSucceeded = false;
             let exportScanned = false;
             let exportRecordCount = 0;
             let historyExpired = !!previous?.history_expired;
@@ -153,7 +154,7 @@ jobs:
             let pageCount = 0;
 
             try {
-              const raw = await getText(`https://technocore.chat/r/${room}/export?n=${Date.now()}`);
+              const raw = await getText(`https://technocore.chat/r/${room}/export?n=${Date.now()}`, 5000);
               exportScanned = true;
               const records = raw.split(/\r?\n/).filter(Boolean).map(line => {
                 try { return JSON.parse(line); } catch { return null; }
@@ -170,6 +171,7 @@ jobs:
                 let view;
                 try {
                   view = await getJson(`https://technocore.chat/r/${room}?format=json&since=${cursor}&limit=200&wait=0&n=${Date.now()}`);
+                  incrementalReadSucceeded = true;
                 } catch (e) {
                   if (!readError) readError = `READ_ERROR:${String(e?.name || e)}:${String(e?.message || e)}`;
                   break;
@@ -198,7 +200,7 @@ jobs:
             cursor = Math.max(cursor, lastSeq);
             const now = new Date();
             const terminal = !!receipt && ['ACCEPTED', 'REFUSED'].includes(receipt.decision);
-            const status = receipt ? receipt.decision : (readError && !exportScanned ? 'ANOMALY' : (historyExpired ? 'PENDING_HISTORY_EXPIRED' : 'PENDING'));
+            const status = receipt ? receipt.decision : (historyExpired ? 'PENDING_HISTORY_EXPIRED' : (readError && !incrementalReadSucceeded ? 'ANOMALY' : 'PENDING'));
             const hoursRemaining = (deadline.getTime() - now.getTime()) / 3600000;
             const semantic = JSON.stringify({
               status,
@@ -207,7 +209,7 @@ jobs:
               receiptSeq: receipt?.seq || null,
               receiptDecision: receipt?.decision || null,
               gap,
-              readError,
+              monitorReadOk: incrementalReadSucceeded,
               deadlineBucket: hoursRemaining <= 1 ? '1h' : hoursRemaining <= 6 ? '6h' : hoursRemaining <= 12 ? '12h' : hoursRemaining <= 24 ? '24h' : hoursRemaining <= 48 ? '48h' : 'later',
             });
             const semanticFingerprint = crypto.createHash('sha256').update(semantic).digest('hex');
@@ -216,7 +218,7 @@ jobs:
             const persist = notify || terminal || (now.getTime() - prevPersist >= 30 * 60 * 1000);
 
             const state = {
-              schema_version: 3,
+              schema_version: 4,
               contest: 'sonnet-2',
               request_id: requestId,
               subject_did: subjectDid,
@@ -230,6 +232,7 @@ jobs:
               page_count: pageCount,
               export_scanned: exportScanned,
               export_record_count: exportRecordCount,
+              incremental_read_succeeded: incrementalReadSucceeded,
               history_expired: historyExpired,
               retention_gap: gap,
               checked_at: now.toISOString(),
@@ -281,6 +284,7 @@ jobs:
           console.log(`history expired: ${s.history_expired}`);
           console.log(`retention gap: ${JSON.stringify(s.retention_gap)}`);
           console.log(`export scanned: ${s.export_scanned} (${s.export_record_count} records)`);
+          console.log(`incremental read succeeded: ${s.incremental_read_succeeded}`);
           console.log(`receipt seq: ${s.receipt?.seq ?? 'none'}`);
           console.log(`referee signature verified: ${s.receipt?.signature_verified ? 'YES' : 'NO'}`);
           console.log(`reason/error: ${s.receipt?.reason ?? s.read_error ?? 'none'}`);
