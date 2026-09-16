@@ -38,7 +38,7 @@ jobs:
             const c = new AbortController();
             const t = setTimeout(() => c.abort(), 15000);
             try {
-              const r = await fetch(url, { headers: { 'user-agent': 'raindog-flop-integrated-monitor/1.0' }, signal: c.signal });
+              const r = await fetch(url, { headers: { 'user-agent': 'raindog-flop-integrated-monitor/1.1' }, signal: c.signal });
               if (!r.ok) throw new Error(`${url} HTTP ${r.status}`);
               return await r.text();
             } finally { clearTimeout(t); }
@@ -46,7 +46,7 @@ jobs:
 
           async function getJson(url) { return JSON.parse(await getText(url)); }
           function sha(s) { return crypto.createHash('sha256').update(s).digest('hex'); }
-          function hasAny(text, words) { const x = text.toLowerCase(); return words.some(w => x.includes(w.toLowerCase())); }
+          function hasExactSignal(text, patterns) { return patterns.some(re => re.test(text)); }
 
           async function main() {
             let old = null;
@@ -75,8 +75,39 @@ jobs:
             ]);
 
             const allWeb = `${yellowWeb}\n${teaser}`;
+            const testnetLive = hasExactSignal(allWeb, [
+              /\btestnet\s+is\s+live\b/i,
+              /\btestnet\s+has\s+launched\b/i,
+              /\btestnet\s+launched\s+(today|now)\b/i,
+              /\bjoin\s+the\s+testnet\s+now\b/i,
+            ]);
+            const faucetLive = hasExactSignal(allWeb, [
+              /\bfaucet\s+is\s+live\b/i,
+              /\bfaucet\s+live\s+(today|now)\b/i,
+              /\bclaim\s+testnet\s+(tokens|flop)\s+now\b/i,
+            ]);
+            const rpcLive = hasExactSignal(allWeb, [
+              /\bpublic\s+(rpc|json-rpc)\s+(endpoint|url)\b/i,
+              /\brpc\s+(endpoint|url)\s*[:=]\s*https?:\/\//i,
+            ]);
+            const explorerLive = hasExactSignal(allWeb, [
+              /\bblock\s+explorer\s+is\s+live\b/i,
+              /\bexplorer\s+is\s+live\b/i,
+              /\bexplorer\s*[:=]\s*https?:\/\//i,
+            ]);
+            const claimLive = hasExactSignal(allWeb, [
+              /\bairdrop\s+claim\s+is\s+live\b/i,
+              /\bclaim\s+is\s+live\b/i,
+              /\bclaim\s+your\s+\$?flop\s+now\b/i,
+              /\bclaim\s+now\b[^]{0,120}\b\$?flop\b/i,
+            ]);
+            const snapshotAnnounced = hasExactSignal(allWeb, [
+              /\bsnapshot\s+(has\s+been|was)\s+taken\b/i,
+              /\bsnapshot\s+(date|block)\s*[:=]/i,
+            ]);
+
             const state = {
-              schema_version: 1,
+              schema_version: 2,
               checked_at: new Date().toISOString(),
               technocore: {
                 release: techRel.tag_name || techRel.name || null,
@@ -97,19 +128,26 @@ jobs:
                 has_D_0440: /D-0440/i.test(yellowWeb),
                 has_E38_TBD: /E\.38[^]{0,2500}TBD/i.test(yellowWeb),
                 has_E40_TBD: /E\.40[^]{0,2500}TBD/i.test(yellowWeb),
+                web_genesis_4_4b: /4[,_ ]?400[,_ ]?000[,_ ]?000\s+FLOP/i.test(yellowWeb),
               },
               sonnet: {
                 head_sha: Array.isArray(sonnetCommits) ? sonnetCommits[0]?.sha || null : null,
                 head_message: Array.isArray(sonnetCommits) ? sonnetCommits[0]?.commit?.message || null : null,
               },
-              launch_signals: {
-                testnet: hasAny(allWeb, ['testnet live', 'testnet launched', 'testnet is live']),
-                faucet: hasAny(allWeb, ['faucet live', 'faucet is live', 'testnet faucet']),
-                rpc: hasAny(allWeb, ['rpc endpoint', 'rpc url', 'json-rpc']),
-                explorer: hasAny(allWeb, ['block explorer', 'explorer live']),
-                airdrop_claim: hasAny(allWeb, ['airdrop claim', 'claim is live', 'claim now']),
-                snapshot: hasAny(allWeb, ['snapshot taken', 'snapshot date', 'snapshot block']),
+              announced_status: {
+                testnet_q4_2026: /testnet[^]{0,300}Q4\s+2026|Q4\s+2026[^]{0,300}testnet/i.test(allWeb),
+                mainnet_q1_2027: /mainnet[^]{0,300}Q1\s+2027|Q1\s+2027[^]{0,300}mainnet/i.test(allWeb),
+                airdrop_exists: /\bairdrop\b/i.test(allWeb),
               },
+              live_signals: {
+                testnet_live: testnetLive,
+                faucet_live: faucetLive,
+                rpc_live: rpcLive,
+                explorer_live: explorerLive,
+                airdrop_claim_live: claimLive,
+                snapshot_announced: snapshotAnnounced,
+              },
+              detection_note: 'Live flags require explicit live/launch/endpoint language. Generic mentions such as "airdrop claim" do not count as claim-live.',
             };
 
             const semantic = {
@@ -121,8 +159,10 @@ jobs:
               yp_d0440: state.yellowpaper.has_D_0440,
               yp_e38_tbd: state.yellowpaper.has_E38_TBD,
               yp_e40_tbd: state.yellowpaper.has_E40_TBD,
+              yp_4_4b: state.yellowpaper.web_genesis_4_4b,
               sonnet_head: state.sonnet.head_sha,
-              launch_signals: state.launch_signals,
+              announced_status: state.announced_status,
+              live_signals: state.live_signals,
             };
             state.semantic_fingerprint = sha(JSON.stringify(semantic));
 
@@ -133,7 +173,8 @@ jobs:
               old?.yellowpaper?.has_D_0440 !== state.yellowpaper.has_D_0440 ||
               old?.yellowpaper?.has_E38_TBD !== state.yellowpaper.has_E38_TBD ||
               old?.yellowpaper?.has_E40_TBD !== state.yellowpaper.has_E40_TBD ||
-              JSON.stringify(old?.launch_signals || {}) !== JSON.stringify(state.launch_signals);
+              old?.yellowpaper?.web_genesis_4_4b !== state.yellowpaper.web_genesis_4_4b ||
+              JSON.stringify(old?.live_signals || old?.launch_signals || {}) !== JSON.stringify(state.live_signals);
 
             if (changed) fs.writeFileSync(statePath, JSON.stringify(state, null, 2) + '\n');
             fs.appendFileSync(process.env.GITHUB_OUTPUT, `changed=${changed}\nimportant=${important}\n`);
@@ -163,7 +204,7 @@ jobs:
         run: |
           node - <<'NODE' > /tmp/flop_issue_body.txt
           const s = require('./data/flop_integrated_monitor_state.json');
-          console.log(`Technocore release: ${s.technocore.release}\nTechnocore head: ${s.technocore.head_sha}\ntclk release: ${s.tclk.release}\ntclk head: ${s.tclk.head_sha}\nYellow Paper head: ${s.yellowpaper.head_sha}\nD-0440 on web: ${s.yellowpaper.has_D_0440}\nE.38 TBD: ${s.yellowpaper.has_E38_TBD}\nE.40 TBD: ${s.yellowpaper.has_E40_TBD}\nSonnet head: ${s.sonnet.head_sha}\nLaunch signals: ${JSON.stringify(s.launch_signals)}\n\nThis issue is generated from official sources only. Activity is not treated as airdrop eligibility without explicit official text.`);
+          console.log(`Technocore release: ${s.technocore.release}\nTechnocore head: ${s.technocore.head_sha}\ntclk release: ${s.tclk.release}\ntclk head: ${s.tclk.head_sha}\nYellow Paper head: ${s.yellowpaper.head_sha}\nD-0440 on web: ${s.yellowpaper.has_D_0440}\nWeb genesis 4.4B: ${s.yellowpaper.web_genesis_4_4b}\nE.38 TBD: ${s.yellowpaper.has_E38_TBD}\nE.40 TBD: ${s.yellowpaper.has_E40_TBD}\nSonnet head: ${s.sonnet.head_sha}\nAnnounced: ${JSON.stringify(s.announced_status)}\nLive signals: ${JSON.stringify(s.live_signals)}\n\nOfficial X is monitored separately as an early-warning layer. Explicit official X airdrop eligibility/task announcements are retained even when a scoring formula is not yet ratified in the Yellow Paper.`);
           NODE
           TITLE='[FLOP] Important ecosystem state change'
           NUM=$(gh issue list --state open --search "$TITLE in:title" --json number,title --jq '.[] | select(.title == "[FLOP] Important ecosystem state change") | .number' | head -1)
