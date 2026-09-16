@@ -1,4 +1,4 @@
-name: FLOP Labs X Monitor
+name: FLOP X Early-Warning Monitor
 
 on:
   push:
@@ -13,17 +13,17 @@ permissions:
   issues: write
 
 concurrency:
-  group: flop-labs-x-monitor
+  group: flop-x-monitor
   cancel-in-progress: false
 
 jobs:
   monitor:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 4
     steps:
       - uses: actions/checkout@v4
 
-      - name: Read @flop_labs public X surface
+      - name: Read official FLOP X surfaces
         id: collect
         shell: bash
         run: |
@@ -32,13 +32,13 @@ jobs:
           const crypto = require('crypto');
 
           const statePath = 'data/flop_x_monitor_state.json';
-          const handle = 'flop_labs';
-          const directUrl = `https://x.com/${handle}`;
-          const fallbackUrl = `https://r.jina.ai/http://x.com/${handle}`;
+          const handles = ['flop_labs', 'CryptoHayes'];
           const keywords = [
             'testnet','mainnet','faucet','rpc','explorer','airdrop','snapshot','claim',
             'yellow paper','yellowpaper','tokenomics','genesis','miner','validator','agent',
-            'technocore','tclk','sonnet','launch','release','deadline'
+            'technocore','tclk','sonnet','launch','release','deadline','did','task','reward',
+            'kol','leaderboard','ref link','referral','lottery','gpu','rent','coordinated voting',
+            'disqualify','disqualification'
           ];
 
           fs.mkdirSync('data', { recursive: true });
@@ -53,7 +53,7 @@ jobs:
             try {
               const r = await fetch(url, {
                 headers: {
-                  'user-agent': 'Mozilla/5.0 (compatible; raindog-flop-x-monitor/1.0)',
+                  'user-agent': 'Mozilla/5.0 (compatible; raindog-flop-x-monitor/1.1)',
                   'accept': 'text/html, text/plain, */*',
                   'cache-control': 'no-cache'
                 },
@@ -65,11 +65,11 @@ jobs:
             } finally { clearTimeout(t); }
           }
 
-          function extractPostIds(text) {
+          function extractPostIds(text, handle) {
             const ids = [];
-            const re = /(?:https?:\/\/)?(?:x\.com|twitter\.com)\/flop_labs\/status\/(\d{8,25})/gi;
+            const re = new RegExp(`(?:https?:\\/\\/)?(?:x\\.com|twitter\\.com)\\/${handle}\\/status\\/(\\d{8,25})`, 'gi');
             let m;
-            while ((m = re.exec(text)) && ids.length < 30) if (!ids.includes(m[1])) ids.push(m[1]);
+            while ((m = re.exec(text)) && ids.length < 40) if (!ids.includes(m[1])) ids.push(m[1]);
             return ids;
           }
 
@@ -78,7 +78,9 @@ jobs:
             return keywords.filter(k => lower.includes(k));
           }
 
-          async function main() {
+          async function readHandle(handle) {
+            const directUrl = `https://x.com/${handle}`;
+            const fallbackUrl = `https://r.jina.ai/http://x.com/${handle}`;
             let source = 'UNAVAILABLE';
             let text = '';
             let directError = null;
@@ -86,7 +88,7 @@ jobs:
 
             try {
               const t = await get(directUrl);
-              if (t && t.length > 1000 && /flop_labs|FLOP/i.test(t)) {
+              if (t && t.length > 1000 && new RegExp(handle, 'i').test(t)) {
                 source = 'DIRECT_X';
                 text = t;
               }
@@ -103,35 +105,50 @@ jobs:
             }
 
             const normalized = clean(text);
-            const postIds = extractPostIds(normalized);
-            const hits = keywordHits(normalized);
-            const contentHash = normalized ? hash(normalized) : null;
-            const checkedAt = new Date().toISOString();
-
-            const state = {
-              schema_version: 1,
-              account: '@flop_labs',
+            return {
+              account: `@${handle}`,
               profile_url: directUrl,
-              checked_at: checkedAt,
               source,
-              source_note: source === 'JINA_MIRROR' ? 'Third-party rendering used only for early warning; verify material claims against the original X post and normative FLOP sources.' : null,
               accessible: !!normalized,
-              content_sha256: contentHash,
-              visible_post_ids: postIds,
-              keyword_hits: hits,
+              content_sha256: normalized ? hash(normalized) : null,
+              visible_post_ids: extractPostIds(normalized, handle),
+              keyword_hits: keywordHits(normalized),
               direct_error: directError,
               fallback_error: fallbackError,
             };
+          }
+
+          async function main() {
+            const accounts = {};
+            for (const h of handles) accounts[h] = await readHandle(h);
+            const semantic = Object.fromEntries(handles.map(h => [h, {
+              source: accounts[h].source,
+              accessible: accounts[h].accessible,
+              post_ids: accounts[h].visible_post_ids,
+              keyword_hits: accounts[h].keyword_hits,
+            }]));
+
+            const state = {
+              schema_version: 2,
+              checked_at: new Date().toISOString(),
+              authority_note: '@flop_labs is the primary FLOP announcement surface. @CryptoHayes is separately watched because FLOP Labs repeatedly republishes his project/airdrop/contest announcements. X signals are early-warning evidence; protocol mechanics are cross-checked against flop.finance and official GitHub.',
+              accounts,
+              semantic_fingerprint: hash(JSON.stringify(semantic)),
+            };
 
             const baseline = !old;
-            const postSetChanged = !!old && JSON.stringify(old.visible_post_ids || []) !== JSON.stringify(postIds);
-            const sourceChanged = !!old && old.source !== source;
-            const becameUnavailable = !!old && old.accessible === true && !state.accessible;
-            const changed = baseline || postSetChanged || sourceChanged || becameUnavailable;
-            const important = !baseline && postSetChanged;
+            const changed = baseline || old.semantic_fingerprint !== state.semantic_fingerprint;
+            let important = false;
+            if (old) {
+              for (const h of handles) {
+                const before = old.accounts?.[h]?.visible_post_ids || [];
+                const after = accounts[h].visible_post_ids || [];
+                if (JSON.stringify(before) !== JSON.stringify(after)) important = true;
+              }
+            }
 
             if (changed) fs.writeFileSync(statePath, JSON.stringify(state, null, 2) + '\n');
-            fs.appendFileSync(process.env.GITHUB_OUTPUT, `changed=${changed}\nimportant=${important}\nsource=${source}\naccessible=${state.accessible}\n`);
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `changed=${changed}\nimportant=${important}\n`);
             console.log(JSON.stringify({ baseline, changed, important, state }, null, 2));
           }
 
@@ -146,11 +163,11 @@ jobs:
           git config user.email "flop-x-monitor@users.noreply.github.com"
           git add data/flop_x_monitor_state.json
           if ! git diff --cached --quiet; then
-            git commit -m "chore: update FLOP Labs X monitor state [skip ci]"
+            git commit -m "chore: update FLOP X monitor state [skip ci]"
             git push
           fi
 
-      - name: Open early-warning issue for new X posts
+      - name: Open early-warning issue for new X signals
         if: steps.collect.outputs.important == 'true'
         shell: bash
         env:
@@ -158,10 +175,13 @@ jobs:
         run: |
           node - <<'NODE' > /tmp/x_issue_body.txt
           const s = require('./data/flop_x_monitor_state.json');
-          console.log(`Account: ${s.account}\nProfile: ${s.profile_url}\nRead path: ${s.source}\nVisible post IDs: ${(s.visible_post_ids || []).join(', ') || 'none parsed'}\nKeyword hits: ${(s.keyword_hits || []).join(', ') || 'none'}\n\nEARLY WARNING ONLY: material protocol/tokenomics/testnet/airdrop claims must be cross-checked against the original post and FLOP's normative docs/GitHub before being treated as confirmed.`);
+          for (const [h,a] of Object.entries(s.accounts)) {
+            console.log(`${a.account}: source=${a.source}, accessible=${a.accessible}, visible post IDs=${(a.visible_post_ids || []).join(', ') || 'none parsed'}, keyword hits=${(a.keyword_hits || []).join(', ') || 'none'}\n`);
+          }
+          console.log('EARLY WARNING: airdrop/contest/testnet claims from X are material and must be captured immediately. Protocol mechanics are then cross-checked against FLOP docs/GitHub; lack of a Yellow Paper ratification does not erase an explicit official eligibility/task announcement on X.');
           NODE
-          TITLE='[FLOP X] New @flop_labs signal'
-          NUM=$(gh issue list --state open --search "$TITLE in:title" --json number,title --jq '.[] | select(.title == "[FLOP X] New @flop_labs signal") | .number' | head -1)
+          TITLE='[FLOP X] New official X signal'
+          NUM=$(gh issue list --state open --search "$TITLE in:title" --json number,title --jq '.[] | select(.title == "[FLOP X] New official X signal") | .number' | head -1)
           if [ -n "$NUM" ]; then
             gh issue comment "$NUM" --body-file /tmp/x_issue_body.txt
           else
