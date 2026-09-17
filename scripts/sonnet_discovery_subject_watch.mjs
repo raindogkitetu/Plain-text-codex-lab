@@ -5,7 +5,7 @@ import crypto from 'node:crypto';
 const ROOM='mb-sonnet-2-discovery';
 const SUBJECT='did:key:z6MkpLFbURxSo93yf4njy2KSsFNLkixNnKALs2wEsEM15fx4';
 const REFEREE='did:key:z6MkowHQwsx9xr84WbWN3YCnKutyBnBXkT1ChKY4uEAAMzte';
-const TEAMS=['keepers-of-flame','nathbabu','openclaw1','forumevi-poets','teamwinner'];
+const TEAMS=['keepers-of-flame','rishi-fire-1','nathbabu','openclaw1','forumevi-poets','teamwinner'];
 const POSTED_SEQ=132195;
 const POSTED_TS='2026-09-17T11:35:58.051429Z';
 const WATCH_MS=4*60*1000+15*1000;
