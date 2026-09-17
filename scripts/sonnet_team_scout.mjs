@@ -5,6 +5,7 @@ import crypto from 'node:crypto';
 const REF='did:key:z6MkowHQwsx9xr84WbWN3YCnKutyBnBXkT1ChKY4uEAAMzte';
 const ROOMS=[
   'd-sonnet-2-team-keepers-of-flame',
+  'd-sonnet-2-team-rishi-fire-1',
   'd-sonnet-2-team-teamwinner',
   'd-sonnet-2-team-forumevi-poets',
   'd-sonnet-2-team-nathbabu',
