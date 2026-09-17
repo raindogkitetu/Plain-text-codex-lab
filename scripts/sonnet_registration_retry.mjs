@@ -12,6 +12,7 @@ const DEADLINE = '2026-09-18T12:00:00.000Z';
 const PAYLOAD = `{"type":"sonnet.register.v1","contest_id":"${CONTEST_ID}","role":"writer","x_account_url":"${X_ACCOUNT_URL}","request_id":"${REQUEST_ID}"}`;
 const STATE_PATH = 'data/sonnet_registration_retry_state.json';
 const MONITOR_PATH = 'data/sonnet_receipt_monitor_state.json';
+const SECRET_NAMES = ['TECHNOCORE_SIGN_SEED', 'SIGN_SEED', 'DID_SEED', 'TECHNOCORE_SEED', 'SONNET_SIGN_SEED', 'ED25519_SEED', 'AGENT_SIGN_SEED'];
 const B58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 const PKCS8_ED25519_PREFIX = Buffer.from('302e020100300506032b657004220420', 'hex');
 const SPKI_ED25519_PREFIX = Buffer.from('302a300506032b6570032100', 'hex');
@@ -46,7 +47,7 @@ function base58(raw) {
 }
 
 function seedBytesFromSecret(value) {
-  if (!value) fail('TECHNOCORE_SIGN_SEED is missing');
+  if (!value) fail('empty signing secret');
   if (/^[0-9a-fA-F]{64}$/.test(value)) return Buffer.from(value, 'hex');
   return crypto.createHash('sha256').update(value, 'utf8').digest();
 }
@@ -86,13 +87,18 @@ function candidateSecrets(raw) {
 }
 
 function privateKeyFromEnv() {
-  const secret = process.env.TECHNOCORE_SIGN_SEED || '';
-  if (!secret) return null;
-  for (const candidate of candidateSecrets(secret)) {
-    const key = keyFromSeed(candidate);
-    if (didFromPrivateKey(key) === EXPECTED_DID) return key;
+  let sawAny = false;
+  for (const name of SECRET_NAMES) {
+    const raw = process.env[name] || '';
+    if (!raw) continue;
+    sawAny = true;
+    for (const candidate of candidateSecrets(raw)) {
+      const key = keyFromSeed(candidate);
+      if (didFromPrivateKey(key) === EXPECTED_DID) return key;
+    }
   }
-  fail('Technocore signing secret does not derive the expected DID after safe normalization; WRITE blocked');
+  if (!sawAny) return null;
+  fail('No configured signing secret alias derives the expected DID; WRITE blocked');
 }
 
 function baseState(existing = {}) {
@@ -146,7 +152,7 @@ function preflight() {
   const key = privateKeyFromEnv();
   if (!key) {
     ghOutput('send', 'false'); ghOutput('reason', 'missing_secret');
-    console.log('No write: TECHNOCORE_SIGN_SEED GitHub Secret is not configured yet.');
+    console.log('No write: no candidate GitHub signing secret is configured yet.');
     return;
   }
 
@@ -181,7 +187,7 @@ async function send() {
   if (Date.now() >= Date.parse(DEADLINE)) fail('contest deadline passed before send; WRITE blocked');
 
   const key = privateKeyFromEnv();
-  if (!key) fail('TECHNOCORE_SIGN_SEED disappeared after preflight; WRITE blocked');
+  if (!key) fail('matching signing secret disappeared after preflight; WRITE blocked');
   const text = swept(PAYLOAD);
   const nonce = (BigInt(Date.now()) * 1_000_000n).toString();
   if (!/^[0-9]{1,19}$/.test(nonce)) fail('generated nonce is outside Technocore limits');
@@ -202,7 +208,7 @@ async function send() {
   try {
     response = await fetch(url, {
       method: 'GET',
-      headers: { 'user-agent': 'raindog-sonnet-registration-retry/1.2', 'cache-control': 'no-cache' },
+      headers: { 'user-agent': 'raindog-sonnet-registration-retry/1.3', 'cache-control': 'no-cache' },
       redirect: 'error',
       signal: controller.signal,
     });
