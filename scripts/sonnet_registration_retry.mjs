@@ -65,13 +65,34 @@ function didFromPrivateKey(privateKey) {
   return `did:key:z${base58(Buffer.concat([MULTICODEC_ED25519, raw]))}`;
 }
 
+function candidateSecrets(raw) {
+  const out = new Set();
+  const add = (v) => { if (typeof v === 'string' && v.length) out.add(v); };
+  add(raw);
+  const trimmed = raw.trim();
+  add(trimmed);
+  let unquoted = trimmed;
+  if ((unquoted.startsWith('"') && unquoted.endsWith('"')) || (unquoted.startsWith("'") && unquoted.endsWith("'"))) unquoted = unquoted.slice(1, -1);
+  add(unquoted);
+  for (const prefix of ['SIGN_SEED=', 'TECHNOCORE_SIGN_SEED=']) {
+    if (unquoted.startsWith(prefix)) {
+      let v = unquoted.slice(prefix.length).trim();
+      if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1);
+      add(v);
+    }
+  }
+  for (const v of [...out]) if (/^0x[0-9a-fA-F]{64}$/.test(v)) add(v.slice(2));
+  return [...out];
+}
+
 function privateKeyFromEnv() {
   const secret = process.env.TECHNOCORE_SIGN_SEED || '';
   if (!secret) return null;
-  const key = keyFromSeed(secret);
-  const did = didFromPrivateKey(key);
-  if (did !== EXPECTED_DID) fail('Technocore signing secret does not derive the expected DID; WRITE blocked');
-  return key;
+  for (const candidate of candidateSecrets(secret)) {
+    const key = keyFromSeed(candidate);
+    if (didFromPrivateKey(key) === EXPECTED_DID) return key;
+  }
+  fail('Technocore signing secret does not derive the expected DID after safe normalization; WRITE blocked');
 }
 
 function baseState(existing = {}) {
@@ -181,7 +202,7 @@ async function send() {
   try {
     response = await fetch(url, {
       method: 'GET',
-      headers: { 'user-agent': 'raindog-sonnet-registration-retry/1.1', 'cache-control': 'no-cache' },
+      headers: { 'user-agent': 'raindog-sonnet-registration-retry/1.2', 'cache-control': 'no-cache' },
       redirect: 'error',
       signal: controller.signal,
     });
