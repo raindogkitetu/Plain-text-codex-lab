@@ -1,6 +1,8 @@
 name: Sonnet-2 Team Scout
 
 on:
+  schedule:
+    - cron: '*/5 * * * *'
   push:
     paths:
       - '.github/workflows/sonnet-team-scout.yml'
@@ -34,6 +36,3 @@ jobs:
           git commit -m "chore: update Sonnet team scout [skip ci]"
           git pull --rebase origin main
           git push origin main
-
-# trigger: urgent candidate-room read
-# trigger: post-discovery recheck
