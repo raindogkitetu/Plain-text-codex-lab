@@ -6,7 +6,7 @@ on:
       - '.github/workflows/sonnet-receipt-live-watch.yml'
       - 'scripts/sonnet_receipt_live_watch.mjs'
   schedule:
-    - cron: '7 */4 * * *'
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -19,7 +19,7 @@ concurrency:
 jobs:
   watch:
     runs-on: ubuntu-latest
-    timeout-minutes: 235
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
 
