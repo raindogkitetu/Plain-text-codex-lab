@@ -69,7 +69,7 @@ precheck() {
 
 select_candidate() {
   node scripts/sonnet_candidate_live.mjs >/tmp/sonnet-candidate-live.out
-  cat /tmp/sonnet-candidate-live.out
+  cat /tmp/sonnet-candidate-live.out >&2
   node - <<'NODE'
 const fs=require('fs');
 const x=JSON.parse(fs.readFileSync('data/sonnet_candidate_live.json','utf8'));
@@ -118,6 +118,10 @@ load_seed() {
 
 post_candidate() {
   local selected="$1"
+  if ! node -e 'JSON.parse(process.argv[1])' "$selected" >/dev/null 2>&1; then
+    echo 'SAFE_STOP=SELECTED_JSON_INVALID'
+    return 12
+  fi
   export SELECTED_JSON="$selected"
   local game target score signal_ts req receipt msg nonce signed sign_did sig enc tmp code
   game="$(node -e 'const x=JSON.parse(process.env.SELECTED_JSON);process.stdout.write(x.game_id)')"
@@ -194,6 +198,10 @@ for ((i=1;i<=MAX_NEW_CONTACTS;i++)); do
     echo 'SAFE_STOP=NO_NEXT_ACTIONABLE_FALLBACK'
     break
   }
+  if ! node -e 'JSON.parse(process.argv[1])' "$selected" >/dev/null 2>&1; then
+    echo 'SAFE_STOP=SELECTED_JSON_INVALID'
+    break
+  fi
   echo "CHAIN_SELECTED_JSON=$selected"
   post_candidate "$selected"
   echo "CHAIN_WATCH_ROUND=$i"
