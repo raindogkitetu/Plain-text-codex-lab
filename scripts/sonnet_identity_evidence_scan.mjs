@@ -14,7 +14,7 @@ const PUB=pub(SUBJECT);
 function verify(m,room){try{return m?.from===SUBJECT&&m.nonce!=null&&typeof m.text==='string'&&!!m.sig&&crypto.verify(null,Buffer.from(`${room}|${m.nonce}|${m.text}`,'utf8'),PUB,Buffer.from(m.sig,'base64url'))}catch{return false}}
 function J(s){try{return JSON.parse(s)}catch{return null}}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
-async function getText(url,ms=25000){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(url,{headers:{'user-agent':'raindog-sonnet-evidence-scan/1.0','cache-control':'no-cache'},signal:c.signal});if(!r.ok)throw new Error(`HTTP ${r.status}`);return await r.text()}finally{clearTimeout(t)}}
+async function getText(url,ms=25000){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(url,{headers:{'user-agent':'raindog-sonnet-evidence-scan/1.1','cache-control':'no-cache'},signal:c.signal});if(!r.ok)throw new Error(`HTTP ${r.status}`);return await r.text()}finally{clearTimeout(t)}}
 
 function roomListFromJson(x){
   const out=new Set();
@@ -27,6 +27,14 @@ function roomListFromJson(x){
   };
   visit(x);return out;
 }
+function addRoomTokens(text,set){
+  if(typeof text!=='string')return;
+  for(const m of text.matchAll(/\b[A-Za-z0-9][A-Za-z0-9._-]{1,127}\b/g)){
+    const s=m[0];
+    if(s==='events'||s.startsWith('did')||/^\d+$/.test(s))continue;
+    if(s.includes('-')||s.includes('_')||/^(lobby|general|help|registration|discovery|campaign|votes|submissions|results|rules)$/i.test(s))set.add(s);
+  }
+}
 
 const rooms=new Set();
 const errors=[];
@@ -36,7 +44,24 @@ try{
   if(x)for(const r of roomListFromJson(x))rooms.add(r);
 }catch(e){errors.push(`rooms:${e?.name||'Error'}:${e?.message||String(e)}`)}
 
-// Ensure all contest rooms already known locally are included even if /rooms parsing changes.
+// Enumerate the server-written public room event lane as a second source.
+try{
+  let cursor=0;
+  for(let page=0;page<20;page++){
+    const raw=await getText(`https://technocore.chat/r/events?format=json&since=${cursor}&limit=200&n=${Date.now()}-${page}`,25000);
+    const x=J(raw);
+    if(!x)break;
+    const msgs=Array.isArray(x.messages)?x.messages:[];
+    for(const m of msgs){addRoomTokens(m?.text,rooms);if(typeof m?.room==='string')rooms.add(m.room)}
+    const last=Number(x.last_seq||cursor);
+    if(last<=cursor||msgs.length===0)break;
+    cursor=last;
+    if(msgs.length<200)break;
+    await sleep(100);
+  }
+}catch(e){errors.push(`events:${e?.name||'Error'}:${e?.message||String(e)}`)}
+
+// Ensure all contest rooms already known locally are included even if discovery APIs change.
 for(const f of ['data/sonnet_discovery_subject_watch.json','data/sonnet_candidate_live.json']){
   try{
     const txt=fs.readFileSync(f,'utf8');
@@ -46,7 +71,7 @@ for(const f of ['data/sonnet_discovery_subject_watch.json','data/sonnet_candidat
 
 const evidence=[];
 const scanned=[];
-const list=[...rooms].filter(r=>r!=='events');
+const list=[...rooms].filter(r=>r&&r!=='events').slice(0,550);
 let next=0;
 const workers=Math.min(4,Math.max(1,list.length));
 async function worker(){
@@ -56,7 +81,7 @@ async function worker(){
     try{
       const raw=await getText(`https://technocore.chat/r/${encodeURIComponent(room)}/export?n=${Date.now()}-${i}`,30000);
       scanned.push(room);
-      if(!raw.includes(SUBJECT)){await sleep(80);continue}
+      if(!raw.includes(SUBJECT)){await sleep(100);continue}
       for(const line of raw.split(/\r?\n/).filter(Boolean)){
         const m=J(line);if(!m||m.from!==SUBJECT)continue;
         const ts=Date.parse(m.ts||'');if(!Number.isFinite(ts)||ts>=CUTOFF)continue;
@@ -64,7 +89,7 @@ async function worker(){
         evidence.push({room,seq:Number(m.seq||0)||null,ts:m.ts||null,nonce:m.nonce??null,signature_verified:ok,text_sha256:typeof m.text==='string'?crypto.createHash('sha256').update(m.text).digest('hex'):null,text_preview:typeof m.text==='string'?m.text.slice(0,240):null});
       }
     }catch(e){errors.push(`${room}:${e?.name||'Error'}:${e?.message||String(e)}`)}
-    await sleep(80);
+    await sleep(100);
   }
 }
 await Promise.all(Array.from({length:workers},()=>worker()));
