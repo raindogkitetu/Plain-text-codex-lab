@@ -1,97 +1,17 @@
-name: Sonnet-2 Registration Retry Once
+name: Sonnet-2 Registration Retry Disabled
 
 on:
-  push:
-    paths:
-      - '.github/workflows/sonnet-registration-retry.yml'
-      - 'scripts/sonnet_registration_retry.mjs'
-  schedule:
-    - cron: '2-57/5 * * * *'
   workflow_dispatch:
 
 permissions:
-  contents: write
-  issues: write
-
-concurrency:
-  group: sonnet-2-registration-retry
-  cancel-in-progress: false
+  contents: read
 
 jobs:
-  retry-once:
+  disabled:
     runs-on: ubuntu-latest
-    timeout-minutes: 4
-    env:
-      TECHNOCORE_SIGN_SEED: ${{ secrets.TECHNOCORE_SIGN_SEED }}
-      SIGN_SEED: ${{ secrets.SIGN_SEED }}
-      DID_SEED: ${{ secrets.DID_SEED }}
-      TECHNOCORE_SEED: ${{ secrets.TECHNOCORE_SEED }}
-      SONNET_SIGN_SEED: ${{ secrets.SONNET_SIGN_SEED }}
-      ED25519_SEED: ${{ secrets.ED25519_SEED }}
-      AGENT_SIGN_SEED: ${{ secrets.AGENT_SIGN_SEED }}
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Self-test Ed25519/DID implementation
-        run: node scripts/sonnet_registration_retry.mjs selftest
-
-      - name: Preflight and arm exactly one retry
-        id: preflight
-        run: node scripts/sonnet_registration_retry.mjs preflight
-
-      - name: Persist dedupe lock before any Technocore WRITE
-        if: steps.preflight.outputs.send == 'true'
-        shell: bash
+      - name: Local signing policy
         run: |
-          git config user.name "sonnet-registration-retry"
-          git config user.email "sonnet-registration-retry@users.noreply.github.com"
-          git add data/sonnet_registration_retry_state.json
-          git commit -m "chore: arm one-shot sonnet registration retry [skip ci]"
-          git pull --rebase origin main
-          git push origin main
-
-      - name: Execute the single authorized retry
-        if: steps.preflight.outputs.send == 'true'
-        id: send
-        run: node scripts/sonnet_registration_retry.mjs send
-
-      - name: Persist retry result
-        if: steps.preflight.outputs.send == 'true'
-        shell: bash
-        run: |
-          git config user.name "sonnet-registration-retry"
-          git config user.email "sonnet-registration-retry@users.noreply.github.com"
-          git add data/sonnet_registration_retry_state.json
-          if ! git diff --cached --quiet; then
-            git commit -m "chore: record sonnet registration retry result [skip ci]"
-            git pull --rebase origin main
-            git push origin main
-          fi
-
-      - name: Report one-shot retry status
-        if: steps.preflight.outputs.send == 'true'
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          node - <<'NODE' > /tmp/sonnet_retry_status.txt
-          const s = require('./data/sonnet_registration_retry_state.json');
-          console.log(`retry status: ${s.status}`);
-          console.log(`request_id: ${s.request_id}`);
-          console.log(`expected DID: ${s.expected_did}`);
-          console.log(`HTTP status: ${s.last_http_status ?? 'unknown'}`);
-          console.log(`write attempts: ${s.write_attempt_count ?? 0}`);
-          console.log(`registration resend count: ${s.registration_resend_count ?? 0}`);
-          console.log(`result unknown: ${s.result_unknown ? 'YES' : 'NO'}`);
-          console.log(`new request_id generated: ${s.new_request_id_generated ? 'YES' : 'NO'}`);
-          console.log('No signature or signing seed is printed or stored. Receipt verification remains delegated to the 5-minute Sonnet receipt monitor.');
-          NODE
-          TITLE='[sonnet-2] Autopilot registration status'
-          NUM=$(gh issue list --state open --search "$TITLE in:title" --json number,title --jq '.[] | select(.title == "[sonnet-2] Autopilot registration status") | .number' | head -1)
-          if [ -n "$NUM" ]; then
-            gh issue comment "$NUM" --body-file /tmp/sonnet_retry_status.txt
-          else
-            gh issue create --title "$TITLE" --body-file /tmp/sonnet_retry_status.txt
-          fi
-
-# trigger: verify updated TECHNOCORE_SIGN_SEED
+          echo "Disabled: Technocore DID signing must remain local on the user's Mac."
+          echo "Use the existing macOS Keychain item 'FLOP Technocore DID seed' with the official flop-labs/technocore-chat scripts/sign.py."
+          echo "Do not place the DID seed in GitHub Secrets, logs, repository files, or chat."
