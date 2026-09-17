@@ -45,9 +45,14 @@ function base58(raw) {
   return '1'.repeat(leading) + out;
 }
 
-function keyFromSeed(seedHex) {
-  if (!/^[0-9a-fA-F]{64}$/.test(seedHex || '')) fail('TECHNOCORE_SIGN_SEED must be exactly 64 hex characters');
-  const seed = Buffer.from(seedHex, 'hex');
+function seedBytesFromSecret(value) {
+  if (!value) fail('TECHNOCORE_SIGN_SEED is missing');
+  if (/^[0-9a-fA-F]{64}$/.test(value)) return Buffer.from(value, 'hex');
+  return crypto.createHash('sha256').update(value, 'utf8').digest();
+}
+
+function keyFromSeed(value) {
+  const seed = seedBytesFromSecret(value);
   return crypto.createPrivateKey({ key: Buffer.concat([PKCS8_ED25519_PREFIX, seed]), format: 'der', type: 'pkcs8' });
 }
 
@@ -61,11 +66,11 @@ function didFromPrivateKey(privateKey) {
 }
 
 function privateKeyFromEnv() {
-  const seed = process.env.TECHNOCORE_SIGN_SEED || '';
-  if (!seed) return null;
-  const key = keyFromSeed(seed);
+  const secret = process.env.TECHNOCORE_SIGN_SEED || '';
+  if (!secret) return null;
+  const key = keyFromSeed(secret);
   const did = didFromPrivateKey(key);
-  if (did !== EXPECTED_DID) fail('Technocore signing seed does not derive the expected DID; WRITE blocked');
+  if (did !== EXPECTED_DID) fail('Technocore signing secret does not derive the expected DID; WRITE blocked');
   return key;
 }
 
@@ -176,7 +181,7 @@ async function send() {
   try {
     response = await fetch(url, {
       method: 'GET',
-      headers: { 'user-agent': 'raindog-sonnet-registration-retry/1.0', 'cache-control': 'no-cache' },
+      headers: { 'user-agent': 'raindog-sonnet-registration-retry/1.1', 'cache-control': 'no-cache' },
       redirect: 'error',
       signal: controller.signal,
     });
