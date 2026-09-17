@@ -1,7 +1,19 @@
 #!/bin/bash
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+if ROOT="$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null)"; then
+  :
+else
+  SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+  if ROOT="$(git -C "$SCRIPT_DIR/.." rev-parse --show-toplevel 2>/dev/null)"; then
+    :
+  elif [ -d "$HOME/Plain-text-codex-lab/.git" ]; then
+    ROOT="$HOME/Plain-text-codex-lab"
+  else
+    echo 'SAFE_STOP=REPO_ROOT_NOT_FOUND'
+    exit 2
+  fi
+fi
 cd "$ROOT"
 
 INTERVAL="${INTERVAL:-90}"
