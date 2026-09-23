@@ -1,11 +1,11 @@
 {
   "schema_version": 2,
-  "checked_at": "2026-09-23T12:04:09.295Z",
+  "checked_at": "2026-09-23T17:26:06.080Z",
   "technocore": {
     "release": "v0.14.1",
     "release_published_at": "2026-09-23T09:47:09Z",
-    "head_sha": "f49debd0cd0d50271b62f75420549f2592e8020d",
-    "head_message": "release: 0.14.1 (#893)\n\n## What\n\nCuts **0.14.1**. It dates the CHANGELOG section, bumps the version in\nthe files the service, the MCP wrapper and the worker share (the same\nset as #866), and re-ratchets the measured block of `sz-baseline.json`.\nNo cap moves.\n\n## Why\n\nOne change since v0.14.0, #890. Room reads stop reparsing seq-state\nshards, and long-poll ticks skip rooms whose file is unchanged. On the\nlive box that parse was 71% of worker GIL time. PATCH, because nothing\non the HTTP surface moves.\n\nAfter merge: tag `v0.14.1` and `mcp-v0.14.1`, then create the GitHub\nRelease. The box is deployed with `deploy-agent-chat.sh --tag 0.14.1`\nfrom flop-core main, which also applies flop-core#1767\n(`MALLOC_ARENA_MAX=2`), so the rollout is one restart.\n\n## Checks\n\n- [x] `uv run coverage run -m pytest tests -q && uv run coverage\nreport`: 788 passed, 1 skipped, 98.05%\n- [x] `uv run ruff check . && uv run ruff format --check .` and `uv run\nty check`: clean\n- [x] `uv lock --check` (root, and `mcp/worker` after `uv build\n--project mcp` built the 0.14.1 wheel), `sz.py --caps`, `sz.py --check`,\n`just contract`, and both `release.yml` gates\n- [x] Docs that would now be wrong are updated: `CHANGELOG.md` is the\nchange\n- [x] New surface on a world-writable service: nothing new"
+    "head_sha": "c05e6c291b18bbf6c1ec5b54e32f4c6ca8c397d5",
+    "head_message": "fix(http): check the body cap before buffering a chunk, not after (#620)\n\n## What changes for a caller\n\nNothing observable. An oversized streamed body still gets the same `413`\nwith the same text;\na body within the cap is read exactly as before. Two lines swap places\nin `read_json`\n(`src/app.py:1359-1361`): the cap is checked against `len(raw) +\nlen(chunk)` *before*\n`raw.extend(chunk)` instead of after it. Core line count is unchanged\n(`sz.py --check` passes,\n`app.py` stays at 1014).\n\n## Why\n\nThe docstring makes a memory promise — reading incrementally is \"what\nlets MAX_BODY be generous\n… without ever holding more than the cap in memory\"\n(`src/app.py:1344-1345`) — and the loop did\nnot keep it: a chunk was appended first and measured second, so a single\nchunk larger than the\ncap was held in full before the `413` went out.\n\nTo be precise about the size of this: uvicorn/h11 hand the app bodies in\nbounded pieces, so on\nthe deployed stack a single chunk past 256 KiB is not something I have\nobserved or can claim.\nThe ASGI interface allows it, the function's contract says it cannot\nhappen, and the fix costs\nnothing — that is the whole case. No production incident is being\nreported.\n\n## Checks\n\n- `ruff check .`, `ruff format --check .`, `ty check`, `sz.py --check` —\nall pass.\n- Regression test\n`test_the_single_oversize_stream_chunk_is_refused_before_buffer_growth_so_that_the_cap_holds`\n(`tests/http/test_limits.py`): a request stub yields one `MAX_BODY + 1`\nchunk and a tracking\naccumulator records the most bytes ever held. Without the fix: `262145`\nheld against the\n`262144` cap → fails. With it: `413`, high-water mark `≤ MAX_BODY` →\npasses.\n- `pytest tests -q`: **615 passed** in 4m16s.\n\nVerified against `main` at `248bcf3`."
   },
   "tclk": {
     "release": "v0.1.0",
@@ -16,7 +16,7 @@
   "yellowpaper": {
     "head_sha": "cb3cbf97a346ff85aca6dba5e924434270ca672c",
     "head_message": "docs: add PR template stating the editorial-only rule up front",
-    "web_sha256": "497f6aab2b80a8fa5d866d76ca2718453e040fa3cff4015778ef43bd75e70136",
+    "web_sha256": "1a2e0fed198f6a777d18653f4f365aa6cdd4922ec8aafe4bd4d5efa9be1f925b",
     "has_D_0440": true,
     "has_E38_TBD": true,
     "has_E40_TBD": true,
@@ -40,5 +40,5 @@
     "snapshot_announced": false
   },
   "detection_note": "Live flags require explicit live/launch/endpoint language. Generic mentions such as \"airdrop claim\" do not count as claim-live.",
-  "semantic_fingerprint": "9e0d9690a488998dadf000b1dce9c740d4e9bc264584b3bc070ca080a193bd24"
+  "semantic_fingerprint": "04afe485fd13fcb69cb690d52c3c0570735c7a2390356bf1660ca55291e4a8cd"
 }
