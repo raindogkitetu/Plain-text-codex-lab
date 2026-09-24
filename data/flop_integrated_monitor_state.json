@@ -1,11 +1,11 @@
 {
   "schema_version": 2,
-  "checked_at": "2026-09-23T17:26:06.080Z",
+  "checked_at": "2026-09-24T05:19:01.910Z",
   "technocore": {
     "release": "v0.14.1",
     "release_published_at": "2026-09-23T09:47:09Z",
-    "head_sha": "c05e6c291b18bbf6c1ec5b54e32f4c6ca8c397d5",
-    "head_message": "fix(http): check the body cap before buffering a chunk, not after (#620)\n\n## What changes for a caller\n\nNothing observable. An oversized streamed body still gets the same `413`\nwith the same text;\na body within the cap is read exactly as before. Two lines swap places\nin `read_json`\n(`src/app.py:1359-1361`): the cap is checked against `len(raw) +\nlen(chunk)` *before*\n`raw.extend(chunk)` instead of after it. Core line count is unchanged\n(`sz.py --check` passes,\n`app.py` stays at 1014).\n\n## Why\n\nThe docstring makes a memory promise — reading incrementally is \"what\nlets MAX_BODY be generous\n… without ever holding more than the cap in memory\"\n(`src/app.py:1344-1345`) — and the loop did\nnot keep it: a chunk was appended first and measured second, so a single\nchunk larger than the\ncap was held in full before the `413` went out.\n\nTo be precise about the size of this: uvicorn/h11 hand the app bodies in\nbounded pieces, so on\nthe deployed stack a single chunk past 256 KiB is not something I have\nobserved or can claim.\nThe ASGI interface allows it, the function's contract says it cannot\nhappen, and the fix costs\nnothing — that is the whole case. No production incident is being\nreported.\n\n## Checks\n\n- `ruff check .`, `ruff format --check .`, `ty check`, `sz.py --check` —\nall pass.\n- Regression test\n`test_the_single_oversize_stream_chunk_is_refused_before_buffer_growth_so_that_the_cap_holds`\n(`tests/http/test_limits.py`): a request stub yields one `MAX_BODY + 1`\nchunk and a tracking\naccumulator records the most bytes ever held. Without the fix: `262145`\nheld against the\n`262144` cap → fails. With it: `413`, high-water mark `≤ MAX_BODY` →\npasses.\n- `pytest tests -q`: **615 passed** in 4m16s.\n\nVerified against `main` at `248bcf3`."
+    "head_sha": "72f65bb783fb5a99f28a46689f9c9b01bd3d4eea",
+    "head_message": "release: 0.14.4 (#904)\n\n## What\n\nThis PR cuts **0.14.4**. It touches the same nine files as #899:\n- the CHANGELOG section gets its date;\n- the version is bumped in the files the service, the MCP wrapper and\nthe worker share;\n- the measured block of `sz-baseline.json` is re-ratcheted. No cap\nmoves.\n\n## Why\n\n**Main CI is red.** #585 grew `store.py` from 1025 to 1029 code lines,\nwhich is under its cap of 1030. Since then every push to main has failed\n`sz.py --check`, and the steps after it have been skipped: the example\ne2e, the MCP wrapper build, and the image build and smoke. This PR's CI\nis the first to run those steps against #585, #902 and #903.\n\nChanges since v0.14.3. The release is PATCH, because no route, field or\ncap changes:\n- **#902:** `?format=json` replies are one compact line, encoded ~50x\nfaster. It's the same JSON value.\n- **#903:** starlette 1.7.0, uvicorn 0.53.0 and cryptography 50.0.1. It\nalso moves the test-only httpx2 past three Dependabot alerts; the\nservice could never reach them, and none are open now.\n- **#585:** a `?since=` past a room's head is clamped to the head\ninstead of echoed back.\n- **#886:** repeated `Accept` lines are honored.\n- **#620:** a streamed request body is measured before it is buffered.\n- **#757 (edge):** `/favicon.ico?v=…` is served by the edge.\n\nFollowing precedent, the test and CI PRs #788, #791 and #871 have no\nentries.\n\n**After merge:**\n- Tag `v0.14.4` on the squash commit. That publishes\n`ghcr.io/flop-labs/technocore-chat:0.14.4`, and the box's autoupdate\ntimer installs it within ~15 min.\n- #757 isn't live until `edge/deploy.sh` runs.\n- Whether to cut `mcp-v0.14.4` is your call. 0.14.2 and 0.14.3 skipped\nit, and the wrapper hasn't changed.\n\n## Checks\n\nVerified against main at 7772a98, which includes #903.\n\n- [x] `uv run coverage run -m pytest tests -q && uv run coverage\nreport`: 849 passed, 1 skipped.\n- [x] `uv run ruff check . && uv run ruff format --check .` and `uv run\nty check`: clean\n- [x] `uv lock --check` passes for the root and for `mcp/worker`, after\n`uv build --project mcp` built the 0.14.4 wheel. Only version lines\nmoved in either lock.\n- [x] `sz.py --caps` and `sz.py --check` pass.\n- [x] Both `release.yml` gates pass: the tag matches the\n`pyproject.toml` version, and CHANGELOG has a `[0.14.4]` section.\n- [x] Docs that would now be wrong are updated: `CHANGELOG.md` is the\nchange\n- [x] New surface on a world-writable service: nothing new"
   },
   "tclk": {
     "release": "v0.1.0",
@@ -16,7 +16,7 @@
   "yellowpaper": {
     "head_sha": "cb3cbf97a346ff85aca6dba5e924434270ca672c",
     "head_message": "docs: add PR template stating the editorial-only rule up front",
-    "web_sha256": "1a2e0fed198f6a777d18653f4f365aa6cdd4922ec8aafe4bd4d5efa9be1f925b",
+    "web_sha256": "a52e766af2a9baff7e73fde2b52d851518ee87f2ddba0a7a8c6d16d7da06aef7",
     "has_D_0440": true,
     "has_E38_TBD": true,
     "has_E40_TBD": true,
@@ -40,5 +40,5 @@
     "snapshot_announced": false
   },
   "detection_note": "Live flags require explicit live/launch/endpoint language. Generic mentions such as \"airdrop claim\" do not count as claim-live.",
-  "semantic_fingerprint": "04afe485fd13fcb69cb690d52c3c0570735c7a2390356bf1660ca55291e4a8cd"
+  "semantic_fingerprint": "7a46c7405bc94c267374f4a2eb126ec15a26b895535386a1a5ae2761896db7d7"
 }
