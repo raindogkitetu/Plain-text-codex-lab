@@ -1,30 +1,30 @@
 {
   "schema_version": 2,
-  "checked_at": "2026-10-25T23:30:23.981Z",
+  "checked_at": "2026-10-26T05:13:47.232Z",
   "technocore": {
-    "release": null,
-    "release_published_at": null,
-    "head_sha": null,
-    "head_message": null
+    "release": "v0.14.1",
+    "release_published_at": "2026-09-23T09:47:09Z",
+    "head_sha": "73a732497a19cac11aff4dcb527bae3c52b02f73",
+    "head_message": "fix(humans): align the message input limit with the server (#142)\n\nThe message box on `/humans` stops accepting input at 2000 characters.\nThe server takes 4096.\n\nWhat made me file this rather than shrug at it is that the page\ndisagrees with itself. The WebMCP `say` tool that same page publishes\ndeclares `maxLength: 4096` for `text`, and both it and the input box\npost to `POST /r/<room>`. One page, one operation, two limits, and the\nsmaller one is the one a person hits.\n\n`maxlength` is also silent when it bites. There is no message and no\ncounter. The input just stops taking characters, so someone pasting a\nlong message loses the tail without being told it happened or how much\nwent missing.\n\n### Checked against a running instance\n\n```\nCHAT_ROOT=./data uv run uvicorn --app-dir src app:app --port 8080\n\nPOST /r/probe  {\"text\": 4096 chars}   200, stored 4096, nothing truncated\nPOST /r/probe  {\"text\": 4097 chars}   400 text too long: 4097 characters, and the limit is 4096\n```\n\nSo 4096 is real on the lane the page actually uses, not just the number\nin `store.MAX_TEXT_CHARS`.\n\n### The change\n\nOne attribute, 2000 to 4096.\n\nThe test reads `maxlength` off the page as served and checks it against\n`store.clean_text`, which is the validator that lane reaches. That\nmirrors `test_humans_name_inputs_match_the_server_name_limit` directly\nabove it, which does the same thing for `#room` and `#nick` against\n`valid_name`. Putting it in the same file keeps one place that answers\n\"do the boxes on this page agree with the server\".\n\nIt fails without the fix: at 2000, `clean_text(\"a\" * 2001)` raises\nnothing, so the `pytest.raises` block reports `DID NOT RAISE\nStoreError`.\n\n### Gates\n\n`ruff check`, `ruff format --check`, `ty check` all clean. `coverage\nreport` 97.40%. `sz.py --check` ok, and the core baseline does not move\nsince `humans.html` is not core and the test is not either.\n\nOne note in the interest of not overclaiming: on one full-suite run I\nsaw `test_the_post_lanes_do_not_block_the_event_loop` fail. It did not\nreproduce in three further full runs or six isolated ones, and `main`\nwas clean across five runs on the same machine. It asserts a 0.2s\nceiling on event loop scheduling gaps, and I was running under Docker on\nWindows with coverage on, so I believe it was host noise rather than\nanything here. Mentioning it because 1 in 4 is not 0 in 4.\n\n---\n\nI used Claude to help investigate this. The verification against the\nrunning service, and the writing, are mine.\n\nCo-authored-by: faakhiranadiaz <304199974+faakhiranadiaz@users.noreply.github.com>\nCo-authored-by: Sergey Vidyuk <svidyuk@gmail.com>"
   },
   "tclk": {
-    "release": null,
-    "release_published_at": null,
-    "head_sha": null,
-    "head_message": null
+    "release": "v0.1.0",
+    "release_published_at": "2026-09-01T16:39:46Z",
+    "head_sha": "fb910d354b34892f9bad236ca51f390be50a6d4b",
+    "head_message": "feat(flop): add configurable HTLC settlement rail (#210)\n\n## What\n\nAdd `@flop-labs/tclk-flop` with HTLC lock, verify, claim and refund.\nDevnet is the default; testnet/mainnet require explicit RPC and genesis\npins. Signing remains local.\n\nAfter recovery journaling, the rail rechecks the claim window and anchor\nfreshness before submitting, so a slow journal cannot knowingly deposit\ninto a stale deal.\n\n## Why\n\ntclk needs a value-bearing settlement rail. The optional package keeps\nnetworking outside the protocol core. SPEC.md describes the actual\nblock-deadline and Ed25519 account bindings.\n\nHostile references cannot substitute chain, parties, amount or terms. A\nbare HTLC does not prove work delivery; chain stalls can delay refunds.\n\n## Devnet verification\n\nBoth paths finalized for **0.001 test FLOP**, with balance events and\n`ExtrinsicSuccess`:\n\n- Claim:\n`0x634b4d1ca17876f08f805d7cb1f5a79667b2de86be44d9819abaec6d08408c03`\n- Refund:\n`0x574a55ac8578514c3c22605d6fb1d9af67c2fa7b7ca351563404b1049740354c`\n\n[Receipts, reproduction and review regression\ncoverage](https://github.com/flop-labs/tclk/blob/795ff20e21cacce43e4ea146b2d88af7eba4268a/flop/VERIFICATION.md).\nAll four test escrows closed.\n\n## Checks\n\n- [x] `pnpm install --frozen-lockfile`\n- [x] `pnpm -r --include-workspace-root build`\n- [x] `pnpm -r --include-workspace-root test`: **249 passed**, including\n72 rail tests.\n- [x] Protocol drift and whitespace checks; golden vectors untouched.\n- [x] Affected documentation and `CHANGELOG.md` updated."
   },
   "yellowpaper": {
-    "head_sha": null,
-    "head_message": null,
-    "web_sha256": "14f593377f71ad2e90728864ce3953d82276ae10054b39c1cf4611809f4c77c4",
+    "head_sha": "56410c67b11292e707d32ef32e9c4ff9c02e28c7",
+    "head_message": "docs(yellowpaper): sync 0.5.0 (draft) from flop-core@dfd98a59",
+    "web_sha256": "2cc7bde93a85cee216b7a995bb74cd796ef7d8ba1b39e2b04c34343e5c9afa93",
     "has_D_0440": true,
     "has_E38_TBD": true,
     "has_E40_TBD": true,
     "web_genesis_4_4b": true
   },
   "sonnet": {
-    "head_sha": null,
-    "head_message": null
+    "head_sha": "195647a4d85733ecd4862d67dc7bf7a62e673c58",
+    "head_message": "Results: sonnet-2 — the winner, every allocation and DID, and how to check them (#86)\n\nThe permanent record of the sonnet-2 result: every allocation and every\nDID, with what each is owed and the signed record that earned it.\n\n- **Winner:** maragung-flop, chosen by FLOP Labs' judges from the\nfinalists quire, pom-team and maragung-flop.\n- **Allocations:** 12,500 FLOP to each of 4 contributors; 7 FLOP to each\nof 6,852 voters whose final ballot chose the winner; 2,036 FLOP rounding\nremainder kept by FLOP Labs. 6,856 DIDs, 97,964 FLOP.\n- **Verifiable:** `payouts.json` hashes to `ebc0de59…`, the\n`payments_sha256` in the signed settle receipt at `d-sonnet-2-results`\nseq 45498. `allocations.csv` and `payouts.json` agree DID for DID; every\nfile's hash is in `manifest.json`.\n\nEverything here is built from the closed referee ledger and was\ncross-checked against it: all 6,856 paid DIDs match the ledger's payout,\nevery contributor supplied accepted words, and every voter's counted\nballot is their own accepted record for the winner.\n\nAdds `results/sonnet-2/` only. The pinned package and its\n`manifest.json` are untouched; the package tests pass.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>"
   },
   "announced_status": {
     "testnet_q4_2026": true,
@@ -40,5 +40,5 @@
     "snapshot_announced": false
   },
   "detection_note": "Live flags require explicit live/launch/endpoint language. Generic mentions such as \"airdrop claim\" do not count as claim-live.",
-  "semantic_fingerprint": "5968fcc856614a3018eb8e9770f36af30283aa7fea017dbdb5792100e567e837"
+  "semantic_fingerprint": "bfff0e21140236a0fd4efe463e65969114f78647941d2603f1a9d1f2bb65f70b"
 }
