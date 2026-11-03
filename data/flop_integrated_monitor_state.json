@@ -1,11 +1,11 @@
 {
   "schema_version": 2,
-  "checked_at": "2026-11-03T11:17:08.304Z",
+  "checked_at": "2026-11-03T19:46:30.167Z",
   "technocore": {
     "release": "v0.14.1",
     "release_published_at": "2026-09-23T09:47:09Z",
-    "head_sha": "1b85eb56c5b75def403910f694a410f994cbb438",
-    "head_message": "test(stats): stamp the expired entry relative to the clock (#1066)\n\n## What\n\nThree `/stats` cache tests seeded the \"expired\" entry with a literal\n`0.0`. They now stamp it relative to `time.monotonic()`.\n\n## Why\n\nRefs #1064. `0.0` is expired only while `time.monotonic()` is at least\n`STATS_CACHE_SECONDS` (60). On a host up for less than that the entry is\nstill fresh, no refresh starts, and `started.wait(10)` fails with \"the\nrefresh must start\". With `time.monotonic` wrapped as `% 30`, three\ntests fail on `73a7324` (3 failed, 14 passed). With this change none do\n(17 passed).\n\nThis does not claim to fix the CI failure in #1064. There only one of\nthe three failed, so uptime is not the cause there. This removes a real\nfragility and leaves the cause open.\n\n## Checks\n\n- [x] `uv run coverage run -m pytest tests -q`: 919 passed, 1 skipped,\n98.08%\n- [x] `uv run ruff check . && uv run ruff format --check .` and `uv run\nty check`; `sz.py --caps` exit 0\n- [x] Docs that would now be wrong are updated: none affected\n- [x] New surface on a world-writable service: nothing new. Tests only.\n\nAI assistance: Kiro (Claude) assisted coding and local verification. No\nhuman review claimed.\n\n<details><summary>DID contribution proof</summary>\n\nContributor: zkasuran. DID:\n`did:key:z6MkoA8xuzKJRGtHa5hr6znFCZq164mb45JHx6kktdJ6tMdL`.\n\nSHA-256 each `git show <commit>:<path>` byte stream. Join the header and\nsorted hash/path rows below with LF, no final LF. Verify the unpadded\nbase64url Ed25519 signature using the public key decoded from the DID\n(base58btc, remove the ed01 multicodec prefix). Public verification\npasses; a tampered manifest fails.\n\n```text\ntechnocore-chat 9bd8fe08811a51b1f97e6256f29685ba752237c4 test/stats-no-uptime-assumption\n6977a75484cc127c7d20de08d1c710a25555cddce0f4f4c9799154ad9d87e16b  tests/http/test_stats.py\n```\n\nSignature:\n`vzwFQ2C-jSZDjXeMDPDF_5hNomjxeL9U8J5cbip7IyOzdQsajLRX0l5RIK4GgDrNgDpLE_h0aKHmTrHqnCKaDQ`\n\nSigned `/r/technocore` attestation seq `21077289`. The post names this\nmanifest digest; room retention can evict it.\n\nDID note: https://technocore.chat/kv/did/f15ddb2552fee06f\n\n</details>\n\nCo-authored-by: Sergey Vidyuk <svidyuk@gmail.com>"
+    "head_sha": "20629ab2913f30601c4cd59b20d04031105bdc7b",
+    "head_message": "chore(size): regenerate accepted store baseline (#1075)\n\n## What\n\nRegenerate `sz-baseline.json` with `uv run sz.py --update-baseline` at\nmain `1b85eb5`, as the requested maintainer reconciliation. The caps\nremain byte-identical; the service gains no new surface.\n\n## Why\n\nMain's ratchet still records 1029 store code lines, although the\naccepted counter-preservation fix in #914 brought it to its existing\n1030 cap. That is the only store change since the last regeneration.\nThis records the reviewed source while retaining its safety guard.\n\nOverlap: #918 changes snapshot recovery; #993 changes benchmark writers.\nNeither edits this baseline.\n\n## Checks\n\n- [x] Coverage suite: 923 passed, 1 existing skip; 98.08% coverage.\n- [x] Ruff, formatting, types, immutable caps and main's ratchet passed.\n- [x] Example, MCP wheel/sdist verification, image build and four smoke\nchecks passed.\n- [x] Running-service contract: 881/881 cases; Worker real bundle\ndry-run passed.\n- [x] Documentation remains accurate; new abusive-caller capability:\nnothing new.\n\n## Evidence\n\nOwned Linux, Python 3.12.3: `uv sync --frozen`; `uv run just check`; `uv\nrun sz.py --caps`; `uv run sz.py --check`; `uv run just contract`;\npackaging/image/example commands from CI; `uv run pywrangler deploy\n--dry-run`.\n\nUndo: revert this baseline-only commit; that restores the recorded\nratchet failure and requires no data migration."
   },
   "tclk": {
     "release": "v0.1.0",
@@ -16,7 +16,7 @@
   "yellowpaper": {
     "head_sha": "56410c67b11292e707d32ef32e9c4ff9c02e28c7",
     "head_message": "docs(yellowpaper): sync 0.5.0 (draft) from flop-core@dfd98a59",
-    "web_sha256": "69b3298e58789bdef251647cad816229a8d54115b98ad0a6dd5a6dbbe047ffcf",
+    "web_sha256": "40135b0bfc9e708e347a413f3d3dea55bb1655f7f71564055ed64e47dfddff7c",
     "has_D_0440": true,
     "has_E38_TBD": true,
     "has_E40_TBD": true,
@@ -40,5 +40,5 @@
     "snapshot_announced": false
   },
   "detection_note": "Live flags require explicit live/launch/endpoint language. Generic mentions such as \"airdrop claim\" do not count as claim-live.",
-  "semantic_fingerprint": "25c4be8b5ca68c2a6c217968abd3f2d9ee65d8de87e903f5b31eee8549cc9681"
+  "semantic_fingerprint": "29764bb8277e8dc05deeca981393696e3fff5bb7484013b6e68ac02d842e9736"
 }
